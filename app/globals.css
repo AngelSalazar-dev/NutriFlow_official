@@ -1,0 +1,349 @@
+@import "tailwindcss";
+
+:root {
+  /* NutriFlow Premium Color Palette */
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-200: #a7f3d0;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-400: #34d399;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
+  --color-emerald-700: #047857;
+  --color-emerald-800: #065f46;
+  --color-emerald-900: #064e3b;
+  
+  /* Premium accent colors */
+  --color-gold-400: #fbbf24;
+  --color-gold-500: #f59e0b;
+  --color-gold-600: #d97706;
+  
+  /* Stone neutrals - warmer tones */
+  --color-stone-50: #fafaf9;
+  --color-stone-100: #f5f5f4;
+  --color-stone-200: #e7e5e4;
+  --color-stone-300: #d6d3d1;
+  --color-stone-400: #a8a29e;
+  --color-stone-500: #78716c;
+  --color-stone-600: #57534e;
+  --color-stone-700: #44403c;
+  --color-stone-800: #292524;
+  --color-stone-900: #1c1917;
+  
+  /* Semantic colors */
+  --background: var(--color-stone-50);
+  --foreground: var(--color-stone-900);
+  --primary: var(--color-emerald-800);
+  --primary-foreground: #ffffff;
+  --secondary: var(--color-stone-200);
+  --secondary-foreground: var(--color-stone-900);
+  --accent: var(--color-emerald-100);
+  --accent-foreground: var(--color-emerald-900);
+  --muted: var(--color-stone-100);
+  --muted-foreground: var(--color-stone-500);
+  --border: var(--color-stone-200);
+  --ring: var(--color-emerald-600);
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+  
+  /* Typography */
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-manrope);
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-manrope);
+}
+
+* {
+  border-color: var(--border);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar - Premium style */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-stone-100);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--color-emerald-600), var(--color-emerald-800));
+  border-radius: 8px;
+  border: 2px solid var(--color-stone-100);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--color-emerald-500), var(--color-emerald-700));
+}
+
+/* Focus styles - Accessible */
+*:focus-visible {
+  outline: 2px solid var(--color-emerald-600);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-emerald-200);
+  color: var(--color-emerald-900);
+}
+
+/* Utility classes for NutriFlow Premium */
+.container-nutriflow {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+.container-narrow {
+  @apply mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8;
+}
+
+.card-nutriflow {
+  @apply rounded-2xl border border-stone-200 bg-white shadow-sm backdrop-blur-sm;
+}
+
+.card-premium {
+  @apply rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white shadow-lg;
+}
+
+.card-glass {
+  @apply rounded-2xl border border-white/20 bg-white/80 shadow-lg backdrop-blur-xl;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:from-emerald-800 hover:to-emerald-700 hover:shadow-lg hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-xl border border-stone-200 bg-white px-6 py-3 text-sm font-semibold text-stone-900 shadow-sm transition-all duration-200 hover:bg-stone-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-stone-200 focus:ring-offset-2;
+}
+
+.btn-glow {
+  @apply relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-600 px-8 py-4 text-base font-bold text-white shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2;
+}
+
+.btn-glow::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full;
+  transition: transform 0.6s ease;
+}
+
+.btn-glow:hover::before {
+  @apply translate-x-full;
+}
+
+/* Gradient backgrounds */
+.gradient-emerald {
+  @apply bg-gradient-to-br from-emerald-800 via-emerald-700 to-emerald-900;
+}
+
+.gradient-emerald-premium {
+  @apply bg-gradient-to-br from-emerald-900 via-emerald-800 to-stone-900;
+}
+
+.gradient-subtle {
+  @apply bg-gradient-to-br from-stone-50 via-stone-100 to-stone-50;
+}
+
+.gradient-warm {
+  @apply bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50;
+}
+
+/* Animation utilities - Premium feel */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(16, 185, 129, 0.6); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.5s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+  background-size: 1000px 100%;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Skeleton loader */
+.skeleton {
+  @apply bg-stone-200 rounded animate-pulse;
+}
+
+/* Glass morphism */
+.glass {
+  @apply bg-white/70 backdrop-blur-lg border border-white/20;
+}
+
+.glass-dark {
+  @apply bg-stone-900/70 backdrop-blur-lg border border-stone-700/20;
+}
+
+/* Responsive utilities */
+@media (max-width: 640px) {
+  .container-nutriflow {
+    @apply px-3;
+  }
+  
+  h1 { @apply text-3xl; }
+  h2 { @apply text-2xl; }
+  h3 { @apply text-xl; }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Article typography - Clean reading */
+.prose-nutriflow {
+  @apply max-w-none;
+}
+
+.prose-nutriflow h1 {
+  @apply text-4xl font-bold mb-6 text-stone-900;
+}
+
+.prose-nutriflow h2 {
+  @apply text-2xl font-semibold mb-4 text-stone-800 mt-8;
+}
+
+.prose-nutriflow h3 {
+  @apply text-xl font-semibold mb-3 text-stone-800 mt-6;
+}
+
+.prose-nutriflow p {
+  @apply text-stone-700 leading-relaxed mb-4;
+}
+
+.prose-nutriflow ul,
+.prose-nutriflow ol {
+  @apply mb-4 pl-6;
+}
+
+.prose-nutriflow li {
+  @apply text-stone-700 mb-2;
+}
+
+.prose-nutriflow a {
+  @apply text-emerald-700 underline decoration-emerald-300 underline-offset-2 hover:decoration-emerald-600 transition-colors;
+}
+
+.prose-nutriflow blockquote {
+  @apply border-l-4 border-emerald-600 pl-4 italic text-stone-600 my-6;
+}
+
+.prose-nutriflow code {
+  @apply bg-stone-100 rounded px-2 py-1 text-sm font-mono;
+}
+
+.prose-nutriflow pre {
+  @apply bg-stone-900 text-stone-100 rounded-lg p-4 my-6 overflow-x-auto;
+}
