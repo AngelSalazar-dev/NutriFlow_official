@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "WebSearch",
+      "WebFetch(ventureharbour.com)",
+      "WebFetch(cheapestserverhostinginindia.wordpress.com)",
+      "Bash(git init)",
+      "Bash(git config *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(gh *)",
+      "Bash(curl *)",
+      "Bash(findstr *)",
+      "Bash(npx *)",
+      "Bash(mysql *)",
+      "Bash(node *)",
+      "Bash(tasklist)",
+      "Bash(select-string *)",
+      "Bash(select-object *)",
+      "Bash(taskkill *)",
+      "Bash(openssl *)",
+      "Bash(timeout *)",
+      "Bash(get-content *)",
+      "Bash(start *)",
+      "Bash(powershell *)",
+      "Bash(type *)",
+      "Bash(npm test)",
+      "Bash(npm *)",
+      "Bash(ren *)",
+      "Bash(sc *)",
+      "Bash(rmdir *)",
+      "Bash(del *)",
+      "Bash(git remote *)"
+    ]
+  },
+  "$version": 3
+}
