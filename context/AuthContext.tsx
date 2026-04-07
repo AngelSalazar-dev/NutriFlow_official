@@ -14,7 +14,7 @@ interface AuthContextType {
   register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (data: Partial<User>) => Promise<void>;
-  updateAvatar: (avatarType: string, avatarUrl?: string) => Promise<void>;
+  updateAvatar: (avatarType: 'initials' | 'preset' | 'custom', avatarUrl?: string) => Promise<void>;
   checkChatLimit: () => Promise<{ allowed: boolean; remaining: number; limit: number; used: number }>;
 }
 
@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(result.user);
   }, [user]);
 
-  const updateAvatar = React.useCallback(async (avatarType: string, avatarUrl?: string) => {
+  const updateAvatar = React.useCallback(async (avatarType: 'initials' | 'preset' | 'custom', avatarUrl?: string) => {
     const res = await fetch('/api/user/avatar', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
