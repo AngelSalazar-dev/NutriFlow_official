@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/mongodb';
-import { getCurrentUser } from '@/lib/auth';
-import { ObjectId } from 'mongodb';
+import { query } from '@/lib/mysql';
+import { getCurrentUser } from '@/lib/auth-mysql';
+
+interface Routine {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string;
+  day_of_week: number | null;
+  exercises: string;
+  is_favorite: boolean;
+  created_at: string;
+  updated_at?: string;
+}
 
 // GET - Get user routines
 export async function GET(request: NextRequest) {
@@ -11,22 +22,30 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No authenticated' }, { status: 401 });
     }
 
-    const db = await getDb();
-    const routines = await db.collection('routines').find({
-      userId: user._id,
-    }).sort({ createdAt: -1 }).toArray();
+    const rows = await query(`
+      SELECT id, name, description, day_of_week, exercises, is_favorite, created_at
+      FROM routines
+      WHERE user_id = ?
+      ORDER BY created_at DESC
+    `, [user._id]);
 
-    return NextResponse.json({
-      routines: routines.map((r) => ({
-        ...r,
-        _id: r._id?.toString(),
-        userId: r.userId?.toString(),
-      })),
-    });
-  } catch (error) {
+    const routines = (rows as unknown as Routine[]).map((r) => ({
+      _id: r.id,
+      userId: r.user_id,
+      name: r.name,
+      description: r.description,
+      dayOfWeek: r.day_of_week,
+      exercises: r.exercises ? JSON.parse(r.exercises) : [],
+      isFavorite: r.is_favorite,
+      createdAt: r.created_at,
+    }));
+
+    return NextResponse.json({ routines });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error getting routines:', error);
     return NextResponse.json(
-      { error: 'Error getting routines' },
+      { error: 'Error getting routines: ' + message },
       { status: 500 }
     );
   }
@@ -50,23 +69,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const db = await getDb();
     const now = new Date();
 
-    const result = await db.collection('routines').insertOne({
-      userId: user._id,
+    const [uuidResult] = await query('SELECT UUID() as id');
+    const routineId = (uuidResult as any)[0].id;
+
+    await query(`
+      INSERT INTO routines (
+        id, user_id, name, description, day_of_week, exercises, is_favorite, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      routineId,
+      user._id,
       name,
-      description: description || '',
-      dayOfWeek: dayOfWeek !== undefined ? Number(dayOfWeek) : undefined,
-      exercises: exercises || [],
-      isFavorite: isFavorite || false,
-      createdAt: now,
-    });
+      description || '',
+      dayOfWeek !== undefined ? Number(dayOfWeek) : null,
+      JSON.stringify(exercises || []),
+      isFavorite || false,
+      now,
+    ]);
 
     return NextResponse.json({
       success: true,
       routine: {
-        _id: result.insertedId.toString(),
+        _id: routineId,
         userId: user._id,
         name,
         description: description || '',
@@ -76,10 +102,11 @@ export async function POST(request: NextRequest) {
         createdAt: now,
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error creating routine:', error);
     return NextResponse.json(
-      { error: 'Error creating routine' },
+      { error: 'Error creating routine: ' + message },
       { status: 500 }
     );
   }
@@ -104,40 +131,80 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const db = await getDb();
 
-    const allowedFields = ['name', 'description', 'dayOfWeek', 'exercises', 'isFavorite'];
-    const updateData: any = {};
+    const allowedFields: Record<string, string> = {
+      name: 'name',
+      description: 'description',
+      dayOfWeek: 'day_of_week',
+      exercises: 'exercises',
+      isFavorite: 'is_favorite',
+    };
 
-    for (const field of allowedFields) {
+    const setClauses: string[] = [];
+    const values: unknown[] = [];
+
+    for (const [field, dbField] of Object.entries(allowedFields)) {
       if (body[field] !== undefined) {
-        updateData[field] = body[field];
+        setClauses.push(`${dbField} = ?`);
+        if (field === 'exercises' || field === 'dayOfWeek') {
+          values.push(field === 'exercises' ? JSON.stringify(body[field]) : Number(body[field]));
+        } else {
+          values.push(body[field]);
+        }
       }
     }
 
-    updateData.updatedAt = new Date();
+    if (setClauses.length === 0) {
+      return NextResponse.json(
+        { error: 'No fields to update' },
+        { status: 400 }
+      );
+    }
 
-    await db.collection('routines').updateOne(
-      { _id: new ObjectId(id), userId: user._id },
-      { $set: updateData }
-    );
+    setClauses.push('updated_at = ?');
+    values.push(new Date());
+    values.push(id);
+    values.push(user._id);
 
-    const updatedRoutine = await db.collection('routines').findOne({
-      _id: new ObjectId(id),
-      userId: user._id,
-    });
+    await query(`
+      UPDATE routines
+      SET ${setClauses.join(', ')}
+      WHERE id = ? AND user_id = ?
+    `, values);
+
+    // Fetch updated routine
+    const [rows] = await query(`
+      SELECT id, name, description, day_of_week, exercises, is_favorite, created_at
+      FROM routines
+      WHERE id = ? AND user_id = ?
+    `, [id, user._id]);
+
+    const updatedRoutine = (Array.isArray(rows) ? rows[0] : rows) as Routine | undefined;
+
+    if (!updatedRoutine) {
+      return NextResponse.json(
+        { error: 'Rutina no encontrada' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       routine: {
-        ...updatedRoutine,
-        _id: updatedRoutine?._id?.toString(),
-        userId: updatedRoutine?.userId?.toString(),
+        _id: updatedRoutine.id,
+        userId: updatedRoutine.user_id,
+        name: updatedRoutine.name,
+        description: updatedRoutine.description,
+        dayOfWeek: updatedRoutine.day_of_week,
+        exercises: updatedRoutine.exercises ? JSON.parse(updatedRoutine.exercises) : [],
+        isFavorite: updatedRoutine.is_favorite,
+        createdAt: updatedRoutine.created_at,
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error updating routine:', error);
     return NextResponse.json(
-      { error: 'Error updating routine' },
+      { error: 'Error updating routine: ' + message },
       { status: 500 }
     );
   }
@@ -161,13 +228,11 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const db = await getDb();
-    const result = await db.collection('routines').deleteOne({
-      _id: new ObjectId(id),
-      userId: user._id,
-    });
+    const result = await query('DELETE FROM routines WHERE id = ? AND user_id = ?', [id, user._id]);
 
-    if (result.deletedCount === 0) {
+    const affectedRows = (result as any).affectedRows;
+
+    if (affectedRows === 0) {
       return NextResponse.json(
         { error: 'Rutina no encontrada' },
         { status: 404 }
@@ -175,10 +240,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error deleting routine:', error);
     return NextResponse.json(
-      { error: 'Error deleting routine' },
+      { error: 'Error deleting routine: ' + message },
       { status: 500 }
     );
   }

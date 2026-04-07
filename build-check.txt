@@ -1,0 +1,29 @@
+
+> nutriflow-app@2.0.0 build
+> next build
+
+▲ Next.js 16.2.1 (Turbopack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 10.7s
+  Running TypeScript ...
+Failed to type check.
+
+./app/api/health/db/route.ts:44:33
+Type error: No overload matches this call.
+  Overload 1 of 2, '(sql: string, values?: ExecuteValues | undefined): Promise<[QueryResult, FieldPacket[]]>', gave the following error.
+    Type 'string | undefined' is not assignable to type 'ExecuteValues'.
+      Type 'undefined' is not assignable to type 'ExecuteValues'.
+  Overload 2 of 2, '(options: QueryOptions, values?: ExecuteValues | undefined): Promise<[QueryResult, FieldPacket[]]>', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'QueryOptions'.
+
+  [90m42 |[0m   [36mtry[0m {
+  [90m43 |[0m     [36mconst[0m pool = getPool();
+[31m[1m>[0m [90m44 |[0m     [36mconst[0m [dbRows] = [36mawait[0m pool.execute(
+  [90m   |[0m                                 [31m[1m^[0m
+  [90m45 |[0m       [32m'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?'[0m,
+  [90m46 |[0m       [process.env.[33mMYSQL_DATABASE[0m]
+  [90m47 |[0m     );
+Next.js build worker exited with code: 1 and signal: null

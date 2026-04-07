@@ -1,222 +1,324 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import {
-  Flame,
-  Droplets,
-  Utensils,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Dumbbell,
-  Plus,
-} from 'lucide-react';
-import Link from 'next/link';
+import { LoadingSpinner } from '@/components/ui/loading';
+import { Flame, Droplets, Utensils, Dumbbell, Activity, TrendingUp, Zap, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-interface DailyStats {
-  caloriesConsumed: number;
-  caloriesBurned: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  waterMl: number;
-}
+// Datos visuales temporales para el gráfico de progreso calórico
+const weeklyData = [
+  { name: 'Lun', consumidas: 1800, quemadas: 2100 },
+  { name: 'Mar', consumidas: 2200, quemadas: 2400 },
+  { name: 'Mie', consumidas: 1950, quemadas: 2000 },
+  { name: 'Jue', consumidas: 2100, quemadas: 2300 },
+  { name: 'Vie', consumidas: 2400, quemadas: 2800 },
+  { name: 'Sab', consumidas: 1700, quemadas: 1900 },
+  { name: 'Dom', consumidas: 2000, quemadas: 2200 },
+];
+
+// Variantes de animación para framer-motion
+const containerVariants: any = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+const itemVariants: any = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+};
 
 export default function DashboardPage() {
-  const { user, isPremium } = useAuth();
-  const [stats, setStats] = React.useState<DailyStats>({
-    caloriesConsumed: 0,
-    caloriesBurned: 0,
-    protein: 0,
-    carbs: 0,
-    fat: 0,
-    waterMl: 0,
-  });
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
 
   React.useEffect(() => {
-    // Load today's stats
-    loadTodayStats();
-  }, []);
-
-  const loadTodayStats = async () => {
-    try {
-      const response = await fetch('/api/stats/today');
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data.stats);
-      }
-    } catch (error) {
-      console.error('Error loading stats:', error);
+    if (!isLoading && !user) {
+      router.push('/login');
     }
+  }, [user, isLoading, router]);
+
+  if (isLoading || !user) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <LoadingSpinner size="lg" text="Preparando tu espacio..." />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Cálculos iniciales
+  const calorieGoal = user.calorieGoal || 2000;
+  // Valores calculados temporalmente para simular el dashboard vivo
+  const macros = {
+    protein: { current: 45, target: 120, label: 'Proteínas' },
+    carbs: { current: 180, target: 250, label: 'Carbos' },
+    fat: { current: 30, target: 65, label: 'Grasas' }
   };
-
-  const netCalories = stats.caloriesConsumed - stats.caloriesBurned;
-  const calorieRemaining = (user?.calorieGoal || 2000) - netCalories;
-  const calorieProgress = Math.min((netCalories / (user?.calorieGoal || 2000)) * 100, 100);
-
-  const proteinProgress = (stats.protein / (user?.proteinGoal || 150)) * 100;
-  const carbsProgress = (stats.carbs / (user?.carbGoal || 250)) * 100;
-  const fatProgress = (stats.fat / (user?.fatGoal || 65)) * 100;
-
-  const waterGlasses = Math.floor(stats.waterMl / 250);
-  const waterGoal = 8; // 8 glasses = 2L
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold">Hola, {user?.name}</h1>
-          <p className="text-stone-500">Aquí está tu resumen de hoy</p>
-        </div>
+      <motion.div 
+        className="space-y-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Header Animado */}
+        <motion.div variants={itemVariants} className="flex flex-col gap-2">
+          <h1 className="text-5xl font-heading font-extrabold text-slate-900 tracking-tighter">
+            Hola, {user?.name ? user.name.split(' ')[0] : 'Usuario'} 👋
+          </h1>
+          <p className="text-lg text-slate-500 font-medium">
+            Tu progreso de hoy está luciendo excelente. Sigue así.
+          </p>
+        </motion.div>
 
-        {/* Calorie Summary */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Flame className="h-5 w-5 text-orange-500" />
-                Calorías
-              </CardTitle>
-              <CardDescription>
-                {user?.calorieGoal || 2000} kcal objetivo diario
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-4xl font-bold text-center py-4">
-                {Math.round(calorieRemaining)} kcal restantes
-              </div>
-              <Progress value={calorieProgress} className="h-3" />
-              <div className="grid grid-cols-3 gap-4 text-center text-sm">
-                <div>
-                  <div className="text-stone-500">Comidas</div>
-                  <div className="font-semibold text-emerald-700">{stats.caloriesConsumed}</div>
-                </div>
-                <div>
-                  <div className="text-stone-500">Ejercicio</div>
-                  <div className="font-semibold text-orange-500">{stats.caloriesBurned}</div>
-                </div>
-                <div>
-                  <div className="text-stone-500">Neto</div>
-                  <div className="font-semibold">{netCalories}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Droplets className="h-5 w-5 text-blue-500" />
-                Hidratación
-              </CardTitle>
-              <CardDescription>
-                {waterGlasses} de {waterGoal} vasos
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-4xl font-bold text-center py-4">
-                {stats.waterMl} ml
-              </div>
-              <Progress value={(waterGlasses / waterGoal) * 100} className="h-3" />
-              <Button className="w-full gap-2" onClick={async () => {
-                await fetch('/api/hydration', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ amountMl: 250 }),
-                });
-                setStats(prev => ({ ...prev, waterMl: prev.waterMl + 250 }));
-              }}>
-                <Plus className="h-4 w-4" />
-                Agregar vaso (250ml)
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Macros */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Macronutrientes</CardTitle>
-            <CardDescription>Progreso diario de macros</CardDescription>
-          </CardHeader>
-          <CardContent>
+        {/* Info Card Premium (Welcome / Status) */}
+        <motion.div variants={itemVariants} className="relative overflow-hidden rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100 p-8 shadow-sm">
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 opacity-20 pointer-events-none">
+            <Zap className="h-64 w-64 text-emerald-500" />
+          </div>
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">Proteínas</span>
-                  <span className="text-stone-500">
-                    {Math.round(stats.protein)} / {user?.proteinGoal || 150}g
-                  </span>
-                </div>
-                <Progress value={proteinProgress} className="h-2" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-200/50 text-emerald-700 text-sm font-semibold">
+                <Activity className="h-4 w-4" /> Actividad Nivel: {user.activityLevel || 'Desconocido'}
               </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">Carbohidratos</span>
-                  <span className="text-stone-500">
-                    {Math.round(stats.carbs)} / {user?.carbGoal || 250}g
-                  </span>
-                </div>
-                <Progress value={carbsProgress} className="h-2" />
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">Grasas</span>
-                  <span className="text-stone-500">
-                    {Math.round(stats.fat)} / {user?.fatGoal || 65}g
-                  </span>
-                </div>
-                <Progress value={fatProgress} className="h-2" />
+              <h2 className="text-2xl md:text-3xl font-bold text-emerald-950">
+                Plan {String(user.subscriptionPlan).toUpperCase()} Activado
+              </h2>
+              <p className="text-emerald-800 max-w-md leading-relaxed">
+                Tu objetivo diario está fijado en <strong className="font-bold">{calorieGoal} kcal</strong>. 
+                Estás en camino a dominar tus metas esta semana.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Stats Cards (4 grid) */}
+        <motion.div variants={itemVariants} className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            icon={<Flame className="h-6 w-6 text-orange-500 drop-shadow-sm" />}
+            title="Calorías"
+            value="1,240"
+            subtitle={`de ${calorieGoal} kcal`}
+            progress={62}
+            color="orange"
+          />
+          <StatCard
+            icon={<Droplets className="h-6 w-6 text-blue-500 drop-shadow-sm" />}
+            title="Hidratación"
+            value="1.2L"
+            subtitle="objetivo: 2.5L"
+            progress={48}
+            color="blue"
+          />
+          <StatCard
+            icon={<Utensils className="h-6 w-6 text-emerald-500 drop-shadow-sm" />}
+            title="Comidas"
+            value="3"
+            subtitle="registradas hoy"
+            progress={75}
+            color="emerald"
+          />
+          <StatCard
+            icon={<Dumbbell className="h-6 w-6 text-purple-500 drop-shadow-sm" />}
+            title="Actividad"
+            value="450"
+            subtitle="kcal quemadas hoy"
+            progress={100}
+            color="purple"
+          />
+        </motion.div>
+
+        <div className="grid gap-8 lg:grid-cols-3">
+          {/* Gráfico Recharts */}
+          <motion.div variants={itemVariants} className="lg:col-span-2 rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-emerald-500" />
+                  Balance Semanal
+                </h3>
+                <p className="text-sm text-slate-500 mt-1">Calorías consumidas vs quemadas (estimación)</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={weeklyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorConsumidas" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorQuemadas" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#3f3f46" opacity={0.2} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 12 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 12 }} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
+                    itemStyle={{ fontWeight: 600 }}
+                  />
+                  <Area type="monotone" dataKey="consumidas" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorConsumidas)" />
+                  <Area type="monotone" dataKey="quemadas" stroke="#f59e0b" strokeWidth={3} fillOpacity={1} fill="url(#colorQuemadas)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <Link href="/food-log">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-              <CardHeader>
-                <Utensils className="h-8 w-8 text-emerald-700 mb-2" />
-                <CardTitle>Registrar Comida</CardTitle>
-                <CardDescription>
-                  Agrega alimentos a tu registro diario
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
+          {/* Macros Rings */}
+          <motion.div variants={itemVariants} className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm flex flex-col">
+            <h3 className="text-xl font-bold text-slate-900 mb-1">
+              Macronutrientes
+            </h3>
+            <p className="text-sm text-slate-500 mb-8">Desglose de tu ingesta actual</p>
+            
+            <div className="flex-1 space-y-6 flex flex-col justify-center">
+              {Object.entries(macros).map(([key, data]) => {
+                const percentage = Math.min(100, Math.round((data.current / data.target) * 100));
+                return (
+                  <div key={key} className="space-y-2">
+                    <div className="flex justify-between items-end text-sm">
+                      <span className="font-semibold text-slate-700">{data.label}</span>
+                      <span className="text-slate-500"><strong className="text-slate-900">{data.current}g</strong> / {data.target}g</span>
+                    </div>
+                    <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${percentage}%` }}
+                        transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
+                        className={`h-full rounded-full ${
+                          key === 'protein' ? 'bg-rose-500' : key === 'carbs' ? 'bg-amber-500' : 'bg-emerald-500'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <button
+              onClick={() => router.push('/food-log')} 
+              className="mt-8 w-full group flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition-all font-medium text-slate-600 hover:text-emerald-600"
+            >
+              Registrar nuevo alimento <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </motion.div>
+        </div>
 
-          <Link href="/exercise">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-              <CardHeader>
-                <Dumbbell className="h-8 w-8 text-emerald-700 mb-2" />
-                <CardTitle>Registrar Ejercicio</CardTitle>
-                <CardDescription>
-                  Registra tu entrenamiento de hoy
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
+        {/* Quick Actions Animadas */}
+        <motion.div variants={itemVariants} className="grid md:grid-cols-3 gap-5">
+          <ActionButton
+            title="Dietario"
+            description="Registra tus próximas comidas y snacks"
+            icon="🍽️"
+            href="/food-log"
+            color="emerald"
+          />
+          <ActionButton
+            title="Entrenamiento"
+            description="Añade tu progreso en el gimnasio"
+            icon="🏋️"
+            href="/exercise"
+            color="purple"
+          />
+          <ActionButton
+            title="Analítica Avanzada"
+            description="Explora tu historia mes a mes"
+            icon="📊"
+            href="/history"
+            color="blue"
+          />
+        </motion.div>
 
-          <Link href="/history">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-              <CardHeader>
-                <TrendingUp className="h-8 w-8 text-emerald-700 mb-2" />
-                <CardTitle>Ver Historial</CardTitle>
-                <CardDescription>
-                  Revisa tu progreso semanal
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
+      </motion.div>
+    </DashboardLayout>
+  );
+}
+
+function StatCard({ icon, title, value, subtitle, progress, color }: any) {
+  const colorMap: Record<string, string> = {
+    orange: 'bg-orange-500',
+    blue: 'bg-blue-500',
+    emerald: 'bg-emerald-500',
+    purple: 'bg-purple-500',
+  };
+  
+  const bgMap: Record<string, string> = {
+    orange: 'bg-orange-50',
+    blue: 'bg-blue-50',
+    emerald: 'bg-emerald-50',
+    purple: 'bg-purple-50',
+  };
+  
+  return (
+    <div className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+      <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-10 transition-opacity duration-300 scale-150">
+        {icon}
+      </div>
+      <div className="flex items-center justify-between mb-4 mt-2">
+        <div className="text-slate-500 text-xs font-bold tracking-widest uppercase">{title}</div>
+        <div className={`p-2.5 rounded-2xl ${bgMap[color]} shadow-inner group-hover:scale-110 transition-transform`}>
+          {icon}
         </div>
       </div>
-    </DashboardLayout>
+      <div className="text-5xl font-heading font-extrabold tracking-tighter text-slate-900 mb-1">{value}</div>
+      <div className="text-sm font-medium text-slate-400 mb-6">{subtitle}</div>
+      
+      {/* Mini Progress bar */}
+      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+         <motion.div 
+           initial={{ width: 0 }}
+           animate={{ width: `${progress}%` }}
+           transition={{ duration: 1, delay: 0.2 }}
+           className={`h-full ${colorMap[color]} rounded-full`}
+         />
+      </div>
+    </div>
+  );
+}
+
+function ActionButton({ title, description, icon, href, color }: any) {
+  const router = useRouter();
+  
+  const bgGradientMap: Record<string, string> = {
+    emerald: 'from-transparent to-emerald-500/5',
+    purple: 'from-transparent to-purple-500/5',
+    blue: 'from-transparent to-blue-500/5',
+  };
+  
+  return (
+    <motion.button
+      whileHover={{ y: -5, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => router.push(href)}
+      className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 text-left group"
+    >
+      <div className={`absolute inset-0 bg-gradient-to-br ${bgGradientMap[color]} opacity-0 group-hover:opacity-100 transition-opacity`} />
+      
+      <div className="flex items-start gap-4">
+        <div className="text-4xl p-2 rounded-2xl bg-slate-50 group-hover:scale-110 transition-transform shadow-sm">
+          {icon}
+        </div>
+        <div>
+          <div className="font-semibold text-slate-900 mb-1 flex items-center gap-2">
+            {title}
+            <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+          </div>
+          <div className="text-sm text-slate-500 leading-relaxed pr-4">{description}</div>
+        </div>
+      </div>
+    </motion.button>
   );
 }

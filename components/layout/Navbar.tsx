@@ -47,23 +47,25 @@ export function Navbar() {
 
   if (isLandingPage) {
     return (
-      <header className="sticky top-0 z-50 w-full border-b border-stone-200 bg-white/80 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 w-full border-b border-slate-200/50 bg-white/70 backdrop-blur-3xl shadow-[0_4px_30px_rgb(0,0,0,0.03)]">
         <div className="container-nutriflow flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Leaf className="h-6 w-6 text-emerald-700" />
-            <span className="font-heading text-xl font-bold text-emerald-900">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20">
+              <Leaf className="h-5 w-5 text-white" />
+            </div>
+            <span className="font-heading text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
               NutriFlow
             </span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
-            <Link href="/#features" className="text-sm text-stone-600 hover:text-emerald-700">
+            <Link href="/#features" className="text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors">
               Características
             </Link>
-            <Link href="/#pricing" className="text-sm text-stone-600 hover:text-emerald-700">
+            <Link href="/#pricing" className="text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors">
               Precios
             </Link>
-            <Link href="/login" className="text-sm text-stone-600 hover:text-emerald-700">
+            <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors">
               Iniciar sesión
             </Link>
             <Link href="/register">
@@ -110,11 +112,13 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-stone-200 bg-white/80 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 w-full border-b border-slate-200/50 bg-white/70 backdrop-blur-3xl shadow-[0_4px_30px_rgb(0,0,0,0.03)]">
       <div className="container-nutriflow flex h-16 items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <Leaf className="h-6 w-6 text-emerald-700" />
-          <span className="font-heading text-xl font-bold text-emerald-900 hidden sm:inline">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20">
+            <Leaf className="h-5 w-5 text-white" />
+          </div>
+          <span className="font-heading text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent hidden sm:inline">
             NutriFlow
           </span>
         </Link>
@@ -132,7 +136,7 @@ export function Navbar() {
                   'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                   isActive
                     ? 'bg-emerald-50 text-emerald-700'
-                    : 'text-stone-600 hover:text-emerald-700 hover:bg-stone-50'
+                    : 'text-slate-600 hover:text-emerald-600 hover:bg-slate-50'
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -143,6 +147,7 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
+
           {!isPremium && (
             <Link href="/subscription">
               <Button variant="default" size="sm" className="hidden sm:inline-flex gap-2">
@@ -202,10 +207,10 @@ export function Navbar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex flex-col items-center justify-center gap-1 rounded-lg px-3 py-2 min-w-[64px]',
+                  'flex flex-col items-center justify-center gap-1 rounded-lg px-3 py-2 min-w-[64px] transition-colors',
                   isActive
                     ? 'bg-emerald-50 text-emerald-700'
-                    : 'text-stone-600'
+                    : 'text-slate-600 hover:text-emerald-600'
                 )}
               >
                 <Icon className="h-5 w-5" />

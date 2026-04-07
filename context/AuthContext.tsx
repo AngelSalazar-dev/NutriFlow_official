@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { User, SubscriptionPlan } from '@/types';
 import { useRouter } from 'next/navigation';
+import { User } from '@/types';
 
 interface AuthContextType {
   user: User | null;
@@ -10,79 +10,15 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isPremium: boolean;
   isPro: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
+  login: (email: string, password: string, redirectTo?: string) => Promise<void>;
+  register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (data: Partial<User>) => Promise<void>;
+  updateAvatar: (avatarType: string, avatarUrl?: string) => Promise<void>;
   checkChatLimit: () => Promise<{ allowed: boolean; remaining: number; limit: number; used: number }>;
 }
 
-interface RegisterData {
-  email: string;
-  password: string;
-  name: string;
-  age: number;
-  sex: 'male' | 'female';
-  weight: number;
-  height: number;
-  activityLevel: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
-  goal: 'lose' | 'maintain' | 'gain';
-}
-
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
-
-const PLANS: Record<string, SubscriptionPlan> = {
-  free: {
-    id: 'free',
-    name: 'Gratuito',
-    price: 0,
-    currency: 'USD',
-    interval: 'month',
-    features: [
-      'Todos los artículos (con anuncios)',
-      'Registro manual de alimentos',
-      'Seguimiento de calorías y macros',
-      'Seguimiento de hidratación',
-      'Historial de 7 días',
-      'Chat IA: 5 mensajes/día',
-      'Calculadora de calorías diarias',
-    ],
-  },
-  premium: {
-    id: 'premium',
-    name: 'Premium',
-    price: 9.99,
-    currency: 'USD',
-    interval: 'month',
-    features: [
-      'Todo lo del plan gratuito (sin anuncios)',
-      'Reconocimiento de alimentos por IA',
-      'Chat IA ilimitado',
-      'Estadísticas avanzadas (30 días)',
-      'Recomendaciones personalizadas',
-      'Artículos verificados por expertos',
-      'Módulo de ejercicio completo',
-    ],
-  },
-  pro: {
-    id: 'pro',
-    name: 'Pro',
-    price: 19.99,
-    currency: 'USD',
-    interval: 'month',
-    features: [
-      'Todo lo del plan Premium',
-      'Planes de entrenamiento con IA',
-      'Análisis nutricional detallado',
-      'Integración con wearables',
-      'Historial ilimitado',
-      'Planes de alimentación con IA',
-      'Seguimiento de progreso corporal',
-      'Exportación de datos PDF/CSV',
-      'Soporte prioritario',
-    ],
-  },
-};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
@@ -95,102 +31,146 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUser = async () => {
     try {
-      const response = await fetch('/api/auth/me');
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
+      const res = await fetch('/api/auth/me', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.user) {
+          setUser(data.user);
+        }
       }
-    } catch (error) {
-      console.error('Failed to load user:', error);
+    } catch (err) {
+      console.log('No hay sesión activa');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const login = async (email: string, password: string) => {
-    const response = await fetch('/api/auth/login', {
+  const login = React.useCallback(async (email: string, password: string, redirectTo?: string) => {
+    const normalizedEmail = email.replace(/\s+/g, '').toLowerCase();
+    console.log('[AuthContext] Login attempt:', { email: normalizedEmail, passwordLength: password.length });
+    const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: normalizedEmail, password }),
+      credentials: 'include',
     });
 
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.error || 'Login failed');
+    if (!res.ok) {
+      const data = await res.json();
+      console.error('[AuthContext] Login failed:', data, 'Status:', res.status);
+      throw new Error(data.error || 'Error al iniciar sesión');
     }
 
-    const data = await response.json();
+    const data = await res.json();
+    console.log('[AuthContext] Login success:', data.user?.email);
     setUser(data.user);
-    router.push('/dashboard');
-  };
 
-  const register = async (data: RegisterData) => {
-    const response = await fetch('/api/auth/register', {
+    const redirectUrl = redirectTo || '/dashboard';
+    router.push(redirectUrl);
+    router.refresh();
+  }, [router]);
+
+  const register = React.useCallback(async (data: any) => {
+    const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
+      credentials: 'include',
     });
 
-    if (!response.ok) {
-      const resData = await response.json();
-      throw new Error(resData.error || 'Registration failed');
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || 'Error al registrar');
     }
 
-    const resData = await response.json();
-    setUser(resData.user);
-    router.push('/dashboard');
-  };
+    const result = await res.json();
+    setUser(result.user);
 
-  const logout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/dashboard');
+    router.refresh();
+  }, [router]);
+
+  const logout = React.useCallback(async () => {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     setUser(null);
     router.push('/');
-  };
+    router.refresh();
+  }, [router]);
 
-  const updateUser = async (data: Partial<User>) => {
+  const updateUser = React.useCallback(async (data: Partial<User>) => {
     if (!user) return;
 
-    const response = await fetch('/api/auth/profile', {
+    const res = await fetch('/api/auth/profile', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
+      credentials: 'include',
     });
 
-    if (!response.ok) {
-      const resData = await response.json();
-      throw new Error(resData.error || 'Update failed');
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || 'Error al actualizar');
     }
 
-    const resData = await response.json();
-    setUser(resData.user);
-  };
+    const result = await res.json();
+    setUser(result.user);
+  }, [user]);
 
-  const checkChatLimit = async () => {
-    const response = await fetch('/api/chat/limit');
-    if (!response.ok) {
-      return { allowed: false, remaining: 0, limit: 5 };
+  const updateAvatar = React.useCallback(async (avatarType: string, avatarUrl?: string) => {
+    const res = await fetch('/api/user/avatar', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ avatarType, avatarUrl }),
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || 'Error al actualizar avatar');
     }
-    return await response.json();
-  };
+
+    // Update user state directly
+    setUser((prev) => prev ? { ...prev, avatarType, avatarUrl } : null);
+  }, []);
 
   const isPremium = user?.subscriptionPlan === 'premium' || user?.subscriptionPlan === 'pro';
   const isPro = user?.subscriptionPlan === 'pro';
 
+  const checkChatLimit = React.useCallback(async () => {
+    try {
+      const res = await fetch('/api/chat/limit');
+      if (!res.ok) {
+        return { allowed: false, remaining: 0, limit: 15, used: 15 };
+      }
+      const data = await res.json();
+      return {
+        allowed: data.allowed,
+        remaining: data.remaining,
+        limit: data.limit,
+        used: data.used,
+      };
+    } catch (error) {
+      console.error('Error checking chat limit:', error);
+      return { allowed: false, remaining: 0, limit: 15, used: 15 };
+    }
+  }, []);
+
+  const contextValue = React.useMemo(() => ({
+    user,
+    isLoading,
+    isAuthenticated: !!user,
+    isPremium,
+    isPro,
+    login,
+    register,
+    logout,
+    updateUser,
+    updateAvatar,
+    checkChatLimit,
+  }), [user, isLoading, isPremium, isPro, login, register, logout, updateUser, updateAvatar, checkChatLimit]);
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isLoading,
-        isAuthenticated: !!user,
-        isPremium,
-        isPro,
-        login,
-        register,
-        logout,
-        updateUser,
-        checkChatLimit,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
@@ -199,9 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = React.useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth debe usarse dentro de AuthProvider');
   }
   return context;
 }
-
-export { PLANS };

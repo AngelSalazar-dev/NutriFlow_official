@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { jwtVerify } from 'jose';
 
 // Rate limit store (in production, use Redis)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -7,7 +8,27 @@ const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
 const RATE_LIMIT_MAX = 100; // Max requests per window
 
-export function middleware(request: NextRequest) {
+// Enforce JWT_SECRET in production - fail fast if not set
+const JWT_SECRET_STRING = process.env.JWT_SECRET;
+
+if (!JWT_SECRET_STRING && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable is required in production');
+}
+
+const JWT_SECRET = new TextEncoder().encode(
+  JWT_SECRET_STRING || 'dev-secret-do-not-use-in-production'
+);
+
+async function verifySessionCookie(token: string): Promise<boolean> {
+  try {
+    await jwtVerify(token, JWT_SECRET);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Security Headers
@@ -98,15 +119,28 @@ export function middleware(request: NextRequest) {
   }
   
   // Protect authenticated routes
-  if (pathname.startsWith('/dashboard') || 
-      pathname.startsWith('/food-log') || 
-      pathname.startsWith('/exercise') ||
-      pathname.startsWith('/profile') ||
-      pathname.startsWith('/subscription')) {
-    
+  const protectedRoutes = [
+    '/dashboard',
+    '/food-log',
+    '/exercise',
+    '/chat',
+    '/articles',
+    '/history',
+    '/profile',
+    '/subscription',
+    '/settings',
+    '/ai-agent',
+    '/onboarding',
+  ];
+
+  const isProtectedRoute = protectedRoutes.some(route => 
+    pathname === route || pathname.startsWith(route + '/')
+  );
+
+  if (isProtectedRoute) {
     const sessionCookie = request.cookies.get('session')?.value;
-    
-    if (!sessionCookie) {
+
+    if (!sessionCookie || !(await verifySessionCookie(sessionCookie))) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
@@ -116,9 +150,16 @@ export function middleware(request: NextRequest) {
   // Redirect authenticated users away from auth pages
   if (pathname.startsWith('/login') || pathname.startsWith('/register')) {
     const sessionCookie = request.cookies.get('session')?.value;
-    
-    if (sessionCookie) {
+
+    if (sessionCookie && await verifySessionCookie(sessionCookie)) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    
+    // If cookie exists but is invalid, delete it and continue to login
+    if (sessionCookie) {
+      const response = NextResponse.next();
+      response.cookies.delete('session');
+      return response;
     }
   }
   

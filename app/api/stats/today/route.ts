@@ -2,6 +2,21 @@ import { NextResponse } from 'next/server';
 import { query } from '@/lib/mysql';
 import { getCurrentUser } from '@/lib/auth-mysql';
 
+interface FoodLog {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+interface DailyLog {
+  exercise_calories_burned: number;
+}
+
+interface WaterLog {
+  amount_ml: number;
+}
+
 export async function GET() {
   try {
     const user = await getCurrentUser();
@@ -14,31 +29,34 @@ export async function GET() {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
+    const todayStr = today.toISOString().split('T')[0];
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
     // Get food logs for today
     const foodLogs = await query(`
       SELECT calories, protein_g as protein, carbs_g as carbs, fat_g as fat
-      FROM food_entries
-      WHERE user_id = ? AND entry_date BETWEEN ? AND ?
-    `, [user._id, today.toISOString().split('T')[0], tomorrow.toISOString().split('T')[0]]);
+      FROM food_logs
+      WHERE user_id = ? AND log_date BETWEEN ? AND ?
+    `, [user._id, todayStr, tomorrowStr]);
 
     // Get exercise logs - using daily_logs for exercise calories
     const dailyLogs = await query(`
       SELECT exercise_calories_burned
       FROM daily_logs
       WHERE user_id = ? AND log_date BETWEEN ? AND ?
-    `, [user._id, today.toISOString().split('T')[0], tomorrow.toISOString().split('T')[0]]);
+    `, [user._id, todayStr, tomorrowStr]);
 
     // Get hydration logs for today
     const hydrationLogs = await query(`
       SELECT amount_ml
       FROM water_logs
       WHERE user_id = ? AND log_date BETWEEN ? AND ?
-    `, [user._id, today.toISOString().split('T')[0], tomorrow.toISOString().split('T')[0]]);
+    `, [user._id, todayStr, tomorrowStr]);
 
     // Calculate totals
-    const foodLogsArray = foodLogs as any[];
-    const dailyLogsArray = dailyLogs as any[];
-    const hydrationLogsArray = hydrationLogs as any[];
+    const foodLogsArray = foodLogs as unknown as FoodLog[];
+    const dailyLogsArray = dailyLogs as unknown as DailyLog[];
+    const hydrationLogsArray = hydrationLogs as unknown as WaterLog[];
 
     const caloriesConsumed = foodLogsArray.reduce((acc, log) => acc + (Number(log.calories) || 0), 0);
     const protein = foodLogsArray.reduce((acc, log) => acc + (Number(log.protein) || 0), 0);
@@ -57,10 +75,11 @@ export async function GET() {
         waterMl,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error getting today stats:', error);
     return NextResponse.json(
-      { error: 'Error getting stats: ' + error.message },
+      { error: 'Error getting stats: ' + message },
       { status: 500 }
     );
   }

@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/mongodb';
-import { getCurrentUser } from '@/lib/auth';
-import { ObjectId } from 'mongodb';
+import { query } from '@/lib/mysql';
+import { getCurrentUser } from '@/lib/auth-mysql';
 import { calculateCaloriesBurned } from '@/lib/utils';
+
+interface ExerciseLog {
+  id: string;
+  user_id: string;
+  exercise_name: string;
+  exercise_type: string;
+  muscle_groups: string;
+  sets_data: string;
+  met_value: number;
+  duration_min: number;
+  calories_burned: number;
+  notes: string;
+  log_date: string;
+  created_at: string;
+}
 
 // GET - Get exercise logs
 export async function GET(request: NextRequest) {
@@ -15,34 +29,59 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
 
-    const db = await getDb();
     const startDate = new Date(date);
     startDate.setHours(0, 0, 0, 0);
     const endDate = new Date(date);
     endDate.setHours(23, 59, 59, 999);
 
-    const logs = await db.collection('exercise_logs').find({
-      userId: user._id,
-      date: {
-        $gte: startDate,
-        $lte: endDate,
-      },
-    }).sort({ createdAt: -1 }).toArray();
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    const rows = await query(`
+      SELECT id, exercise_name, exercise_type, muscle_groups, met_value,
+             duration_min, calories_burned, notes, log_date, created_at
+      FROM exercise_logs
+      WHERE user_id = ? AND log_date BETWEEN ? AND ?
+      ORDER BY created_at DESC
+    `, [user._id, startDateStr, endDateStr]);
+
+    const logs = (rows as unknown as ExerciseLog[]).map((log) => ({
+      id: log.id,
+      userId: log.user_id,
+      exerciseName: log.exercise_name,
+      exerciseType: log.exercise_type,
+      muscleGroups: log.muscle_groups ? JSON.parse(log.muscle_groups) : [],
+      metValue: log.met_value,
+      durationMin: log.duration_min,
+      caloriesBurned: log.calories_burned,
+      notes: log.notes,
+      logDate: log.log_date,
+      createdAt: log.created_at,
+    }));
 
     const totalCalories = logs.reduce((acc, log) => acc + log.caloriesBurned, 0);
 
     return NextResponse.json({
       logs: logs.map((log) => ({
-        ...log,
-        _id: log._id?.toString(),
-        userId: log.userId?.toString(),
+        _id: log.id,
+        userId: log.userId,
+        exerciseName: log.exerciseName,
+        exerciseType: log.exerciseType,
+        muscleGroups: log.muscleGroups,
+        metValue: log.metValue,
+        durationMin: log.durationMin,
+        caloriesBurned: log.caloriesBurned,
+        notes: log.notes,
+        date: log.logDate,
+        createdAt: log.createdAt,
       })),
       totalCalories,
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error getting exercise logs:', error);
     return NextResponse.json(
-      { error: 'Error getting exercise logs' },
+      { error: 'Error getting exercise logs: ' + message },
       { status: 500 }
     );
   }
@@ -82,43 +121,52 @@ export async function POST(request: NextRequest) {
       durationMin || 0
     );
 
-    const db = await getDb();
     const now = new Date();
+    const logDate = now.toISOString().split('T')[0];
 
-    const result = await db.collection('exercise_logs').insertOne({
-      userId: user._id,
+    const [uuidResult] = await query('SELECT UUID() as id');
+    const logId = (uuidResult as any)[0].id;
+
+    await query(`
+      INSERT INTO exercise_logs (
+        id, user_id, exercise_name, exercise_type, muscle_groups,
+        met_value, duration_min, calories_burned, notes, log_date, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      logId,
+      user._id,
       exerciseName,
-      exerciseType: exerciseType || 'strength',
-      muscleGroups: muscleGroups || [],
-      setsData: setsData || [],
-      metValue: Number(metValue),
-      durationMin: Number(durationMin) || 0,
+      exerciseType || 'strength',
+      JSON.stringify(muscleGroups || []),
+      Number(metValue),
+      Number(durationMin) || 0,
       caloriesBurned,
-      notes: notes || '',
-      date: now,
-      createdAt: now,
-    });
+      notes || '',
+      logDate,
+      now,
+    ]);
 
     return NextResponse.json({
       success: true,
       log: {
-        _id: result.insertedId.toString(),
+        _id: logId,
         userId: user._id,
         exerciseName,
         exerciseType: exerciseType || 'strength',
         muscleGroups: muscleGroups || [],
-        setsData: setsData || [],
         metValue: Number(metValue),
         durationMin: Number(durationMin) || 0,
         caloriesBurned,
         notes: notes || '',
-        date: now,
+        date: logDate,
+        createdAt: now,
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error adding exercise log:', error);
     return NextResponse.json(
-      { error: 'Error adding exercise log' },
+      { error: 'Error adding exercise log: ' + message },
       { status: 500 }
     );
   }
@@ -142,13 +190,11 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const db = await getDb();
-    const result = await db.collection('exercise_logs').deleteOne({
-      _id: new ObjectId(id),
-      userId: user._id,
-    });
+    const result = await query('DELETE FROM exercise_logs WHERE id = ? AND user_id = ?', [id, user._id]);
 
-    if (result.deletedCount === 0) {
+    const affectedRows = (result as any).affectedRows;
+
+    if (affectedRows === 0) {
       return NextResponse.json(
         { error: 'Registro no encontrado' },
         { status: 404 }
@@ -156,10 +202,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error deleting exercise log:', error);
     return NextResponse.json(
-      { error: 'Error deleting exercise log' },
+      { error: 'Error deleting exercise log: ' + message },
       { status: 500 }
     );
   }

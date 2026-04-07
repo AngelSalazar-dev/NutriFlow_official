@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth';
-import { getDb } from '@/lib/mongodb';
+import { getCurrentUser } from '@/lib/auth-mysql';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy');
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+
+if (!stripeSecretKey) {
+  console.error('STRIPE_SECRET_KEY is not configured');
+}
+
+const stripe = new Stripe(stripeSecretKey || 'sk_test_dummy');
 
 const PLAN_PRICES: Record<string, { price: number; name: string }> = {
   premium: { price: 999, name: 'NutriFlow Premium' }, // $9.99 in cents

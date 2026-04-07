@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth-mysql';
 
 export async function GET() {
   try {
     const user = await getCurrentUser();
+    
     if (!user) {
-      return NextResponse.json({ error: 'No authenticated' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'No authenticated' },
+        { status: 401 }
+      );
     }
 
     return NextResponse.json({
@@ -20,8 +24,9 @@ export async function GET() {
         activityLevel: user.activityLevel,
         goal: user.goal,
         subscriptionPlan: user.subscriptionPlan,
-        subscriptionEnd: user.subscriptionEnd,
+        calorieGoal: user.calorieGoal,
         createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
       },
     });
   } catch (error) {

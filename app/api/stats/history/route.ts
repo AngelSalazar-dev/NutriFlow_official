@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/mongodb';
-import { getCurrentUser } from '@/lib/auth';
+import { query } from '@/lib/mysql';
+import { getCurrentUser } from '@/lib/auth-mysql';
+
+interface DailyStats {
+  date: string;
+  caloriesConsumed: number;
+  caloriesBurned: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  waterMl: number;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,34 +22,16 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const days = parseInt(searchParams.get('days') || '7');
 
-    const db = await getDb();
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const startDate = new Date(today);
     startDate.setDate(startDate.getDate() - days + 1);
-    startDate.setHours(0, 0, 0, 0);
 
-    // Get food logs for the period
-    const foodLogs = await db.collection('food_logs').find({
-      userId: user._id,
-      date: { $gte: startDate },
-    }).toArray();
-
-    // Get exercise logs for the period
-    const exerciseLogs = await db.collection('exercise_logs').find({
-      userId: user._id,
-      date: { $gte: startDate },
-    }).toArray();
-
-    // Get hydration logs for the period
-    const hydrationLogs = await db.collection('hydration_logs').find({
-      userId: user._id,
-      date: { $gte: startDate },
-    }).toArray();
-
-    // Group by date
-    const statsByDate: Record<string, DailyStats> = {};
+    const todayStr = today.toISOString().split('T')[0];
+    const startDateStr = startDate.toISOString().split('T')[0];
 
     // Initialize all days
+    const statsByDate: Record<string, DailyStats> = {};
     for (let i = 0; i < days; i++) {
       const date = new Date(startDate);
       date.setDate(date.getDate() + i);
@@ -55,30 +47,69 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    // Get food logs for the period
+    const foodLogs = await query(`
+      SELECT calories, protein_g, carbs_g, fat_g, log_date
+      FROM food_logs
+      WHERE user_id = ? AND log_date BETWEEN ? AND ?
+    `, [user._id, startDateStr, todayStr]);
+
+    // Get daily logs for exercise calories
+    const dailyLogs = await query(`
+      SELECT exercise_calories_burned, log_date
+      FROM daily_logs
+      WHERE user_id = ? AND log_date BETWEEN ? AND ?
+    `, [user._id, startDateStr, todayStr]);
+
+    // Get hydration logs for the period
+    const waterLogs = await query(`
+      SELECT amount_ml, log_date
+      FROM water_logs
+      WHERE user_id = ? AND log_date BETWEEN ? AND ?
+    `, [user._id, startDateStr, todayStr]);
+
     // Aggregate food logs
-    for (const log of foodLogs) {
-      const dateKey = new Date(log.date).toISOString().split('T')[0];
+    const foodLogsArray = foodLogs as unknown as Array<{
+      calories: number;
+      protein_g: number;
+      carbs_g: number;
+      fat_g: number;
+      log_date: string;
+    }>;
+
+    for (const log of foodLogsArray) {
+      const dateKey = new Date(log.log_date).toISOString().split('T')[0];
       if (statsByDate[dateKey]) {
-        statsByDate[dateKey].caloriesConsumed += log.calories;
-        statsByDate[dateKey].protein += log.protein;
-        statsByDate[dateKey].carbs += log.carbs;
-        statsByDate[dateKey].fat += log.fat;
+        statsByDate[dateKey].caloriesConsumed += Number(log.calories) || 0;
+        statsByDate[dateKey].protein += Number(log.protein_g) || 0;
+        statsByDate[dateKey].carbs += Number(log.carbs_g) || 0;
+        statsByDate[dateKey].fat += Number(log.fat_g) || 0;
       }
     }
 
-    // Aggregate exercise logs
-    for (const log of exerciseLogs) {
-      const dateKey = new Date(log.date).toISOString().split('T')[0];
+    // Aggregate daily logs (exercise calories)
+    const dailyLogsArray = dailyLogs as unknown as Array<{
+      exercise_calories_burned: number;
+      log_date: string;
+    }>;
+
+    for (const log of dailyLogsArray) {
+      const dateKey = new Date(log.log_date).toISOString().split('T')[0];
       if (statsByDate[dateKey]) {
-        statsByDate[dateKey].caloriesBurned += log.caloriesBurned;
+        statsByDate[dateKey].caloriesBurned += Number(log.exercise_calories_burned) || 0;
       }
     }
 
-    // Aggregate hydration logs
-    for (const log of hydrationLogs) {
-      const dateKey = new Date(log.date).toISOString().split('T')[0];
+    // Aggregate water logs
+    const waterLogsArray = waterLogs as unknown as Array<{
+      amount_ml: number;
+      log_date: string;
+    }>;
+
+    for (const log of waterLogsArray) {
+      const dateKey = new Date(log.log_date).toISOString().split('T')[0];
       if (statsByDate[dateKey]) {
-        statsByDate[dateKey].waterMl += log.amountMl;
+        statsByDate[dateKey].waterMl += Number(log.amount_ml) || 0;
       }
     }
 
@@ -87,21 +118,12 @@ export async function GET(request: NextRequest) {
     );
 
     return NextResponse.json({ stats });
-  } catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error getting history:', error);
     return NextResponse.json(
-      { error: 'Error getting history' },
+      { error: 'Error getting history: ' + message },
       { status: 500 }
     );
   }
-}
-
-interface DailyStats {
-  date: string;
-  caloriesConsumed: number;
-  caloriesBurned: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  waterMl: number;
 }

@@ -5,7 +5,9 @@ import { useAuth } from '@/context/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, Crown, Sparkles, Zap } from 'lucide-react';
+import { Check, Crown, Sparkles, Zap, Gift, Users } from 'lucide-react';
+import { PromoCodeRedeemer } from '@/components/features/PromoCodeRedeemer';
+import { ReferralProgram } from '@/components/features/ReferralProgram';
 
 const PLANS = [
   {
@@ -18,9 +20,11 @@ const PLANS = [
       'Registro manual de alimentos',
       'Seguimiento de calorías y macros',
       'Seguimiento de hidratación',
-      'Historial de 7 días',
-      'Chat IA: 5 mensajes/día',
+      'Historial de 14 días',
+      'Chat IA: 10 mensajes/día',
       'Calculadora de calorías diarias',
+      'Exportar datos CSV básico',
+      'Recordatorios de agua',
     ],
     cta: 'Plan actual',
     highlighted: false,
@@ -40,6 +44,7 @@ const PLANS = [
       'Artículos verificados por expertos',
       'Módulo de ejercicio completo',
       'Badges y logros',
+      'Soporte por email',
     ],
     cta: 'Actualizar a Premium',
     highlighted: true,
@@ -60,6 +65,7 @@ const PLANS = [
       'Seguimiento de progreso corporal',
       'Exportación de datos PDF/CSV',
       'Soporte prioritario',
+      'Sesiones de coaching mensual',
     ],
     cta: 'Obtener Pro',
     highlighted: false,
@@ -213,6 +219,56 @@ export default function SubscriptionPage() {
               <p className="text-sm text-stone-600">
                 Aceptamos todas las tarjetas de crédito y débito principales a través de Stripe, así como PayPal en algunos países.
               </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Free Access Options */}
+        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <PromoCodeRedeemer />
+          <ReferralProgram />
+        </div>
+
+        {/* Free Access Info */}
+        <Card className="max-w-4xl mx-auto bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Gift className="h-6 w-6 text-purple-600" />
+              <CardTitle className="text-purple-900">¿Quieres Premium Gratis?</CardTitle>
+            </div>
+            <CardDescription className="text-purple-700">
+              Tenemos varias formas de obtener acceso Premium sin costo
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">🎁</span>
+                  <strong className="text-purple-900">Códigos Promocionales</strong>
+                </div>
+                <p className="text-sm text-purple-700">
+                  Sigue nuestras redes sociales (@NutriFlow) donde publicamos códigos regularmente.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">👥</span>
+                  <strong className="text-purple-900">Programa de Referidos</strong>
+                </div>
+                <p className="text-sm text-purple-700">
+                  Invita amigos y gana hasta Premium Lifetime. ¡Ellos también obtienen 7 días gratis!
+                </p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">🎓</span>
+                  <strong className="text-purple-900">Plan Estudiantes</strong>
+                </div>
+                <p className="text-sm text-purple-700">
+                  Si eres estudiante, contáctanos para obtener descuentos especiales o acceso gratuito.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>

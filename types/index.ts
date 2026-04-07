@@ -11,6 +11,9 @@ export interface User {
   goal: Goal;
   subscriptionPlan: 'free' | 'premium' | 'pro';
   subscriptionEnd?: Date;
+  // Avatar
+  avatarUrl?: string | null;
+  avatarType?: 'initials' | 'preset' | 'custom' | null;
   // Nutritional data
   tdee?: number;
   bmr?: number;

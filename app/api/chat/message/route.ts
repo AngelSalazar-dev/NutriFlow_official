@@ -1,167 +1,272 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/mongodb';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth-mysql';
+import { query } from '@/lib/mysql';
 
-// GET - Get chat limit for today
-export async function GET() {
-  try {
-    const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json({ error: 'No authenticated' }, { status: 401 });
-    }
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const db = await getDb();
-    const messageCount = await db.collection('chat_messages').countDocuments({
-      userId: user._id,
-      role: 'user',
-      date: {
-        $gte: today,
-        $lt: tomorrow,
-      },
-    });
-
-    const limit = user.subscriptionPlan === 'free' ? 5 : -1; // -1 = unlimited
-    const remaining = limit === -1 ? -1 : Math.max(0, limit - messageCount);
-
-    return NextResponse.json({
-      allowed: user.subscriptionPlan !== 'free' || messageCount < limit,
-      remaining,
-      limit: limit === -1 ? 'Unlimited' : limit,
-      used: messageCount,
-    });
-  } catch (error) {
-    console.error('Error getting chat limit:', error);
-    return NextResponse.json(
-      { error: 'Error getting chat limit' },
-      { status: 500 }
-    );
-  }
-}
-
-// POST - Send a chat message
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json({ error: 'No authenticated' }, { status: 401 });
-    }
-
-    // Check limit for free users
-    if (user.subscriptionPlan === 'free') {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-
-      const db = await getDb();
-      const messageCount = await db.collection('chat_messages').countDocuments({
-        userId: user._id,
-        role: 'user',
-        date: {
-          $gte: today,
-          $lt: tomorrow,
-        },
-      });
-
-      if (messageCount >= 5) {
-        return NextResponse.json(
-          {
-            error: 'Has alcanzado el límite de 5 mensajes diarios. Actualiza a Premium para mensajes ilimitados.',
-          },
-          { status: 429 }
-        );
-      }
+      return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { content } = body;
+    const { message, conversationHistory = [] } = body;
 
-    if (!content || content.trim().length === 0) {
+    if (!message || !message.trim()) {
       return NextResponse.json(
-        { error: 'El mensaje no puede estar vacío' },
+        { error: 'Mensaje vacío' },
         { status: 400 }
       );
     }
 
-    const db = await getDb();
+    // Verificar límite de mensajes (15 cada 5 horas para free, ilimitado premium/pro)
     const now = new Date();
+    const fiveHoursAgo = new Date(now.getTime() - 5 * 60 * 60 * 1000);
+    
+    const [messageCount] = await query(
+      'SELECT COUNT(*) as count FROM chat_messages WHERE user_id = ? AND created_at >= ?',
+      [user._id, fiveHoursAgo]
+    ) as any[];
 
-    // Save user message
-    await db.collection('chat_messages').insertOne({
-      userId: user._id,
-      role: 'user',
-      content,
-      date: now,
-      createdAt: now,
+    const messagesInWindow = messageCount?.count || 0;
+    const isPremium = user.subscriptionPlan === 'premium' || user.subscriptionPlan === 'pro';
+    const windowLimit = isPremium ? 9999 : 15;
+    const windowHours = 5;
+
+    if (messagesInWindow >= windowLimit) {
+      // Calcular cuándo puede enviar otro mensaje
+      const [oldestMessage] = await query(`
+        SELECT created_at FROM chat_messages 
+        WHERE user_id = ? AND created_at >= ?
+        ORDER BY created_at ASC
+        LIMIT 1
+      `, [user._id, fiveHoursAgo]) as any[];
+
+      let resetTime = new Date();
+      if (oldestMessage && oldestMessage[0]) {
+        resetTime = new Date(oldestMessage[0].created_at);
+        resetTime.setHours(resetTime.getHours() + windowHours);
+      }
+
+      const hoursRemaining = Math.ceil((resetTime.getTime() - now.getTime()) / (1000 * 60 * 60));
+      const minutesRemaining = Math.ceil((resetTime.getTime() - now.getTime()) / (1000 * 60));
+
+      return NextResponse.json(
+        {
+          error: 'Límite de mensajes alcanzado',
+          message: `Has alcanzado tu límite de ${windowLimit} mensajes cada ${windowHours} horas. Podrás enviar más mensajes en ${hoursRemaining > 0 ? `${hoursRemaining}h ` : ''}${minutesRemaining % 60}min.`,
+          remaining: 0,
+          limit: windowLimit,
+          used: messagesInWindow,
+          resetTime: resetTime.toISOString(),
+          hoursRemaining,
+          minutesRemaining,
+        },
+        { status: 429 }
+      );
+    }
+
+    // Guardar mensaje del usuario
+    const userMsgId = crypto.randomUUID();
+    await query(`
+      INSERT INTO chat_messages (id, user_id, role, content, created_at)
+      VALUES (?, ?, 'user', ?, NOW())
+    `, [userMsgId, user._id, message]);
+
+    // Construir prompt con contexto del usuario
+    const userContext = `
+Eres un asistente de nutrición y salud experto llamado NutriBot, integrado en NutriFlow.
+
+Contexto del usuario:
+- Nombre: ${user.name}
+- Edad: ${user.age} años
+- Peso: ${user.weight} kg
+- Altura: ${user.height} cm
+- Sexo: ${user.sex}
+- Objetivo: ${user.goal === 'lose' ? 'Perder peso' : user.goal === 'gain' ? 'Ganar músculo' : 'Mantener peso'}
+- Nivel de actividad: ${user.activityLevel}
+- Calorías objetivo: ${user.calorieGoal} kcal/día
+- Plan: ${user.subscriptionPlan}
+
+Instrucciones:
+1. Responde en español de manera clara y concisa
+2. Basa tus respuestas en evidencia científica
+3. Sé empático y motivador
+4. Si te preguntan sobre condiciones médicas, recomienda consultar un profesional
+5. Mantén las respuestas entre 2-4 párrafos
+6. Usa formato markdown cuando sea útil (listas, negritas)
+7. Personaliza las respuestas con los datos del usuario
+
+Historial de conversación:
+${conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}
+
+Mensaje del usuario: ${message}
+
+Respuesta de NutriBot:`;
+
+    // Llamar a Gemini API
+    const geminiResponse = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: userContext
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        },
+        safetySettings: [
+          {
+            category: 'HARM_CATEGORY_HARASSMENT',
+            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+          },
+          {
+            category: 'HARM_CATEGORY_HATE_SPEECH',
+            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+          },
+          {
+            category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+          },
+          {
+            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+          }
+        ]
+      }),
     });
 
-    // Generate AI response (simplified - in production, call actual AI API)
-    const aiResponse = generateAIResponse(content, user);
+    if (!geminiResponse.ok) {
+      const errorData = await geminiResponse.json();
+      console.error('Gemini API Error:', errorData);
+      throw new Error(errorData.error?.message || 'Error en Gemini API');
+    }
 
-    // Save AI response
-    await db.collection('chat_messages').insertOne({
-      userId: user._id,
-      role: 'assistant',
-      content: aiResponse,
-      date: now,
-      createdAt: now,
-    });
+    const geminiData = await geminiResponse.json();
+    
+    // Extraer respuesta de Gemini
+    let assistantMessage = '';
+    if (geminiData.candidates && geminiData.candidates.length > 0) {
+      assistantMessage = geminiData.candidates[0].content?.parts?.[0]?.text || 'Lo siento, no pude generar una respuesta.';
+    } else {
+      assistantMessage = 'Lo siento, ocurrió un error al procesar tu mensaje.';
+    }
+
+    // Guardar respuesta del asistente
+    const assistantMsgId = crypto.randomUUID();
+    await query(`
+      INSERT INTO chat_messages (id, user_id, role, content, created_at)
+      VALUES (?, ?, 'assistant', ?, NOW())
+    `, [assistantMsgId, user._id, assistantMessage]);
+
+    // Obtener conteo actualizado
+    const [updatedCount] = await query(
+      'SELECT COUNT(*) as count FROM chat_messages WHERE user_id = ? AND created_at >= ?',
+      [user._id, fiveHoursAgo]
+    ) as any[];
+
+    const messagesUsed = updatedCount?.count || 0;
+    const resetTime = new Date(now.getTime() + windowHours * 60 * 60 * 1000);
 
     return NextResponse.json({
       success: true,
-      response: aiResponse,
+      message: assistantMessage,
+      conversation: [
+        ...conversationHistory,
+        { role: 'user', content: message },
+        { role: 'assistant', content: assistantMessage },
+      ],
+      usage: {
+        used: messagesUsed,
+        limit: windowLimit,
+        remaining: Math.max(0, windowLimit - messagesUsed),
+        windowHours,
+        resetTime: resetTime.toISOString(),
+      },
     });
-  } catch (error) {
-    console.error('Error processing chat message:', error);
+  } catch (error: any) {
+    console.error('Error in chat:', error);
     return NextResponse.json(
-      { error: 'Error processing message' },
+      { 
+        error: 'Error procesando mensaje',
+        message: error.message || 'Error interno del servidor'
+      },
       { status: 500 }
     );
   }
 }
 
-// Simple AI response generator (replace with actual AI API in production)
-function generateAIResponse(message: string, user: any): string {
-  const lowerMessage = message.toLowerCase();
+/**
+ * GET /api/chat/limit
+ * Verificar límite de mensajes del usuario
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+    }
 
-  // Nutrition-related responses
-  if (lowerMessage.includes('calorías') || lowerMessage.includes('calorias')) {
-    return `Las calorías que necesitas dependen de tu objetivo. Según tu perfil, tu gasto energético diario (TDEE) es de aproximadamente ${user.tdee} calorías. Para ${user.goal === 'lose' ? 'perder peso' : user.goal === 'gain' ? 'ganar masa' : 'mantener peso'}, deberías consumir alrededor de ${user.calorieGoal} calorías al día.`;
+    const now = new Date();
+    const fiveHoursAgo = new Date(now.getTime() - 5 * 60 * 60 * 1000);
+    
+    const [count] = await query(
+      'SELECT COUNT(*) as count FROM chat_messages WHERE user_id = ? AND created_at >= ?',
+      [user._id, fiveHoursAgo]
+    ) as any[];
+
+    const messagesUsed = count?.count || 0;
+    const isPremium = user.subscriptionPlan === 'premium' || user.subscriptionPlan === 'pro';
+    const windowLimit = isPremium ? 9999 : 15;
+    const windowHours = 5;
+
+    // Calcular tiempo restante para reset
+    let resetTime = new Date(now.getTime() + windowHours * 60 * 60 * 1000);
+    
+    if (messagesUsed >= windowLimit && !isPremium) {
+      const [oldestMessage] = await query(`
+        SELECT created_at FROM chat_messages 
+        WHERE user_id = ? AND created_at >= ?
+        ORDER BY created_at ASC
+        LIMIT 1
+      `, [user._id, fiveHoursAgo]) as any[];
+
+      if (oldestMessage && oldestMessage[0]) {
+        resetTime = new Date(oldestMessage[0].created_at);
+        resetTime.setHours(resetTime.getHours() + windowHours);
+      }
+    }
+
+    const timeUntilReset = resetTime.getTime() - now.getTime();
+    const hoursRemaining = Math.ceil(timeUntilReset / (1000 * 60 * 60));
+    const minutesRemaining = Math.ceil((timeUntilReset % (1000 * 60 * 60)) / (1000 * 60));
+
+    return NextResponse.json({
+      allowed: messagesUsed < windowLimit,
+      remaining: Math.max(0, windowLimit - messagesUsed),
+      limit: windowLimit,
+      used: messagesUsed,
+      isPremium,
+      windowHours,
+      resetTime: resetTime.toISOString(),
+      hoursRemaining,
+      minutesRemaining,
+    });
+  } catch (error) {
+    console.error('Error checking chat limit:', error);
+    return NextResponse.json(
+      { error: 'Error verificando límite' },
+      { status: 500 }
+    );
   }
-
-  if (lowerMessage.includes('proteína') || lowerMessage.includes('proteina')) {
-    return `La proteína es esencial para mantener y construir músculo. Según tu peso de ${user.weight}kg, deberías consumir alrededor de ${user.proteinGoal}g de proteína al día. Buenas fuentes incluyen: pollo, pescado, huevos, legumbres, y lácteos.`;
-  }
-
-  if (lowerMessage.includes('carbohidrato') || lowerMessage.includes('carbs')) {
-    return `Los carbohidratos son tu principal fuente de energía. Tu objetivo diario es de aproximadamente ${user.carbGoal}g. Prioriza carbohidratos complejos como arroz integral, avena, quinoa, y vegetales.`;
-  }
-
-  if (lowerMessage.includes('grasa') || lowerMessage.includes('grasas')) {
-    return `Las grasas saludables son importantes para la salud hormonal. Tu objetivo es de aproximadamente ${user.fatGoal}g al día. Incluye aguacate, frutos secos, aceite de oliva, y pescado azul.`;
-  }
-
-  if (lowerMessage.includes('agua') || lowerMessage.includes('hidratación') || lowerMessage.includes('hidratacion')) {
-    return `La hidratación es clave para el rendimiento y la salud. Intenta beber al menos 2 litros de agua al día (8 vasos de 250ml). Más si haces ejercicio o hace calor.`;
-  }
-
-  if (lowerMessage.includes('ejercicio') || lowerMessage.includes('entrenar')) {
-    return `El ejercicio regular es esencial para la salud. Combina entrenamiento de fuerza (3-5 días/semana) con cardio (2-3 días/semana). Como usuario ${user.subscriptionPlan}, tienes acceso ${user.subscriptionPlan === 'free' ? 'limitado al módulo de ejercicio. Actualiza a Premium para acceso completo.' : 'completo al módulo de ejercicio para registrar tus rutinas.'}`;
-  }
-
-  if (lowerMessage.includes('hola') || lowerMessage.includes('buenos') || lowerMessage.includes('buenas')) {
-    return `¡Hola! Soy tu asistente de nutrición de NutriFlow. ¿En qué puedo ayudarte hoy con tu alimentación o salud?`;
-  }
-
-  if (lowerMessage.includes('gracias')) {
-    return `¡De nada! Estoy aquí para ayudarte en tu camino hacia una vida más saludable. ¿Tienes otra pregunta?`;
-  }
-
-  // Default response
-  return `Entiendo tu pregunta sobre "${message}". Como asistente de nutrición, te recomiendo enfocarte en mantener un balance adecuado de macronutrientes según tus objetivos. Tu perfil indica que necesitas ${user.calorieGoal} calorías diarias con ${user.proteinGoal}g de proteína, ${user.carbGoal}g de carbohidratos y ${user.fatGoal}g de grasas. ¿Hay algo más específico en lo que pueda ayudarte?`;
 }

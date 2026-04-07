@@ -1,0 +1,24 @@
+
+> nutriflow-app@2.0.0 build
+> next build
+
+▲ Next.js 16.2.1 (Turbopack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 12.9s
+  Running TypeScript ...
+Failed to type check.
+
+./scripts/test-register.ts:45:32
+Type error: 'data' is of type 'unknown'.
+
+  [90m43 |[0m     [36mif[0m (response.ok) {
+  [90m44 |[0m       console.log([32m'\n✅ ¡Registro exitoso!'[0m);
+[31m[1m>[0m [90m45 |[0m       console.log([32m`📧 Email: [0m${data.user.email[32m}`[0m);
+  [90m   |[0m                              [31m[1m^[0m
+  [90m46 |[0m       console.log([32m`👤 Nombre: [0m${data.user.name[32m}`[0m);
+  [90m47 |[0m       console.log([32m`🎯 Calorías objetivo: [0m${data.user.calorieGoal[32m} kcal/día`[0m);
+  [90m48 |[0m       console.log([32m`💪 Proteína: [0m${data.user.proteinGoal[32m}g/día`[0m);
+Next.js build worker exited with code: 1 and signal: null
