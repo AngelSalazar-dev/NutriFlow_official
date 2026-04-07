@@ -88,7 +88,7 @@ export async function getCurrentUser(): Promise<User | null> {
       SELECT
         id, email, name, age, weight_kg, height_cm,
         sex, activity_level, goal, subscription_plan,
-        daily_calorie_target, created_at, updated_at,
+        daily_calorie_target, tdee, bmr, created_at, updated_at,
         avatar_url, avatar_type
       FROM users
       WHERE id = ?
@@ -121,6 +121,8 @@ export async function getCurrentUser(): Promise<User | null> {
       goal: user.goal,
       subscriptionPlan: user.subscription_plan,
       calorieGoal: user.daily_calorie_target,
+      tdee: user.tdee,
+      bmr: user.bmr,
       avatarUrl: user.avatar_url,
       avatarType: user.avatar_type,
       createdAt: user.created_at,

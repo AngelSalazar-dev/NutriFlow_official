@@ -88,12 +88,12 @@ export async function PUT(request: NextRequest) {
     // Recalculate profile if weight, height, age, sex, activityLevel or goal changed
     if (updateData.weight_kg || updateData.height_cm || updateData.age || updateData.sex || updateData.activity_level || updateData.goal) {
       const profile = calculateUserProfile(
-        updateData.weight_kg as number || user.weight,
-        updateData.height_cm as number || user.height,
-        updateData.age as number || user.age,
-        (updateData.sex as 'male' | 'female') || user.sex,
-        (updateData.activity_level as ActivityLevel) || user.activityLevel,
-        (updateData.goal as Goal) || user.goal
+        Number(updateData.weight_kg ?? user.weight),
+        Number(updateData.height_cm ?? user.height),
+        Number(updateData.age ?? user.age),
+        ((updateData.sex as 'male' | 'female') || user.sex) as 'male' | 'female',
+        ((updateData.activity_level as ActivityLevel) || user.activityLevel) as ActivityLevel,
+        ((updateData.goal as Goal) || user.goal) as Goal
       );
       updateData.bmr = profile.bmr;
       updateData.tdee = profile.tdee;
@@ -103,7 +103,7 @@ export async function PUT(request: NextRequest) {
       updateData.fat_goal = profile.fatGoal;
     }
 
-    updateData.updated_at = new Date();
+    updateData.updated_at = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
     // Build dynamic UPDATE query
     const setClauses: string[] = [];
@@ -166,6 +166,14 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error updating profile:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('Profile update error details:', errorMessage);
+    if (error instanceof Error && error.message.includes('mysql')) {
+      return NextResponse.json(
+        { error: 'Database error: ' + errorMessage },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
       { error: 'Error updating profile' },
       { status: 500 }
