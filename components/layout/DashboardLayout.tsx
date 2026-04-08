@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-// import { AVATAR_PRESETS } from '@/components/ui/AvatarSelector';
+import { AVATAR_PRESETS } from '@/components/ui/AvatarSelector';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -142,6 +142,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Avatar className="h-9 w-9 border-2 border-emerald-500/50 shadow-md">
                   {user?.avatarType === 'custom' && user?.avatarUrl ? (
                     <img src={user.avatarUrl} alt="" className="h-full w-full object-cover rounded-full" />
+                  ) : user?.avatarType === 'preset' && user?.avatarUrl ? (
+                    <div className="h-full w-full rounded-full overflow-hidden bg-emerald-50 flex items-center justify-center">
+                      {AVATAR_PRESETS.find(p => p.id === user.avatarUrl)?.render(36)}
+                    </div>
                   ) : (
                     <AvatarFallback className="bg-gradient-to-br from-emerald-600 to-teal-600 text-white text-sm font-semibold">
                       {initials}

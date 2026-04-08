@@ -84,16 +84,27 @@ export default function SubscriptionPage() {
       const response = await fetch('/api/subscriptions/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ planId }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        // Redirect to Stripe Checkout
-        window.location.href = data.url;
+        // Simulation mode: no redirect, just reload
+        if (data.simulated) {
+          alert(`✅ ${data.message}\n\nPlan ${planId} activado exitosamente.`);
+          window.location.reload();
+        } else if (data.url) {
+          // Real Stripe checkout
+          window.location.href = data.url;
+        }
+      } else {
+        const err = await response.json().catch(() => ({}));
+        alert(`Error: ${err.error || 'No se pudo procesar la suscripción'}`);
       }
     } catch (error) {
-      console.error('Error creating checkout:', error);
+      console.error('[SUBSCRIPTION] Error creating checkout:', error);
+      alert('Error de conexión. Intenta de nuevo.');
     } finally {
       setIsLoading(null);
     }

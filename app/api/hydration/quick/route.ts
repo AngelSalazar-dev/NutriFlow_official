@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-mysql';
-import { query } from '@/lib/mysql';
+import { query, transaction } from '@/lib/mysql';
 
 /**
  * POST /api/hydration/quick
- * Registro rápido de agua (un clic)
+ * Registro rápido de bebidas con integridad ACID y soporte para tipos
  */
 export async function POST(request: NextRequest) {
   try {
@@ -14,44 +14,48 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { amountMl = 250 } = body; // Default: 250ml (1 vaso)
+    const { amountMl = 250, beverageType = 'water' } = body;
+
+    if (amountMl <= 0) {
+      return NextResponse.json({ error: 'Cantidad inválida' }, { status: 400 });
+    }
 
     const logId = crypto.randomUUID();
+    // Obtener fecha local YYYY-MM-DD
     const now = new Date();
-    const logDate = now.toISOString().split('T')[0];
+    const logDate = now.toLocaleDateString('en-CA'); // Formato YYYY-MM-DD
 
-    // Guardar en water_logs
-    await query(`
-      INSERT INTO water_logs (id, user_id, amount_ml, log_date, log_time, created_at)
-      VALUES (?, ?, ?, ?, NOW(), NOW())
-    `, [logId, user._id, amountMl, logDate]);
+    await transaction(async (connection) => {
+      // 1. Guardar log detallado
+      await query(`
+        INSERT INTO water_logs (id, user_id, amount_ml, beverage_type, log_date, created_at)
+        VALUES (?, ?, ?, ?, ?, NOW())
+      `, [logId, user._id, amountMl, beverageType, logDate], connection);
 
-    // Actualizar daily_logs
-    await query(`
-      INSERT INTO daily_logs (user_id, log_date, total_water_ml)
-      VALUES (?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-        total_water_ml = total_water_ml + ?
-    `, [user._id, logDate, amountMl, amountMl]);
+      // 2. Actualizar resumen diario
+      await query(`
+        INSERT INTO daily_logs (user_id, log_date, water_ml, total_calories, total_protein, total_carbs, total_fat)
+        VALUES (?, ?, ?, 0, 0, 0, 0)
+        ON DUPLICATE KEY UPDATE
+          water_ml = water_ml + ?
+      `, [user._id, logDate, amountMl, amountMl], connection);
+    });
 
     return NextResponse.json({
       success: true,
-      message: `${amountMl}ml de agua registrados`,
       logId,
       amountMl,
+      beverageType
     });
-  } catch (error) {
-    console.error('Error logging water:', error);
-    return NextResponse.json(
-      { error: 'Error registrando agua' },
-      { status: 500 }
-    );
+  } catch (error: any) {
+    console.error('Error logging beverage:', error.message);
+    return NextResponse.json({ error: 'Error registrando bebida' }, { status: 500 });
   }
 }
 
 /**
  * DELETE /api/hydration/quick
- * Eliminar registro de agua
+ * Solución al error de borrado: Manejo de fechas seguro y logs de depuración
  */
 export async function DELETE(request: NextRequest) {
   try {
@@ -64,91 +68,55 @@ export async function DELETE(request: NextRequest) {
     const logId = searchParams.get('id');
 
     if (!logId) {
-      return NextResponse.json(
-        { error: 'ID de registro requerido' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'ID requerido' }, { status: 400 });
     }
 
-    // Obtener datos del registro
-    const [rows] = await query(
-      'SELECT amount_ml FROM water_logs WHERE id = ? AND user_id = ?',
-      [logId, user._id]
-    ) as any[];
+    console.log(`[HYDRATION-DELETE] Buscando registro: ${logId} para usuario: ${user._id}`);
 
-    if (!rows || rows.length === 0) {
-      return NextResponse.json(
-        { error: 'Registro no encontrado' },
-        { status: 404 }
-      );
-    }
+    await transaction(async (connection) => {
+      // 1. Obtener datos antes de borrar
+      const [rows] = await query(
+        'SELECT amount_ml, log_date FROM water_logs WHERE id = ? AND user_id = ?',
+        [logId, user._id],
+        connection
+      ) as any[];
 
-    const amount = rows[0].amount_ml;
+      if (!rows || rows.length === 0) {
+        console.warn(`[HYDRATION-DELETE] No se encontró el registro: ${logId}`);
+        return;
+      }
 
-    // Eliminar registro
-    await query('DELETE FROM water_logs WHERE id = ? AND user_id = ?', [logId, user._id]);
-
-    // Actualizar daily_logs (restar)
-    const [dateRows] = await query(
-      'SELECT log_date FROM water_logs WHERE id = ? AND user_id = ?',
-      [logId, user._id]
-    ) as any[];
-
-    if (dateRows && dateRows.length > 0) {
-      const logDate = new Date(dateRows[0].log_date).toISOString().split('T')[0];
+      const { amount_ml, log_date } = rows[0];
       
-      await query(`
+      // FORMATEO DE FECHA SEGURO (YYYY-MM-DD)
+      // log_date puede venir como objeto Date de MySQL. evitamos toISOString() que desfasa horas.
+      const dateObj = new Date(log_date);
+      const formattedDate = dateObj.toLocaleDateString('en-CA'); // 'YYYY-MM-DD'
+
+      console.log(`[HYDRATION-DELETE] Eliminando ${amount_ml}ml del día ${formattedDate}`);
+
+      // 2. Restar del total diario
+      const [updateResult] = await query(`
         UPDATE daily_logs 
-        SET total_water_ml = GREATEST(0, total_water_ml - ?)
+        SET water_ml = GREATEST(0, water_ml - ?)
         WHERE user_id = ? AND log_date = ?
-      `, [amount, user._id, logDate]);
-    }
+      `, [amount_ml, user._id, formattedDate], connection) as any;
 
-    return NextResponse.json({
-      success: true,
-      message: 'Registro de agua eliminado',
+      console.log(`[HYDRATION-DELETE] Filas actualizadas en daily_logs: ${updateResult.affectedRows}`);
+
+      // 3. Borrar el historial detallado
+      const [deleteResult] = await query(
+        'DELETE FROM water_logs WHERE id = ? AND user_id = ?', 
+        [logId, user._id], 
+        connection
+      ) as any;
+      
+      console.log(`[HYDRATION-DELETE] Registro borrado de water_logs: ${deleteResult.affectedRows}`);
     });
-  } catch (error) {
-    console.error('Error deleting water log:', error);
-    return NextResponse.json(
-      { error: 'Error eliminando registro' },
-      { status: 500 }
-    );
-  }
-}
 
-/**
- * GET /api/hydration/today
- * Obtener agua consumida hoy
- */
-export async function GET(request: NextRequest) {
-  try {
-    const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
-    }
-
-    const today = new Date().toISOString().split('T')[0];
-
-    const [rows] = await query(
-      'SELECT SUM(amount_ml) as total FROM water_logs WHERE user_id = ? AND DATE(log_date) = ?',
-      [user._id, today]
-    ) as any[];
-
-    const totalMl = rows && rows[0] ? Number(rows[0].total) || 0 : 0;
-
-    return NextResponse.json({
-      success: true,
-      totalMl,
-      glasses: Math.floor(totalMl / 250),
-      goal: 2000, // 2L default
-      percentage: Math.min((totalMl / 2000) * 100, 100),
-    });
-  } catch (error) {
-    console.error('Error getting hydration:', error);
-    return NextResponse.json(
-      { error: 'Error obteniendo hidratación' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: true, message: 'Registro eliminado con éxito' });
+  } catch (error: any) {
+    console.error('[HYDRATION-DELETE] Error crítico:', error.message);
+    return NextResponse.json({ error: 'Error al procesar el borrado' }, { status: 500 });
   }
 }

@@ -33,25 +33,25 @@ export async function GET() {
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
     // Get food logs for today
-    const foodLogs = await query(`
+    const [foodLogs] = await query(`
       SELECT calories, protein_g as protein, carbs_g as carbs, fat_g as fat
       FROM food_logs
       WHERE user_id = ? AND log_date BETWEEN ? AND ?
-    `, [user._id, todayStr, tomorrowStr]);
+    `, [user._id, todayStr, tomorrowStr]) as any[];
 
     // Get exercise logs - using daily_logs for exercise calories
-    const dailyLogs = await query(`
+    const [dailyLogs] = await query(`
       SELECT exercise_calories_burned
       FROM daily_logs
       WHERE user_id = ? AND log_date BETWEEN ? AND ?
-    `, [user._id, todayStr, tomorrowStr]);
+    `, [user._id, todayStr, tomorrowStr]) as any[];
 
     // Get hydration logs for today
-    const hydrationLogs = await query(`
+    const [hydrationLogs] = await query(`
       SELECT amount_ml
       FROM water_logs
       WHERE user_id = ? AND log_date BETWEEN ? AND ?
-    `, [user._id, todayStr, tomorrowStr]);
+    `, [user._id, todayStr, tomorrowStr]) as any[];
 
     // Calculate totals
     const foodLogsArray = foodLogs as unknown as FoodLog[];

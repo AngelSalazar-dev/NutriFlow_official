@@ -48,25 +48,25 @@ export async function GET(request: NextRequest) {
     }
 
     // Get food logs for the period
-    const foodLogs = await query(`
+    const [foodLogs] = await query(`
       SELECT calories, protein_g, carbs_g, fat_g, log_date
       FROM food_logs
       WHERE user_id = ? AND log_date BETWEEN ? AND ?
-    `, [user._id, startDateStr, todayStr]);
+    `, [user._id, startDateStr, todayStr]) as any[];
 
     // Get daily logs for exercise calories
-    const dailyLogs = await query(`
+    const [dailyLogs] = await query(`
       SELECT exercise_calories_burned, log_date
       FROM daily_logs
       WHERE user_id = ? AND log_date BETWEEN ? AND ?
-    `, [user._id, startDateStr, todayStr]);
+    `, [user._id, startDateStr, todayStr]) as any[];
 
     // Get hydration logs for the period
-    const waterLogs = await query(`
+    const [waterLogs] = await query(`
       SELECT amount_ml, log_date
       FROM water_logs
       WHERE user_id = ? AND log_date BETWEEN ? AND ?
-    `, [user._id, startDateStr, todayStr]);
+    `, [user._id, startDateStr, todayStr]) as any[];
 
     // Aggregate food logs
     const foodLogsArray = foodLogs as unknown as Array<{

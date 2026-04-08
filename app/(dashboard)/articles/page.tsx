@@ -37,13 +37,17 @@ export default function ArticlesPage() {
 
   const loadArticles = async () => {
     try {
-      const response = await fetch('/api/articles');
+      const response = await fetch('/api/articles', { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
-        setArticles(data.articles);
+        setArticles(data.articles || []);
+      } else {
+        console.error('[ARTICLES] Failed to load articles:', response.status);
+        setArticles([]);
       }
     } catch (error) {
-      console.error('Error loading articles:', error);
+      console.error('[ARTICLES] Error loading articles:', error);
+      setArticles([]);
     } finally {
       setIsLoading(false);
     }

@@ -4,39 +4,84 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { LoadingSpinner } from '@/components/ui/loading';
 import { Flame, Droplets, Utensils, Dumbbell, Activity, TrendingUp, Zap, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// Datos visuales temporales para el gráfico de progreso calórico
-const weeklyData = [
-  { name: 'Lun', consumidas: 1800, quemadas: 2100 },
-  { name: 'Mar', consumidas: 2200, quemadas: 2400 },
-  { name: 'Mie', consumidas: 1950, quemadas: 2000 },
-  { name: 'Jue', consumidas: 2100, quemadas: 2300 },
-  { name: 'Vie', consumidas: 2400, quemadas: 2800 },
-  { name: 'Sab', consumidas: 1700, quemadas: 1900 },
-  { name: 'Dom', consumidas: 2000, quemadas: 2200 },
-];
+interface TodayStats {
+  caloriesConsumed: number;
+  caloriesBurned: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  waterMl: number;
+}
 
-// Variantes de animación para framer-motion
-const containerVariants: any = {
+interface MacroData {
+  current: number;
+  target: number;
+  label: string;
+}
+
+interface DashboardData {
+  stats: TodayStats | null;
+  mealCount: number;
+  exerciseSessions: number;
+  macros: {
+    protein: MacroData;
+    carbs: MacroData;
+    fat: MacroData;
+  };
+  weeklyChart: { name: string; consumed: number; burned: number }[];
+}
+
+const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: { staggerChildren: 0.1 }
   }
-};
+} as const;
 
-const itemVariants: any = {
+const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
-};
+  visible: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 300, damping: 24 } }
+} as const;
+
+function DashboardSkeleton() {
+  return (
+    <DashboardLayout>
+      <div className="space-y-8 animate-pulse">
+        <div className="space-y-2">
+          <div className="h-12 w-64 bg-slate-200 rounded-lg" />
+          <div className="h-6 w-96 bg-slate-200 rounded-lg" />
+        </div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 h-40" />
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="rounded-3xl border border-slate-200 bg-white p-6 h-40" />
+          ))}
+        </div>
+        <div className="grid gap-8 lg:grid-cols-3">
+          <div className="lg:col-span-2 rounded-3xl border border-slate-200 bg-white h-96" />
+          <div className="rounded-3xl border border-slate-200 bg-white h-96" />
+        </div>
+        <div className="grid md:grid-cols-3 gap-5">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="rounded-3xl border border-slate-200 bg-white h-28" />
+          ))}
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const [dashboardData, setDashboardData] = React.useState<DashboardData | null>(null);
+  const [isStatsLoading, setIsStatsLoading] = React.useState(true);
+  const [refreshKey, setRefreshKey] = React.useState(0);
 
   React.useEffect(() => {
     if (!isLoading && !user) {
@@ -44,28 +89,110 @@ export default function DashboardPage() {
     }
   }, [user, isLoading, router]);
 
+  // Refresh dashboard when user navigates back (visibility change)
+  React.useEffect(() => {
+    const handler = () => {
+      if (document.visibilityState === 'visible') {
+        setRefreshKey(k => k + 1);
+      }
+    };
+    document.addEventListener('visibilitychange', handler);
+    return () => document.removeEventListener('visibilitychange', handler);
+  }, []);
+
+  React.useEffect(() => {
+    if (!user) return;
+
+    async function loadDashboardData() {
+      setIsStatsLoading(true);
+      try {
+        const [statsRes, foodRes, hydrationRes, exerciseRes, weeklyRes] = await Promise.all([
+          fetch('/api/stats/today', { credentials: 'include' }),
+          fetch('/api/food/today', { credentials: 'include' }),
+          fetch('/api/hydration/today', { credentials: 'include' }),
+          fetch('/api/exercise/log', { credentials: 'include' }),
+          fetch('/api/stats/weekly', { credentials: 'include' }),
+        ]);
+
+        const statsOk = statsRes.ok;
+        const foodOk = foodRes.ok;
+        const hydrationOk = hydrationRes.ok;
+        const exerciseOk = exerciseRes.ok;
+        const weeklyOk = weeklyRes.ok;
+
+        const stats = statsOk ? await statsRes.json() : null;
+        const foodData = foodOk ? await foodRes.json() : null;
+        const hydrationData = hydrationOk ? await hydrationRes.json() : null;
+        const exerciseData = exerciseOk ? await exerciseRes.json() : null;
+        const weeklyData = weeklyOk ? await weeklyRes.json() : null;
+
+        const todayStats = stats?.stats || null;
+        const mealCount = foodData?.count || 0;
+        const exerciseSessions = exerciseData?.logs?.length || 0;
+
+        // Calculate macro targets from user profile
+        const calorieGoal = user?.calorieGoal || 2000;
+        const macroTargets = {
+          protein: { current: todayStats?.protein || 0, target: Math.round((calorieGoal * 0.3) / 4), label: 'Proteínas' },
+          carbs: { current: todayStats?.carbs || 0, target: Math.round((calorieGoal * 0.45) / 4), label: 'Carbos' },
+          fat: { current: todayStats?.fat || 0, target: Math.round((calorieGoal * 0.25) / 9), label: 'Grasas' },
+        };
+
+        setDashboardData({
+          stats: todayStats,
+          mealCount,
+          exerciseSessions,
+          macros: macroTargets,
+          weeklyChart: weeklyData?.weekly || [],
+        });
+      } catch (err) {
+        console.error('[DASHBOARD] Error loading dashboard data:', err);
+        setDashboardData({
+          stats: null,
+          mealCount: 0,
+          exerciseSessions: 0,
+          macros: {
+            protein: { current: 0, target: 0, label: 'Proteínas' },
+            carbs: { current: 0, target: 0, label: 'Carbos' },
+            fat: { current: 0, target: 0, label: 'Grasas' },
+          },
+          weeklyChart: [],
+        });
+      } finally {
+        setIsStatsLoading(false);
+      }
+    }
+
+    loadDashboardData();
+  }, [user, refreshKey]);
+
   if (isLoading || !user) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <LoadingSpinner size="lg" text="Preparando tu espacio..." />
-        </div>
-      </DashboardLayout>
-    );
+    return <DashboardSkeleton />;
   }
 
-  // Cálculos iniciales
   const calorieGoal = user.calorieGoal || 2000;
-  // Valores calculados temporalmente para simular el dashboard vivo
-  const macros = {
-    protein: { current: 45, target: 120, label: 'Proteínas' },
-    carbs: { current: 180, target: 250, label: 'Carbos' },
-    fat: { current: 30, target: 65, label: 'Grasas' }
+  const caloriesConsumed = dashboardData?.stats?.caloriesConsumed || 0;
+  const caloriesBurned = dashboardData?.stats?.caloriesBurned || 0;
+  const waterMl = dashboardData?.stats?.waterMl || 0;
+  const mealCount = dashboardData?.mealCount || 0;
+  const exerciseSessions = dashboardData?.exerciseSessions || 0;
+  const macros = dashboardData?.macros || {
+    protein: { current: 0, target: 0, label: 'Proteínas' },
+    carbs: { current: 0, target: 0, label: 'Carbos' },
+    fat: { current: 0, target: 0, label: 'Grasas' },
   };
+  const weeklyChart = dashboardData?.weeklyChart || [];
+
+  const calorieProgress = calorieGoal > 0 ? Math.min(Math.round((caloriesConsumed / calorieGoal) * 100), 100) : 0;
+  const waterProgress = Math.min(Math.round((waterMl / 2500) * 100), 100);
+  const mealProgress = Math.min(Math.round((mealCount / 4) * 100), 100);
+  const exerciseProgress = exerciseSessions > 0 ? 100 : 0;
+
+  const handleRefresh = () => setRefreshKey(k => k + 1);
 
   return (
     <DashboardLayout>
-      <motion.div 
+      <motion.div
         className="space-y-8"
         variants={containerVariants}
         initial="hidden"
@@ -73,9 +200,20 @@ export default function DashboardPage() {
       >
         {/* Header Animado */}
         <motion.div variants={itemVariants} className="flex flex-col gap-2">
-          <h1 className="text-5xl font-heading font-extrabold text-slate-900 tracking-tighter">
-            Hola, {user?.name ? user.name.split(' ')[0] : 'Usuario'} 👋
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-5xl font-heading font-extrabold text-slate-900 tracking-tighter">
+              Hola, {user?.name ? user.name.split(' ')[0] : 'Usuario'} 👋
+            </h1>
+            <button
+              onClick={handleRefresh}
+              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors"
+              title="Actualizar datos"
+            >
+              <svg className={`h-5 w-5 text-slate-600 ${isStatsLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
           <p className="text-lg text-slate-500 font-medium">
             Tu progreso de hoy está luciendo excelente. Sigue así.
           </p>
@@ -107,33 +245,33 @@ export default function DashboardPage() {
           <StatCard
             icon={<Flame className="h-6 w-6 text-orange-500 drop-shadow-sm" />}
             title="Calorías"
-            value="1,240"
-            subtitle={`de ${calorieGoal} kcal`}
-            progress={62}
+            value={caloriesConsumed.toLocaleString()}
+            subtitle={`de ${calorieGoal.toLocaleString()} kcal`}
+            progress={calorieProgress}
             color="orange"
           />
           <StatCard
             icon={<Droplets className="h-6 w-6 text-blue-500 drop-shadow-sm" />}
             title="Hidratación"
-            value="1.2L"
+            value={`${(waterMl / 1000).toFixed(1)}L`}
             subtitle="objetivo: 2.5L"
-            progress={48}
+            progress={waterProgress}
             color="blue"
           />
           <StatCard
             icon={<Utensils className="h-6 w-6 text-emerald-500 drop-shadow-sm" />}
             title="Comidas"
-            value="3"
+            value={String(mealCount)}
             subtitle="registradas hoy"
-            progress={75}
+            progress={mealProgress}
             color="emerald"
           />
           <StatCard
             icon={<Dumbbell className="h-6 w-6 text-purple-500 drop-shadow-sm" />}
             title="Actividad"
-            value="450"
-            subtitle="kcal quemadas hoy"
-            progress={100}
+            value={caloriesBurned > 0 ? caloriesBurned.toLocaleString() : String(exerciseSessions)}
+            subtitle={caloriesBurned > 0 ? "kcal quemadas hoy" : "sesiones hoy"}
+            progress={exerciseProgress}
             color="purple"
           />
         </motion.div>
@@ -151,29 +289,39 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={weeklyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorConsumidas" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorQuemadas" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#3f3f46" opacity={0.2} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 12 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 12 }} />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
-                    itemStyle={{ fontWeight: 600 }}
-                  />
-                  <Area type="monotone" dataKey="consumidas" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorConsumidas)" />
-                  <Area type="monotone" dataKey="quemadas" stroke="#f59e0b" strokeWidth={3} fillOpacity={1} fill="url(#colorQuemadas)" />
-                </AreaChart>
-              </ResponsiveContainer>
+              {weeklyChart.length > 0 && weeklyChart.some(d => d.consumed > 0 || d.burned > 0) ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={weeklyChart} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorConsumidas" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorQuemadas" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#3f3f46" opacity={0.2} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 12 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 12 }} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
+                      itemStyle={{ fontWeight: 600 }}
+                    />
+                    <Area type="monotone" dataKey="consumed" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorConsumidas)" />
+                    <Area type="monotone" dataKey="burned" stroke="#f59e0b" strokeWidth={3} fillOpacity={1} fill="url(#colorQuemadas)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-slate-400">
+                  <div className="text-center">
+                    <TrendingUp className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                    <p className="text-sm font-medium">Sin datos esta semana</p>
+                    <p className="text-xs text-slate-400 mt-1">Registra alimentos y ejercicio para ver tu progreso</p>
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -186,7 +334,7 @@ export default function DashboardPage() {
             
             <div className="flex-1 space-y-6 flex flex-col justify-center">
               {Object.entries(macros).map(([key, data]) => {
-                const percentage = Math.min(100, Math.round((data.current / data.target) * 100));
+                const percentage = data.target > 0 ? Math.min(100, Math.round((data.current / data.target) * 100)) : 0;
                 return (
                   <div key={key} className="space-y-2">
                     <div className="flex justify-between items-end text-sm">
@@ -194,7 +342,7 @@ export default function DashboardPage() {
                       <span className="text-slate-500"><strong className="text-slate-900">{data.current}g</strong> / {data.target}g</span>
                     </div>
                     <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <motion.div 
+                      <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${percentage}%` }}
                         transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
@@ -206,6 +354,11 @@ export default function DashboardPage() {
                   </div>
                 );
               })}
+              {Object.values(macros).every(m => m.target === 0) && (
+                <div className="flex items-center justify-center h-full text-slate-400 text-sm">
+                  Sin datos aún — registra tu primera comida
+                </div>
+              )}
             </div>
             
             <button

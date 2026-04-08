@@ -248,7 +248,7 @@ interface AvatarSelectorProps {
   currentAvatar?: string | null;
   currentType?: string | null;
   onSelectPreset: (presetId: string) => void;
-  onUploadImage: (file: File) => void;
+  onUploadImage: (dataUrl: string) => void;
   onUseInitials: () => void;
 }
 
@@ -261,15 +261,30 @@ export function AvatarSelector({ currentAvatar, currentType, onSelectPreset, onU
     if (!file) return;
 
     if (!file.type.startsWith('image/')) return;
-    if (file.size > 2 * 1024 * 1024) {
-      alert('La imagen debe ser menor a 2MB');
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen debe ser menor a 5MB');
       return;
     }
 
     const reader = new FileReader();
-    reader.onload = () => {
-      setPreviewUrl(reader.result as string);
-      onUploadImage(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 256;
+        const scaleSize = MAX_WIDTH / img.width;
+        canvas.width = MAX_WIDTH;
+        canvas.height = img.height * scaleSize;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          setPreviewUrl(dataUrl);
+          onUploadImage(dataUrl);
+        }
+      };
+      img.onerror = () => alert('Error procesando imagen');
     };
     reader.readAsDataURL(file);
   };

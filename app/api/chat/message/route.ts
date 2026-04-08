@@ -3,7 +3,7 @@ import { getCurrentUser } from '@/lib/auth-mysql';
 import { query } from '@/lib/mysql';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,8 +12,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
+    if (!GEMINI_API_KEY) {
+      console.error('[CHAT] GEMINI_API_KEY not configured');
+      return NextResponse.json(
+        { error: 'API de IA no configurada. Contacta al administrador.' },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
-    const { message, conversationHistory = [] } = body;
+    const { message, conversationHistory = [], conversationId } = body;
 
     if (!message || !message.trim()) {
       return NextResponse.json(
@@ -25,7 +33,7 @@ export async function POST(request: NextRequest) {
     // Verificar límite de mensajes (15 cada 5 horas para free, ilimitado premium/pro)
     const now = new Date();
     const fiveHoursAgo = new Date(now.getTime() - 5 * 60 * 60 * 1000);
-    
+
     const [messageCount] = await query(
       'SELECT COUNT(*) as count FROM chat_messages WHERE user_id = ? AND created_at >= ?',
       [user._id, fiveHoursAgo]
@@ -37,9 +45,8 @@ export async function POST(request: NextRequest) {
     const windowHours = 5;
 
     if (messagesInWindow >= windowLimit) {
-      // Calcular cuándo puede enviar otro mensaje
       const [oldestMessage] = await query(`
-        SELECT created_at FROM chat_messages 
+        SELECT created_at FROM chat_messages
         WHERE user_id = ? AND created_at >= ?
         ORDER BY created_at ASC
         LIMIT 1
@@ -71,43 +78,64 @@ export async function POST(request: NextRequest) {
 
     // Guardar mensaje del usuario
     const userMsgId = crypto.randomUUID();
-    await query(`
-      INSERT INTO chat_messages (id, user_id, role, content, created_at)
-      VALUES (?, ?, 'user', ?, NOW())
-    `, [userMsgId, user._id, message]);
+    const activeConvId = conversationId || crypto.randomUUID();
+    console.log('[CHAT] conversationId:', conversationId, 'activeConvId:', activeConvId);
 
-    // Construir prompt con contexto del usuario
-    const userContext = `
-Eres un asistente de nutrición y salud experto llamado NutriBot, integrado en NutriFlow.
+    await query(`
+      INSERT INTO chat_messages (id, user_id, role, content, conversation_id, created_at)
+      VALUES (?, ?, 'user', ?, ?, NOW())
+    `, [userMsgId, user._id, message, activeConvId]);
+
+    // Build prompt safely with fallbacks
+    const userName = user.name || 'Usuario';
+    const userAge = user.age || 25;
+    const userWeight = user.weight || 70;
+    const userHeight = user.height || 170;
+    const userSex = user.sex || 'male';
+    const userGoal = user.goal || 'maintain';
+    const userActivity = user.activityLevel || 'moderate';
+    const userCalorieGoal = user.calorieGoal || 2000;
+    const userPlan = user.subscriptionPlan || 'free';
+
+    const goalText = userGoal === 'lose' ? 'Perder peso' : userGoal === 'gain' ? 'Ganar músculo' : 'Mantener peso';
+
+    const conversationContext = conversationHistory.length > 0
+      ? conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')
+      : '(Sin historial previo)';
+
+    const userContext = `Eres un asistente de nutrición y salud experto llamado NutriBot, integrado en NutriFlow.
 
 Contexto del usuario:
-- Nombre: ${user.name}
-- Edad: ${user.age} años
-- Peso: ${user.weight} kg
-- Altura: ${user.height} cm
-- Sexo: ${user.sex}
-- Objetivo: ${user.goal === 'lose' ? 'Perder peso' : user.goal === 'gain' ? 'Ganar músculo' : 'Mantener peso'}
-- Nivel de actividad: ${user.activityLevel}
-- Calorías objetivo: ${user.calorieGoal} kcal/día
-- Plan: ${user.subscriptionPlan}
+- Nombre: ${userName}
+- Edad: ${userAge} años
+- Peso: ${userWeight} kg
+- Altura: ${userHeight} cm
+- Sexo: ${userSex}
+- Objetivo: ${goalText}
+- Nivel de actividad: ${userActivity}
+- Calorías objetivo: ${userCalorieGoal} kcal/día
+- Plan: ${userPlan}
 
 Instrucciones:
 1. Responde en español de manera clara y concisa
 2. Basa tus respuestas en evidencia científica
 3. Sé empático y motivador
 4. Si te preguntan sobre condiciones médicas, recomienda consultar un profesional
-5. Mantén las respuestas entre 2-4 párrafos
-6. Usa formato markdown cuando sea útil (listas, negritas)
-7. Personaliza las respuestas con los datos del usuario
+5. Mantén las respuestas entre 3-5 párrafos máximo — NO te cortes a mitad de respuesta
+6. Si la respuesta es larga, ve al punto y luego da detalles
+7. Usa formato markdown cuando sea útil (listas, negritas)
+8. Personaliza las respuestas con los datos del usuario
+9. IMPORTANTE: Termina SIEMPRE tu respuesta de forma completa. No dejes frases inconclusas.
 
 Historial de conversación:
-${conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')}
+${conversationContext}
 
 Mensaje del usuario: ${message}
 
 Respuesta de NutriBot:`;
 
-    // Llamar a Gemini API
+    // Call Gemini API
+    console.log('[CHAT] Calling Gemini API...');
     const geminiResponse = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
@@ -123,53 +151,53 @@ Respuesta de NutriBot:`;
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 4096,
         },
         safetySettings: [
-          {
-            category: 'HARM_CATEGORY_HARASSMENT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_HATE_SPEECH',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          }
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
         ]
       }),
     });
 
     if (!geminiResponse.ok) {
-      const errorData = await geminiResponse.json();
-      console.error('Gemini API Error:', errorData);
-      throw new Error(errorData.error?.message || 'Error en Gemini API');
+      const errorData = await geminiResponse.json().catch(() => ({}));
+      console.error('[CHAT] Gemini API Error:', geminiResponse.status, JSON.stringify(errorData));
+      throw new Error(`Gemini API error: ${errorData?.error?.message || geminiResponse.statusText || 'Unknown error'}`);
     }
 
     const geminiData = await geminiResponse.json();
-    
-    // Extraer respuesta de Gemini
+    console.log('[CHAT] Gemini response received');
+
+    // Extract response
     let assistantMessage = '';
     if (geminiData.candidates && geminiData.candidates.length > 0) {
-      assistantMessage = geminiData.candidates[0].content?.parts?.[0]?.text || 'Lo siento, no pude generar una respuesta.';
+      const candidate = geminiData.candidates[0];
+      console.log('[CHAT] finishReason:', candidate.finishReason);
+      console.log('[CHAT] tokenCount:', candidate.tokenCount, 'thoughtsTokenCount:', geminiData.usageMetadata?.thoughtsTokenCount);
+      if (candidate.content?.parts?.[0]?.text) {
+        assistantMessage = candidate.content.parts[0].text;
+      } else if (candidate.finishReason === 'SAFETY') {
+        assistantMessage = '⚠️ Tu mensaje fue bloqueado por las políticas de seguridad. Por favor reformula tu pregunta.';
+      } else if (candidate.finishReason === 'MAX_TOKENS') {
+        assistantMessage = '⚠️ La respuesta fue demasiado larga. Intenta hacer una pregunta más específica.';
+      } else {
+        assistantMessage = 'Lo siento, no pude generar una respuesta.';
+      }
     } else {
       assistantMessage = 'Lo siento, ocurrió un error al procesar tu mensaje.';
     }
 
-    // Guardar respuesta del asistente
+    // Save assistant response
     const assistantMsgId = crypto.randomUUID();
     await query(`
-      INSERT INTO chat_messages (id, user_id, role, content, created_at)
-      VALUES (?, ?, 'assistant', ?, NOW())
-    `, [assistantMsgId, user._id, assistantMessage]);
+      INSERT INTO chat_messages (id, user_id, role, content, conversation_id, created_at)
+      VALUES (?, ?, 'assistant', ?, ?, NOW())
+    `, [assistantMsgId, user._id, assistantMessage, activeConvId]);
 
-    // Obtener conteo actualizado
+    // Get updated count
     const [updatedCount] = await query(
       'SELECT COUNT(*) as count FROM chat_messages WHERE user_id = ? AND created_at >= ?',
       [user._id, fiveHoursAgo]
@@ -181,6 +209,7 @@ Respuesta de NutriBot:`;
     return NextResponse.json({
       success: true,
       message: assistantMessage,
+      conversationId: activeConvId,
       conversation: [
         ...conversationHistory,
         { role: 'user', content: message },
@@ -195,9 +224,9 @@ Respuesta de NutriBot:`;
       },
     });
   } catch (error: any) {
-    console.error('Error in chat:', error);
+    console.error('[CHAT] Error processing message:', error.message);
     return NextResponse.json(
-      { 
+      {
         error: 'Error procesando mensaje',
         message: error.message || 'Error interno del servidor'
       },

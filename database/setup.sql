@@ -178,12 +178,15 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     user_id CHAR(36) NOT NULL,
     session_id VARCHAR(100) NOT NULL,
+    conversation_id VARCHAR(100) NULL,
+    context_snapshot JSON NULL,
     role ENUM('user', 'assistant', 'system') NOT NULL,
     content TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
+
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_user_session (user_id, session_id),
+    INDEX idx_conversation (user_id, conversation_id),
     INDEX idx_created (created_at)
 ) ENGINE=InnoDB;
 

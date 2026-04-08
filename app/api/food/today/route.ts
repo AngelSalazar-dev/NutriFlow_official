@@ -18,12 +18,14 @@ export async function GET(request: NextRequest) {
     const [rows] = await query(`
       SELECT 
         id,
-        custom_food_name as foodName,
+        food_name as foodName,
+        brand,
         calories,
         protein_g as protein,
         carbs_g as carbs,
         fat_g as fat,
         serving_size_g as servingSize,
+        serving_name as servingName,
         meal_type as mealType,
         log_date as date,
         is_custom_food as isCustom,

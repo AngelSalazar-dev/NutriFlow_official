@@ -1,20 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/mysql';
-import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy');
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+const isSimulationMode = !stripeSecretKey || stripeSecretKey.includes('dummy') || stripeSecretKey.includes('your_stripe');
 
 export async function POST(request: NextRequest) {
+  // In simulation mode, webhooks are not needed (subscription is activated directly in create-checkout)
+  if (isSimulationMode) {
+    return NextResponse.json({ received: true, simulated: true });
+  }
+
+  const Stripe = (await import('stripe')).default;
+  const stripe = new Stripe(stripeSecretKey!);
+
   const body = await request.text();
   const signature = request.headers.get('stripe-signature') || '';
 
-  let event: Stripe.Event;
+  let event: { type: string; data: { object: Record<string, unknown> } };
 
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
-    console.error('Webhook signature verification failed:', err);
+    console.error('[WEBHOOK] Signature verification failed:', err);
     return NextResponse.json(
       { error: 'Webhook signature verification failed' },
       { status: 400 }
@@ -56,7 +64,7 @@ export async function POST(request: NextRequest) {
       }
 
       case 'customer.subscription.updated': {
-        const subscription = event.data.object as Stripe.Subscription;
+        const subscription = event.data.object as import('stripe').Stripe.Subscription;
 
         const status = subscription.status;
         const subscriptionId = subscription.id;
@@ -105,7 +113,7 @@ export async function POST(request: NextRequest) {
       }
 
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
+        const subscription = event.data.object as import('stripe').Stripe.Subscription;
         const subscriptionId = subscription.id;
 
         const [rows] = await query(

@@ -31,7 +31,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUser = async () => {
     try {
-      const res = await fetch('/api/auth/me', { cache: 'no-store' });
+      const res = await fetch('/api/auth/me', {
+        credentials: 'include',
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.user) {
@@ -48,26 +50,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = React.useCallback(async (email: string, password: string, redirectTo?: string) => {
     const normalizedEmail = email.replace(/\s+/g, '').toLowerCase();
     console.log('[AuthContext] Login attempt:', { email: normalizedEmail, passwordLength: password.length });
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: normalizedEmail, password }),
-      credentials: 'include',
-    });
+    
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalizedEmail, password }),
+        credentials: 'include',
+      });
 
-    if (!res.ok) {
+      if (!res.ok) {
+        const data = await res.json();
+        console.error('[AuthContext] Login failed:', data, 'Status:', res.status);
+        throw new Error(data.error || 'Error al iniciar sesión');
+      }
+
       const data = await res.json();
-      console.error('[AuthContext] Login failed:', data, 'Status:', res.status);
-      throw new Error(data.error || 'Error al iniciar sesión');
+      console.log('[AuthContext] Login success:', data.user?.email);
+      setUser(data.user);
+
+      const redirectUrl = redirectTo || '/dashboard';
+      router.push(redirectUrl);
+      router.refresh();
+    } catch (err: any) {
+      if (err instanceof TypeError && err.message === 'Failed to fetch') {
+        console.error('[AuthContext] Fetch failed - Is the server running?');
+        throw new Error('No se pudo conectar con el servidor. Verifica que el servidor de desarrollo esté funcionando.');
+      }
+      console.error('[AuthContext] Login error:', err);
+      throw err;
     }
-
-    const data = await res.json();
-    console.log('[AuthContext] Login success:', data.user?.email);
-    setUser(data.user);
-
-    const redirectUrl = redirectTo || '/dashboard';
-    router.push(redirectUrl);
-    router.refresh();
   }, [router]);
 
   const register = React.useCallback(async (data: any) => {
@@ -100,20 +112,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateUser = React.useCallback(async (data: Partial<User>) => {
     if (!user) return;
 
-    const res = await fetch('/api/auth/profile', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-      credentials: 'include',
-    });
+    try {
+      const res = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include',
+      });
 
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.error || 'Error al actualizar');
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error('[AuthContext] Update profile failed:', errorData);
+        throw new Error(errorData.error || 'Error al actualizar');
+      }
+
+      const result = await res.json();
+      setUser(result.user);
+    } catch (err: any) {
+      if (err instanceof TypeError && err.message === 'Failed to fetch') {
+        throw new Error('No se pudo conectar con el servidor. Verifica que el servidor esté funcionando.');
+      }
+      console.error('[AuthContext] Update profile error:', err);
+      throw err;
     }
-
-    const result = await res.json();
-    setUser(result.user);
   }, [user]);
 
   const updateAvatar = React.useCallback(async (avatarType: 'initials' | 'preset' | 'custom', avatarUrl?: string) => {
@@ -138,7 +159,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkChatLimit = React.useCallback(async () => {
     try {
-      const res = await fetch('/api/chat/limit');
+      const res = await fetch('/api/chat/limit', {
+        credentials: 'include',
+      });
       if (!res.ok) {
         return { allowed: false, remaining: 0, limit: 15, used: 15 };
       }

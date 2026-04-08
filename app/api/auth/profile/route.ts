@@ -22,6 +22,8 @@ interface UserRow {
   protein_goal: number | null;
   carb_goal: number | null;
   fat_goal: number | null;
+  avatar_url: string | null;
+  avatar_type: string | null;
   created_at: string | null;
   updated_at: string | null;
 }
@@ -52,6 +54,8 @@ export async function GET() {
         proteinGoal: user.proteinGoal,
         carbGoal: user.carbGoal,
         fatGoal: user.fatGoal,
+        avatarUrl: user.avatarUrl,
+        avatarType: user.avatarType,
         createdAt: user.createdAt,
       },
     });
@@ -79,28 +83,57 @@ export async function PUT(request: NextRequest) {
 
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
-        // Convert camelCase to snake_case for database
-        const dbField = field.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+        // Handle specific database column names for weight and height
+        let dbField;
+        if (field === 'weight') {
+          dbField = 'weight_kg';
+        } else if (field === 'height') {
+          dbField = 'height_cm';
+        } else {
+          // Convert camelCase to snake_case for other fields (e.g., activityLevel -> activity_level)
+          dbField = field.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+        }
         updateData[dbField] = body[field];
       }
     }
 
     // Recalculate profile if weight, height, age, sex, activityLevel or goal changed
-    if (updateData.weight_kg || updateData.height_cm || updateData.age || updateData.sex || updateData.activity_level || updateData.goal) {
-      const profile = calculateUserProfile(
-        Number(updateData.weight_kg ?? user.weight),
-        Number(updateData.height_cm ?? user.height),
-        Number(updateData.age ?? user.age),
-        ((updateData.sex as 'male' | 'female') || user.sex) as 'male' | 'female',
-        ((updateData.activity_level as ActivityLevel) || user.activityLevel) as ActivityLevel,
-        ((updateData.goal as Goal) || user.goal) as Goal
-      );
-      updateData.bmr = profile.bmr;
-      updateData.tdee = profile.tdee;
-      updateData.daily_calorie_target = profile.calorieGoal;
-      updateData.protein_goal = profile.proteinGoal;
-      updateData.carb_goal = profile.carbGoal;
-      updateData.fat_goal = profile.fatGoal;
+    // Only recalculate if we have ALL required fields
+    const needsRecalculation = updateData.weight_kg !== undefined || 
+                               updateData.height_cm !== undefined || 
+                               updateData.age !== undefined || 
+                               updateData.sex !== undefined || 
+                               updateData.activity_level !== undefined || 
+                               updateData.goal !== undefined;
+
+    if (needsRecalculation) {
+      const w = updateData.weight_kg !== undefined ? Number(updateData.weight_kg) : (user.weight ? Number(user.weight) : 0);
+      const h = updateData.height_cm !== undefined ? Number(updateData.height_cm) : (user.height ? Number(user.height) : 0);
+      const a = updateData.age !== undefined ? Number(updateData.age) : Number(user.age || 0);
+      const s = (updateData.sex as 'male' | 'female') || user.sex;
+      const al = (updateData.activity_level as ActivityLevel) || user.activityLevel;
+      const g = (updateData.goal as Goal) || user.goal;
+
+      console.log('[Profile] calculateUserProfile params:', { w, h, a, s, al, g });
+
+      // Only recalculate if we have ALL required fields available
+      if (w && h && a && s && al && g) {
+        try {
+          const profile = calculateUserProfile(w, h, a, s as 'male' | 'female', al, g);
+          updateData.bmr = profile.bmr;
+          updateData.tdee = profile.tdee;
+          updateData.daily_calorie_target = profile.calorieGoal;
+          updateData.protein_goal = profile.proteinGoal;
+          updateData.carb_goal = profile.carbGoal;
+          updateData.fat_goal = profile.fatGoal;
+          console.log('[Profile] Calculated new profile stats:', profile);
+        } catch (calcError) {
+          console.error('[Profile] Error calculating profile:', calcError);
+          // Continue with update without recalculating
+        }
+      } else {
+        console.warn('[Profile] Skipping profile calculation - missing required fields:', { w, h, a, s, al, g });
+      }
     }
 
     updateData.updated_at = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -116,11 +149,11 @@ export async function PUT(request: NextRequest) {
 
     values.push(user._id);
 
-    await query(`
-      UPDATE users
-      SET ${setClauses.join(', ')}
-      WHERE id = ?
-    `, values);
+    const sql = `UPDATE users SET ${setClauses.join(', ')} WHERE id = ?`;
+    console.log('[Profile] Final SQL:', sql);
+    console.log('[Profile] Final Values:', values);
+
+    await query(sql, values);
 
     // Fetch updated user
     const [rows] = await query(`
@@ -128,7 +161,7 @@ export async function PUT(request: NextRequest) {
         id, email, name, age, weight_kg, height_cm,
         sex, activity_level, goal, subscription_plan,
         subscription_end, daily_calorie_target, tdee, bmr,
-        protein_goal, carb_goal, fat_goal, created_at
+        protein_goal, carb_goal, fat_goal, avatar_url, avatar_type, created_at
       FROM users
       WHERE id = ?
     `, [user._id]);
@@ -161,6 +194,8 @@ export async function PUT(request: NextRequest) {
         proteinGoal: updatedUser.protein_goal,
         carbGoal: updatedUser.carb_goal,
         fatGoal: updatedUser.fat_goal,
+        avatarUrl: updatedUser.avatar_url,
+        avatarType: updatedUser.avatar_type,
         createdAt: updatedUser.created_at,
       },
     });

@@ -14,6 +14,9 @@ export interface FoodItem {
   fiber: number; // gramos por 100g
   servingSize: number; // porción común en gramos
   servingName: string; // nombre de la porción
+  brand?: string;
+  isVerified?: boolean;
+  dataSource?: string;
 }
 
 export const FOOD_DATABASE: FoodItem[] = [
@@ -552,7 +555,7 @@ export const FOOD_DATABASE: FoodItem[] = [
   },
   {
     id: 'fast-003',
-    name: 'Tacos',
+    name: 'Taco',
     category: 'comida_rapida',
     calories: 210,
     protein: 9,
@@ -574,6 +577,58 @@ export const FOOD_DATABASE: FoodItem[] = [
     servingSize: 243,
     servingName: '1 plato',
   },
+
+  // ═══════════════════════════════════════
+  // COMIDA MEXICANA (offline fallback)
+  // ═══════════════════════════════════════
+  { id: 'mex-taco-01', name: 'Taco de Camarón', category: 'tacos', calories: 175, protein: 12, carbs: 18, fat: 6, fiber: 2, servingSize: 85, servingName: '1 taco', isVerified: true },
+  { id: 'mex-taco-02', name: 'Taco de Marlín', category: 'tacos', calories: 190, protein: 14, carbs: 18, fat: 7, fiber: 2, servingSize: 85, servingName: '1 taco', isVerified: true },
+  { id: 'mex-taco-03', name: 'Taco de Pastor', category: 'tacos', calories: 225, protein: 11, carbs: 20, fat: 11, fiber: 2, servingSize: 85, servingName: '1 taco', isVerified: true },
+  { id: 'mex-taco-04', name: 'Taco de Pollo', category: 'tacos', calories: 165, protein: 11, carbs: 17, fat: 6, fiber: 2, servingSize: 85, servingName: '1 taco', isVerified: true },
+  { id: 'mex-taco-05', name: 'Taco de Carne Asada', category: 'tacos', calories: 210, protein: 13, carbs: 17, fat: 10, fiber: 2, servingSize: 85, servingName: '1 taco', isVerified: true },
+  { id: 'mex-taco-06', name: 'Taco de Carnitas', category: 'tacos', calories: 245, protein: 11, carbs: 17, fat: 14, fiber: 2, servingSize: 85, servingName: '1 taco', isVerified: true },
+  { id: 'mex-taco-07', name: 'Taco de Birria', category: 'tacos', calories: 235, protein: 13, carbs: 17, fat: 13, fiber: 2, servingSize: 85, servingName: '1 taco', isVerified: true },
+  { id: 'mex-taco-08', name: 'Taco de Suizo', category: 'tacos', calories: 240, protein: 13, carbs: 19, fat: 12, fiber: 2, servingSize: 85, servingName: '1 taco', isVerified: true },
+  { id: 'mex-anto-01', name: 'Chilaquiles Rojos', category: 'antojitos', calories: 230, protein: 10, carbs: 25, fat: 10, fiber: 3, servingSize: 250, servingName: '1 plato', isVerified: true },
+  { id: 'mex-anto-02', name: 'Chilaquiles Verdes', category: 'antojitos', calories: 220, protein: 10, carbs: 24, fat: 9, fiber: 3, servingSize: 250, servingName: '1 plato', isVerified: true },
+  { id: 'mex-anto-03', name: 'Enchiladas Rojas', category: 'antojitos', calories: 210, protein: 12, carbs: 20, fat: 9, fiber: 3, servingSize: 150, servingName: '1 enchilada', isVerified: true },
+  { id: 'mex-anto-04', name: 'Enchiladas Verdes', category: 'antojitos', calories: 195, protein: 12, carbs: 19, fat: 8, fiber: 3, servingSize: 150, servingName: '1 enchilada', isVerified: true },
+  { id: 'mex-anto-05', name: 'Quesadilla de Queso', category: 'antojitos', calories: 280, protein: 14, carbs: 28, fat: 13, fiber: 2, servingSize: 100, servingName: '1 quesadilla', isVerified: true },
+  { id: 'mex-anto-06', name: 'Tamal de Pollo', category: 'antojitos', calories: 240, protein: 9, carbs: 30, fat: 10, fiber: 2, servingSize: 200, servingName: '1 tamal', isVerified: true },
+  { id: 'mex-anto-07', name: 'Gordita de Chicharrón', category: 'antojitos', calories: 250, protein: 11, carbs: 24, fat: 12, fiber: 3, servingSize: 130, servingName: '1 gordita', isVerified: true },
+  { id: 'mex-anto-08', name: 'Sope de Pollo', category: 'antojitos', calories: 220, protein: 10, carbs: 24, fat: 9, fiber: 3, servingSize: 120, servingName: '1 sope', isVerified: true },
+  { id: 'mex-anto-09', name: 'Tostada de Tinga', category: 'antojitos', calories: 210, protein: 11, carbs: 20, fat: 9, fiber: 3, servingSize: 80, servingName: '1 tostada', isVerified: true },
+  { id: 'mex-mar-01', name: 'Camarón a la Plancha', category: 'mariscos', calories: 99, protein: 21, carbs: 0.2, fat: 1.4, fiber: 0, servingSize: 100, servingName: '100g', isVerified: true },
+  { id: 'mex-mar-02', name: 'Aguachile de Camarón', category: 'mariscos', calories: 95, protein: 15, carbs: 5, fat: 2, fiber: 1, servingSize: 200, servingName: '1 porción', isVerified: true },
+  { id: 'mex-mar-03', name: 'Ceviche de Camarón', category: 'mariscos', calories: 100, protein: 16, carbs: 6, fat: 2, fiber: 1, servingSize: 200, servingName: '1 porción', isVerified: true },
+  { id: 'mex-mar-04', name: 'Coctel de Camarón', category: 'mariscos', calories: 110, protein: 14, carbs: 10, fat: 2, fiber: 1, servingSize: 250, servingName: '1 vaso', isVerified: true },
+  { id: 'mex-mar-05', name: 'Marlín a la Plancha', category: 'mariscos', calories: 140, protein: 25, carbs: 0, fat: 4, fiber: 0, servingSize: 150, servingName: '1 filete', isVerified: true },
+  { id: 'mex-mar-06', name: 'Tostada de Ceviche', category: 'mariscos', calories: 130, protein: 10, carbs: 16, fat: 3, fiber: 2, servingSize: 50, servingName: '1 tostada', isVerified: true },
+  { id: 'mex-mar-07', name: 'Tostada de Camarón', category: 'mariscos', calories: 140, protein: 11, carbs: 16, fat: 4, fiber: 2, servingSize: 50, servingName: '1 tostada', isVerified: true },
+  { id: 'mex-mar-08', name: 'Tostada de Marlín', category: 'mariscos', calories: 155, protein: 13, carbs: 16, fat: 5, fiber: 2, servingSize: 50, servingName: '1 tostada', isVerified: true },
+  { id: 'mex-mar-09', name: 'Pescado Zarandeado', category: 'mariscos', calories: 180, protein: 22, carbs: 3, fat: 8, fiber: 1, servingSize: 200, servingName: '1 porción', isVerified: true },
+  { id: 'mex-sopa-01', name: 'Pozole Rojo', category: 'sopas', calories: 220, protein: 14, carbs: 24, fat: 7, fiber: 3, servingSize: 350, servingName: '1 plato', isVerified: true },
+  { id: 'mex-sopa-02', name: 'Menudo', category: 'sopas', calories: 180, protein: 14, carbs: 10, fat: 9, fiber: 2, servingSize: 300, servingName: '1 plato', isVerified: true },
+  { id: 'mex-sopa-03', name: 'Caldo Tlalpeño', category: 'sopas', calories: 150, protein: 12, carbs: 12, fat: 6, fiber: 2, servingSize: 300, servingName: '1 plato', isVerified: true },
+  { id: 'mex-sopa-04', name: 'Birria de Res', category: 'sopas', calories: 240, protein: 18, carbs: 8, fat: 15, fiber: 2, servingSize: 300, servingName: '1 plato', isVerified: true },
+  { id: 'mex-gui-01', name: 'Chiles en Nogada', category: 'guisados', calories: 320, protein: 12, carbs: 30, fat: 18, fiber: 4, servingSize: 250, servingName: '1 porción', isVerified: true },
+  { id: 'mex-gui-02', name: 'Mole Poblano con Pollo', category: 'guisados', calories: 310, protein: 18, carbs: 25, fat: 16, fiber: 3, servingSize: 250, servingName: '1 porción', isVerified: true },
+  { id: 'mex-gui-03', name: 'Chile Relleno de Queso', category: 'guisados', calories: 280, protein: 14, carbs: 18, fat: 17, fiber: 3, servingSize: 200, servingName: '1 chile', isVerified: true },
+  { id: 'mex-gui-04', name: 'Cochinita Pibil', category: 'guisados', calories: 260, protein: 18, carbs: 10, fat: 16, fiber: 2, servingSize: 150, servingName: '1 porción', isVerified: true },
+  { id: 'mex-gui-05', name: 'Tinga de Pollo', category: 'guisados', calories: 190, protein: 14, carbs: 8, fat: 11, fiber: 2, servingSize: 150, servingName: '1 porción', isVerified: true },
+  { id: 'mex-gui-06', name: 'Nopales con Huevo', category: 'guisados', calories: 150, protein: 10, carbs: 8, fat: 8, fiber: 4, servingSize: 200, servingName: '1 porción', isVerified: true },
+  { id: 'mex-gui-07', name: 'Huevos Rancheros', category: 'guisados', calories: 290, protein: 14, carbs: 22, fat: 16, fiber: 3, servingSize: 250, servingName: '1 porción', isVerified: true },
+  { id: 'mex-gui-08', name: 'Huevos con Chorizo', category: 'guisados', calories: 320, protein: 16, carbs: 2, fat: 28, fiber: 0, servingSize: 180, servingName: '1 porción', isVerified: true },
+  { id: 'mex-beb-01', name: 'Agua de Horchata', category: 'bebidas', calories: 80, protein: 1, carbs: 18, fat: 1, fiber: 0, servingSize: 250, servingName: '1 vaso', isVerified: true },
+  { id: 'mex-beb-02', name: 'Agua de Jamaica', category: 'bebidas', calories: 60, protein: 0, carbs: 15, fat: 0, fiber: 0, servingSize: 250, servingName: '1 vaso', isVerified: true },
+  { id: 'mex-beb-03', name: 'Atole', category: 'bebidas', calories: 120, protein: 3, carbs: 22, fat: 2, fiber: 1, servingSize: 250, servingName: '1 taza', isVerified: true },
+  { id: 'mex-bot-01', name: 'Guacamole', category: 'salsas', calories: 150, protein: 2, carbs: 9, fat: 14, fiber: 5, servingSize: 60, servingName: '1/4 taza', isVerified: true },
+  { id: 'mex-bot-02', name: 'Elote', category: 'botanas', calories: 180, protein: 5, carbs: 22, fat: 9, fiber: 3, servingSize: 150, servingName: '1 elote', isVerified: true },
+  { id: 'mex-bot-03', name: 'Esquite', category: 'botanas', calories: 160, protein: 4, carbs: 20, fat: 7, fiber: 3, servingSize: 200, servingName: '1 vaso', isVerified: true },
+  { id: 'mex-post-01', name: 'Flan Napolitano', category: 'postres', calories: 220, protein: 6, carbs: 30, fat: 9, fiber: 0, servingSize: 120, servingName: '1 rebanada', isVerified: true },
+  { id: 'mex-post-02', name: 'Churros', category: 'postres', calories: 350, protein: 5, carbs: 40, fat: 18, fiber: 1, servingSize: 80, servingName: '3 piezas', isVerified: true },
+  { id: 'mex-tort-01', name: 'Tortilla de Maíz', category: 'tortillas', calories: 218, protein: 6, carbs: 46, fat: 3, fiber: 6, servingSize: 24, servingName: '1 tortilla', isVerified: true },
+  { id: 'mex-tort-02', name: 'Tortilla de Harina', category: 'tortillas', calories: 304, protein: 8, carbs: 52, fat: 7, fiber: 2, servingSize: 40, servingName: '1 tortilla', isVerified: true },
 
   // Legumbres
   {

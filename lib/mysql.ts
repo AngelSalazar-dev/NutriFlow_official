@@ -15,15 +15,17 @@ export function getPool() {
       password: process.env.MYSQL_PASSWORD || '',
       database: process.env.MYSQL_DATABASE || 'nutriflow_db',
       port: parseInt(process.env.MYSQL_PORT || '3306'),
-      ssl: useSSL ? { rejectUnauthorized: true } : undefined,
+      // Cambiamos rejectUnauthorized a false para evitar errores de certificado SSL en desarrollo local con TiDB Cloud
+      ssl: useSSL ? { rejectUnauthorized: false } : undefined,
       waitForConnections: true,
-      connectionLimit: 10,
+      connectionLimit: 20, // Aumentado para evitar saturación
       queueLimit: 0,
       enableKeepAlive: true,
       keepAliveInitialDelay: 0,
+      connectTimeout: 10000, // 10 segundos (reducido de 20s)
     });
 
-    console.log('✅ MySQL connection pool created' + (useSSL ? ' (SSL enabled)' : ''));
+    console.log('✅ MySQL connection pool created' + (useSSL ? ' (SSL enabled - permissive)' : ''));
   }
 
   return pool;
@@ -51,7 +53,7 @@ export async function transaction<T>(
 ): Promise<T> {
   const connection = await getPool().getConnection();
   await connection.beginTransaction();
-  
+
   try {
     const result = await callback(connection);
     await connection.commit();

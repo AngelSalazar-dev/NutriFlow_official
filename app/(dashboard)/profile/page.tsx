@@ -148,20 +148,15 @@ export default function ProfilePage() {
     }
   };
 
-  const handleUploadImage = async (file: File) => {
+  const handleUploadImage = async (dataUrl: string) => {
     setIsAvatarLoading(true);
     setAvatarMessage('');
     try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const dataUrl = reader.result as string;
-        await updateAvatar('custom', dataUrl);
-        setAvatarType('custom');
-        setAvatarUrl(dataUrl);
-        setAvatarMessage('✅ Imagen subida correctamente');
-        setTimeout(() => setAvatarMessage(''), 3000);
-      };
-      reader.readAsDataURL(file);
+      await updateAvatar('custom', dataUrl);
+      setAvatarType('custom');
+      setAvatarUrl(dataUrl);
+      setAvatarMessage('✅ Imagen subida correctamente');
+      setTimeout(() => setAvatarMessage(''), 3000);
     } catch (err: any) {
       setAvatarMessage('❌ ' + (err.message || 'Error al subir imagen'));
     } finally {

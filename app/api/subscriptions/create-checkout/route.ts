@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-mysql';
-import Stripe from 'stripe';
+import { query } from '@/lib/mysql';
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const isSimulationMode = !stripeSecretKey || stripeSecretKey.includes('dummy') || stripeSecretKey.includes('your_stripe');
 
-if (!stripeSecretKey) {
-  console.error('STRIPE_SECRET_KEY is not configured');
-}
-
-const stripe = new Stripe(stripeSecretKey || 'sk_test_dummy');
-
-const PLAN_PRICES: Record<string, { price: number; name: string }> = {
-  premium: { price: 999, name: 'NutriFlow Premium' }, // $9.99 in cents
-  pro: { price: 1999, name: 'NutriFlow Pro' }, // $19.99 in cents
+const PLAN_PRICES: Record<string, { price: number; name: string; interval: string }> = {
+  premium: { price: 9.99, name: 'NutriFlow Premium', interval: 'month' },
+  pro: { price: 19.99, name: 'NutriFlow Pro', interval: 'month' },
 };
 
 export async function POST(request: NextRequest) {
@@ -29,7 +24,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Plan inválido' }, { status: 400 });
     }
 
-    // Create Stripe Checkout Session
+    // If Stripe is not configured, use simulation mode
+    if (isSimulationMode) {
+      console.log('[SUBSCRIPTION] Simulation mode: activating', planId, 'for user', user._id);
+
+      const subscriptionEnd = new Date();
+      subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 1);
+
+      await query(
+        `UPDATE users SET subscription_plan = ?, subscription_end = ?, updated_at = NOW() WHERE id = ?`,
+        [planId, subscriptionEnd, user._id]
+      );
+
+      // Also insert a subscription record for tracking
+      const [uuidResult] = await query('SELECT UUID() as id');
+      const subId = (uuidResult as any)[0].id;
+
+      await query(
+        `INSERT INTO subscriptions (id, user_id, plan, status, amount_cents, current_period_start, current_period_end, created_at)
+         VALUES (?, ?, ?, 'active', ?, NOW(), ?, NOW())`,
+        [subId, user._id, planId, Math.round(PLAN_PRICES[planId].price * 100), subscriptionEnd]
+      );
+
+      return NextResponse.json({
+        success: true,
+        simulated: true,
+        plan: planId,
+        message: `Plan ${planId} activado (modo simulación)`,
+      });
+    }
+
+    // Real Stripe flow
+    const Stripe = (await import('stripe')).default;
+    const stripe = new Stripe(stripeSecretKey!);
+
     const session = await stripe.checkout.sessions.create({
       customer_email: user.email,
       line_items: [
@@ -39,17 +67,17 @@ export async function POST(request: NextRequest) {
             product_data: {
               name: PLAN_PRICES[planId].name,
               description: 'Suscripción mensual',
-            } as Stripe.Checkout.SessionCreateParams.LineItem.PriceData.ProductData,
-            unit_amount: PLAN_PRICES[planId].price,
+            },
+            unit_amount: Math.round(PLAN_PRICES[planId].price * 100),
             recurring: {
-              interval: 'month',
-            } as Stripe.Checkout.SessionCreateParams.LineItem.PriceData.Recurring,
-          } as Stripe.Checkout.SessionCreateParams.LineItem.PriceData,
+              interval: PLAN_PRICES[planId].interval as 'month',
+            },
+          },
           quantity: 1,
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/subscription/success?session_id={CHECKOUT_SESSION_ID}&plan=${planId}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/subscription`,
       metadata: {
         userId: String(user._id),
@@ -59,7 +87,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    console.error('Error creating checkout session:', error);
+    console.error('[SUBSCRIPTION] Error creating checkout:', error);
     return NextResponse.json(
       { error: 'Error creando sesión de pago' },
       { status: 500 }

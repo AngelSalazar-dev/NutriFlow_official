@@ -37,34 +37,38 @@ export async function GET(request: NextRequest) {
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
 
-    const rows = await query(`
-      SELECT id, exercise_name, exercise_type, muscle_groups, met_value,
-             duration_min, calories_burned, notes, log_date, created_at
-      FROM exercise_logs
-      WHERE user_id = ? AND log_date BETWEEN ? AND ?
-      ORDER BY created_at DESC
-    `, [user._id, startDateStr, endDateStr]);
+    const rows = await query(
+      `SELECT id, exercise_name, exercise_type, muscle_groups, met_value,
+              duration_min, calories_burned, notes, log_date,
+              DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ') as created_at
+       FROM exercise_logs
+       WHERE user_id = ? AND log_date BETWEEN ? AND ?
+       ORDER BY log_date DESC, created_at DESC`,
+      [user._id, startDateStr, endDateStr]
+    );
+
+    console.log('[EXERCISE] Query returned', (rows as any[]).length, 'rows');
 
     const logs = (rows as unknown as ExerciseLog[]).map((log) => ({
       id: log.id,
       userId: log.user_id,
       exerciseName: log.exercise_name,
       exerciseType: log.exercise_type,
-      muscleGroups: log.muscle_groups ? JSON.parse(log.muscle_groups) : [],
-      metValue: log.met_value,
-      durationMin: log.duration_min,
-      caloriesBurned: log.calories_burned,
+      muscleGroups: Array.isArray(log.muscle_groups) ? log.muscle_groups : (log.muscle_groups ? JSON.parse(log.muscle_groups) : []),
+      metValue: Number(log.met_value) || 0,
+      durationMin: Number(log.duration_min) || 0,
+      caloriesBurned: Number(log.calories_burned) || 0,
       notes: log.notes,
       logDate: log.log_date,
-      createdAt: log.created_at,
+      createdAt: log.created_at || new Date().toISOString(),
     }));
 
     const totalCalories = logs.reduce((acc, log) => acc + log.caloriesBurned, 0);
 
     return NextResponse.json({
       logs: logs.map((log) => ({
+        id: log.id,
         _id: log.id,
-        userId: log.userId,
         exerciseName: log.exerciseName,
         exerciseType: log.exerciseType,
         muscleGroups: log.muscleGroups,
@@ -164,7 +168,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error adding exercise log:', error);
+    console.error('❌ [EXERCISE LOG] Error adding exercise:', error);
+    if ((error as any).sql) console.error('SQL:', (error as any).sql);
     return NextResponse.json(
       { error: 'Error adding exercise log: ' + message },
       { status: 500 }
