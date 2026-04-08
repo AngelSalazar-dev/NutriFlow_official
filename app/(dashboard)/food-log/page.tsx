@@ -59,6 +59,7 @@ interface FoodLog {
   carbs: number;
   fat: number;
   servingSize: number;
+  servingName?: string;
   mealType: string;
   date: string;
   isCustom: boolean;
