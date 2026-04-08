@@ -25,6 +25,8 @@ export async function GET() {
         goal: user.goal,
         subscriptionPlan: user.subscriptionPlan,
         calorieGoal: user.calorieGoal,
+        avatarUrl: user.avatarUrl,
+        avatarType: user.avatarType,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },

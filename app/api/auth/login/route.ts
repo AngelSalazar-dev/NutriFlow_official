@@ -104,6 +104,8 @@ export async function POST(request: NextRequest) {
         goal: user.goal,
         subscriptionPlan: user.subscription_plan,
         calorieGoal: user.daily_calorie_target,
+        avatarUrl: user.avatar_url,
+        avatarType: user.avatar_type,
         createdAt: user.created_at,
       },
     });
