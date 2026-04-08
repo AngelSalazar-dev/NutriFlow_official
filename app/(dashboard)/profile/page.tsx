@@ -82,6 +82,8 @@ export default function ProfilePage() {
         activityLevel: user.activityLevel || 'sedentary',
         goal: user.goal || 'maintain',
       });
+      setAvatarType(user.avatarType || 'initials');
+      setAvatarUrl(user.avatarUrl || null);
     }
   }, [user]);
 
