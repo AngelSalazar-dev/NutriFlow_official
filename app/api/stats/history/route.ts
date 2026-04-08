@@ -10,17 +10,19 @@ interface DailyStats {
   carbs: number;
   fat: number;
   waterMl: number;
+  exerciseCount: number;
+  exerciseNames: string;
 }
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json({ error: 'No authenticated' }, { status: 401 });
+      return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const days = parseInt(searchParams.get('days') || '7');
+    const days = Math.min(parseInt(searchParams.get('days') || '7'), 90);
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -44,72 +46,61 @@ export async function GET(request: NextRequest) {
         carbs: 0,
         fat: 0,
         waterMl: 0,
+        exerciseCount: 0,
+        exerciseNames: '',
       };
     }
 
-    // Get food logs for the period
-    const [foodLogs] = await query(`
-      SELECT calories, protein_g, carbs_g, fat_g, log_date
-      FROM food_logs
-      WHERE user_id = ? AND log_date BETWEEN ? AND ?
-    `, [user._id, startDateStr, todayStr]) as any[];
-
-    // Get daily logs for exercise calories
+    // 1. Get daily_logs (aggregated macros, water, exercise calories)
     const [dailyLogs] = await query(`
-      SELECT exercise_calories_burned, log_date
+      SELECT log_date, 
+        COALESCE(total_calories, 0) as calories,
+        COALESCE(total_protein, 0) as protein,
+        COALESCE(total_carbs, 0) as carbs,
+        COALESCE(total_fat, 0) as fat,
+        COALESCE(exercise_calories_burned, 0) as exercise_cals,
+        COALESCE(water_ml, 0) as water
       FROM daily_logs
       WHERE user_id = ? AND log_date BETWEEN ? AND ?
     `, [user._id, startDateStr, todayStr]) as any[];
 
-    // Get hydration logs for the period
-    const [waterLogs] = await query(`
-      SELECT amount_ml, log_date
-      FROM water_logs
+    // 2. Get exercise logs for session counts and names
+    const [exerciseLogs] = await query(`
+      SELECT log_date, exercise_name, duration_min, calories_burned
+      FROM exercise_logs
       WHERE user_id = ? AND log_date BETWEEN ? AND ?
+      ORDER BY created_at ASC
     `, [user._id, startDateStr, todayStr]) as any[];
 
-    // Aggregate food logs
-    const foodLogsArray = foodLogs as unknown as Array<{
-      calories: number;
-      protein_g: number;
-      carbs_g: number;
-      fat_g: number;
-      log_date: string;
-    }>;
-
-    for (const log of foodLogsArray) {
+    // Aggregate daily logs
+    for (const log of dailyLogs) {
       const dateKey = new Date(log.log_date).toISOString().split('T')[0];
       if (statsByDate[dateKey]) {
-        statsByDate[dateKey].caloriesConsumed += Number(log.calories) || 0;
-        statsByDate[dateKey].protein += Number(log.protein_g) || 0;
-        statsByDate[dateKey].carbs += Number(log.carbs_g) || 0;
-        statsByDate[dateKey].fat += Number(log.fat_g) || 0;
+        statsByDate[dateKey].caloriesConsumed = Number(log.calories) || 0;
+        statsByDate[dateKey].protein = Number(log.protein) || 0;
+        statsByDate[dateKey].carbs = Number(log.carbs) || 0;
+        statsByDate[dateKey].fat = Number(log.fat) || 0;
+        statsByDate[dateKey].caloriesBurned = Number(log.exercise_cals) || 0;
+        statsByDate[dateKey].waterMl = Number(log.water) || 0;
       }
     }
 
-    // Aggregate daily logs (exercise calories)
-    const dailyLogsArray = dailyLogs as unknown as Array<{
-      exercise_calories_burned: number;
-      log_date: string;
-    }>;
-
-    for (const log of dailyLogsArray) {
+    // Aggregate exercise logs
+    const exerciseNamesByDate: Record<string, string[]> = {};
+    for (const log of exerciseLogs) {
       const dateKey = new Date(log.log_date).toISOString().split('T')[0];
       if (statsByDate[dateKey]) {
-        statsByDate[dateKey].caloriesBurned += Number(log.exercise_calories_burned) || 0;
+        statsByDate[dateKey].exerciseCount++;
+        statsByDate[dateKey].caloriesBurned += Number(log.calories_burned) || 0;
+        if (!exerciseNamesByDate[dateKey]) exerciseNamesByDate[dateKey] = [];
+        exerciseNamesByDate[dateKey].push(log.exercise_name);
       }
     }
 
-    // Aggregate water logs
-    const waterLogsArray = waterLogs as unknown as Array<{
-      amount_ml: number;
-      log_date: string;
-    }>;
-
-    for (const log of waterLogsArray) {
-      const dateKey = new Date(log.log_date).toISOString().split('T')[0];
+    // Add exercise names to stats
+    for (const [dateKey, names] of Object.entries(exerciseNamesByDate)) {
       if (statsByDate[dateKey]) {
-        statsByDate[dateKey].waterMl += Number(log.amount_ml) || 0;
+        statsByDate[dateKey].exerciseNames = names.join(', ');
       }
     }
 
@@ -118,11 +109,10 @@ export async function GET(request: NextRequest) {
     );
 
     return NextResponse.json({ stats });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error getting history:', error);
+  } catch (error: any) {
+    console.error('[HISTORY] Error:', error.message);
     return NextResponse.json(
-      { error: 'Error getting history: ' + message },
+      { error: 'Error obteniendo historial: ' + error.message },
       { status: 500 }
     );
   }

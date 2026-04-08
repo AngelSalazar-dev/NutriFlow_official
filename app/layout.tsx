@@ -3,7 +3,6 @@ import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/components/ui/toast";
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import NextTopLoader from "nextjs-toploader";
 import Script from "next/script";
 
@@ -73,7 +72,7 @@ export default function RootLayout({
         className="min-h-full flex flex-col font-sans transition-colors duration-300"
         suppressHydrationWarning
       >
-        <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" enableSystem={false}>
+        <div className="light">
           <NextTopLoader
             color="#10b981"
             initialPosition={0.08}
@@ -89,7 +88,7 @@ export default function RootLayout({
           <ToastProvider>
             <AuthProvider>{children}</AuthProvider>
           </ToastProvider>
-        </ThemeProvider>
+        </div>
       </body>
     </html>
   );

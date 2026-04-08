@@ -37,6 +37,9 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  Waves,
+  Clock,
   GlassWater,
   CupSoda,
   CheckCircle,
@@ -45,8 +48,6 @@ import {
   Beer,
   Wine,
   Milk,
-  Clock,
-  Waves
 } from 'lucide-react';
 import { FoodItem, searchFoods } from '@/lib/food-database';
 
@@ -117,7 +118,8 @@ export default function FoodLogPage() {
   const [selectedBeverage, setSelectedBeverage] = React.useState('water');
   const [customMl, setCustomMl] = React.useState('');
   const [showHistory, setShowHistory] = React.useState(false);
-  
+  const [selectedDate, setSelectedDate] = React.useState(new Date());
+
   const searchControllerRef = React.useRef<AbortController | null>(null);
 
   // Cargar datos al iniciar
@@ -125,7 +127,7 @@ export default function FoodLogPage() {
     loadTodayLogs();
     loadFrequentFoods();
     loadWaterToday();
-  }, []);
+  }, [selectedDate]);
 
   // Búsqueda en tiempo real
   React.useEffect(() => {
@@ -142,7 +144,8 @@ export default function FoodLogPage() {
 
   const loadTodayLogs = async () => {
     try {
-      const response = await fetch('/api/food/today', { credentials: 'include' });
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      const response = await fetch(`/api/food/today?date=${dateStr}`, { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
         setFoodLogs(data.logs || []);
@@ -174,7 +177,8 @@ export default function FoodLogPage() {
 
   const loadWaterToday = async () => {
     try {
-      const response = await fetch('/api/hydration/today', { credentials: 'include' });
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      const response = await fetch(`/api/hydration/today?date=${dateStr}`, { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
         setWaterTotal(data.totalMl || 0);
@@ -290,7 +294,7 @@ export default function FoodLogPage() {
           servingSize,
           servingName: finalServingName,
           mealType,
-          date: new Date().toISOString(),
+          date: selectedDate.toISOString(),
           isCustom: false
         }),
       });
@@ -353,7 +357,7 @@ export default function FoodLogPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ amountMl, beverageType: selectedBeverage }),
+        body: JSON.stringify({ amountMl, beverageType: selectedBeverage, date: selectedDate.toISOString() }),
       });
       if (response.ok) {
         loadWaterToday();
@@ -433,6 +437,24 @@ export default function FoodLogPage() {
           </div>
         </div>
 
+        {/* Date Navigation */}
+        <div className="flex items-center justify-between bg-white rounded-2xl border border-slate-200 px-4 py-3 shadow-sm">
+          <Button variant="ghost" size="sm" onClick={() => setSelectedDate(d => { const n = new Date(d); n.setDate(n.getDate() - 1); return n; })} className="gap-1">
+            <ChevronLeft className="h-4 w-4" /> Ayer
+          </Button>
+          <div className="text-center">
+            <div className="font-bold text-slate-900">
+              {selectedDate.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </div>
+            <div className="text-xs text-slate-400">
+              {selectedDate.toDateString() === new Date().toDateString() ? 'Hoy' : ''}
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => setSelectedDate(d => { const n = new Date(d); n.setDate(n.getDate() + 1); return n; })} className="gap-1" disabled={selectedDate.toDateString() === new Date().toDateString()}>
+            Mañana <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+
         {/* Hidratación Premium y Búsqueda */}
         <div className="grid lg:grid-cols-2 gap-6">
           <Card className="card-nutriflow overflow-hidden border-blue-500/20 bg-white shadow-xl relative group">
@@ -458,9 +480,11 @@ export default function FoodLogPage() {
                     <Droplets className="h-6 w-6" />
                   </div>
                   <div>
-                    <CardTitle className="text-slate-900 text-2xl font-black">Hidratación</CardTitle>
+                    <CardTitle className="text-slate-900 text-2xl font-black">
+                      {selectedDate.toDateString() === new Date().toDateString() ? 'Hidratación' : `Agua del ${selectedDate.toLocaleDateString('es', { day: 'numeric', month: 'long' })}`}
+                    </CardTitle>
                     <CardDescription className="text-blue-700 font-bold uppercase tracking-wider text-[10px]">
-                      {waterTotal}ml consumidos hoy
+                      {waterTotal}ml {selectedDate.toDateString() === new Date().toDateString() ? 'consumidos hoy' : 'registrados'}
                     </CardDescription>
                   </div>
                 </div>
@@ -538,7 +562,7 @@ export default function FoodLogPage() {
               {showHistory && (
                 <div className="animate-in slide-in-from-top-4 duration-300 space-y-2 max-h-40 overflow-y-auto pr-1">
                   {waterLogs.length === 0 ? (
-                    <p className="text-center py-4 text-xs text-slate-400 italic">No hay registros aún hoy.</p>
+                    <p className="text-center py-4 text-xs text-slate-400 italic">No hay registros para este día.</p>
                   ) : (
                     waterLogs.map((log, index) => {
                       const bev = BEVERAGE_TYPES.find(b => b.id === log.beverageType) || BEVERAGE_TYPES[0];
@@ -726,12 +750,14 @@ export default function FoodLogPage() {
           <CardHeader>
             <CardTitle className="text-emerald-900 flex items-center gap-2">
               <Utensils className="h-5 w-5 text-emerald-600" />
-              Consumo Diario
+              {selectedDate.toDateString() === new Date().toDateString() ? 'Consumo Diario' : `Comidas del ${selectedDate.toLocaleDateString('es', { day: 'numeric', month: 'long' })}`}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {foodLogs.length === 0 ? (
-              <div className="text-center py-10 text-stone-400 italic">No has registrado alimentos hoy... todavía.</div>
+              <div className="text-center py-10 text-stone-400 italic">
+                No has registrado alimentos para este día... {selectedDate.toDateString() === new Date().toDateString() ? '¡empieza a registrar!' : 'descansa.'}
+              </div>
             ) : (
               <div className="space-y-3">
                 {foodLogs.map((log, index) => {

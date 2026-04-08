@@ -3,7 +3,7 @@ import { query } from '@/lib/mysql';
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
-const isSimulationMode = !stripeSecretKey || stripeSecretKey.includes('dummy') || stripeSecretKey.includes('your_stripe');
+const isSimulationMode = !stripeSecretKey || stripeSecretKey === 'sk_test_your_stripe_secret_key' || stripeSecretKey.includes('dummy');
 
 export async function POST(request: NextRequest) {
   // In simulation mode, webhooks are not needed (subscription is activated directly in create-checkout)
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get('stripe-signature') || '';
 
-  let event: { type: string; data: { object: Record<string, unknown> } };
+  let event: any;
 
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
+        const session = event.data.object as any;
 
         if (session.payment_status === 'paid') {
           const userId = session.metadata?.userId;
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       }
 
       case 'customer.subscription.updated': {
-        const subscription = event.data.object as import('stripe').Stripe.Subscription;
+        const subscription = event.data.object as any;
 
         const status = subscription.status;
         const subscriptionId = subscription.id;
@@ -84,9 +84,10 @@ export async function POST(request: NextRequest) {
 
         if (status === 'active' || status === 'trialing') {
           // Determine plan from price
-          const planId = subscription.items.data[0]?.price?.metadata?.plan || 'premium';
-          const subscriptionEnd = (subscription as any).current_period_end
-            ? new Date((subscription as any).current_period_end * 1000)
+          const price = subscription.items.data[0]?.price;
+          const planId = price?.metadata?.plan || (price?.unit_amount === 1999 ? 'pro' : 'premium');
+          const subscriptionEnd = subscription.current_period_end
+            ? new Date(subscription.current_period_end * 1000)
             : new Date();
 
           await query(
@@ -113,7 +114,7 @@ export async function POST(request: NextRequest) {
       }
 
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object as import('stripe').Stripe.Subscription;
+        const subscription = event.data.object as any;
         const subscriptionId = subscription.id;
 
         const [rows] = await query(

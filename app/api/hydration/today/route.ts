@@ -13,9 +13,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
-    // Manejo de fecha seguro como en el POST/DELETE
-    const now = new Date();
-    const today = now.toLocaleDateString('en-CA');
+    const searchParams = request.nextUrl.searchParams;
+    const dateParam = searchParams.get('date');
+    const selectedDate = dateParam ? new Date(dateParam) : new Date();
+    const today = selectedDate.toLocaleDateString('en-CA');
 
     // 1. Obtener el total consolidado
     const [dailyRows] = await query(

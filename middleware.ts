@@ -6,7 +6,7 @@ import { jwtVerify } from 'jose';
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
-const RATE_LIMIT_MAX = 100; // Max requests per window
+const RATE_LIMIT_MAX = 500; // Max requests per window
 
 // Enforce JWT_SECRET in production - fail fast if not set
 const JWT_SECRET_STRING = process.env.JWT_SECRET;
@@ -71,8 +71,8 @@ export async function middleware(request: NextRequest) {
     );
   }
   
-  // Rate limiting for API routes
-  if (pathname.startsWith('/api/')) {
+  // Rate limiting for API routes (POST/PUT/DELETE only, not GET)
+  if (pathname.startsWith('/api/') && !request.method.startsWith('GET')) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 
                request.headers.get('x-real-ip') || 
                '127.0.0.1';

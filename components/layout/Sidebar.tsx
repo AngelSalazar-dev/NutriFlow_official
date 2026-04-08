@@ -20,11 +20,11 @@ import {
   Leaf,
   ChevronLeft,
   ChevronRight,
-  Bell,
   Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { NotificationBell } from './NotificationBell';
 // import { AVATAR_PRESETS } from '@/components/ui/AvatarSelector';
 
 const navItems = [
@@ -52,7 +52,6 @@ export function Sidebar({ isCollapsed = false, isMobile = false, onToggle }: Sid
   const pathname = usePathname();
   const { user, isPremium, isPro, logout } = useAuth();
   const [showTooltip, setShowTooltip] = React.useState(false);
-  const [notifications, setNotifications] = React.useState(3);
 
   const handleLogout = async () => {
     await logout();
@@ -82,18 +81,21 @@ export function Sidebar({ isCollapsed = false, isMobile = false, onToggle }: Sid
             <p className="text-[10px] text-slate-500">Tu salud, simplificada</p>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggle}
-          className="h-8 w-8 rounded-lg hover:bg-slate-100 hover:text-emerald-600 transition-colors text-slate-500"
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </Button>
+        <div className="flex items-center gap-1">
+          {!isCollapsed && <NotificationBell />}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggle}
+            className="h-8 w-8 rounded-lg hover:bg-slate-100 hover:text-emerald-600 transition-colors text-slate-500"
+          >
+            {isCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Navegación Principal */}
@@ -183,30 +185,6 @@ export function Sidebar({ isCollapsed = false, isMobile = false, onToggle }: Sid
 
       {/* Navegación Inferior */}
       <div className="border-t border-slate-200 px-3 py-6 space-y-2">
-        {/* Notificaciones */}
-        <button
-          className="group relative flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-500 transition-all duration-200 hover:bg-slate-50 hover:text-slate-900"
-          onClick={() => setNotifications(0)}
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 transition-all duration-200 group-hover:bg-slate-200 relative">
-            <Bell className="h-5 w-5 text-slate-500 group-hover:text-slate-900" />
-            {notifications > 0 && (
-              <Badge className="absolute -top-1 -right-1 h-5 w-5 min-w-0 p-0 bg-gradient-to-r from-red-500 to-pink-600 text-white text-[10px] flex items-center justify-center border-0 shadow-lg shadow-red-500/30">
-                {notifications}
-              </Badge>
-            )}
-          </div>
-          {(!isCollapsed || isMobile) && (
-            <div className="flex flex-1 items-center justify-between">
-              <span className="transition-colors">Notificaciones</span>
-              {notifications > 0 && (
-                <Badge variant="secondary" className="bg-red-50 text-red-600 text-[10px]">
-                  {notifications} nuevas
-                </Badge>
-              )}
-            </div>
-          )}
-        </button>
         
         {bottomNavItems.map((item) => {
           const Icon = item.icon;

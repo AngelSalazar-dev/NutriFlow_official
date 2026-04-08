@@ -1,5 +1,8 @@
-import { query } from '../lib/mysql';
-import { v4 as uuidv4 } from 'uuid';
+const mysql = require('mysql2/promise');
+const dotenv = require('dotenv');
+const crypto = require('crypto');
+
+dotenv.config({ path: '.env.local' });
 
 const ARTICLES = [
   {
@@ -105,9 +108,18 @@ Sin un sueño adecuado, tus esfuerzos en nutrición y ejercicio se ven limitados
 
 async function seed() {
   console.log('--- seeding articles ---');
+  const pool = mysql.createPool({
+    host: process.env.MYSQL_HOST,
+    port: Number(process.env.MYSQL_PORT) || 4000,
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE,
+    ssl: { rejectUnauthorized: false }
+  });
+
   try {
     // Ensure table
-    await query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS articles (
         id VARCHAR(36) PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
@@ -123,8 +135,8 @@ async function seed() {
     `);
 
     for (const art of ARTICLES) {
-      const id = uuidv4();
-      await query(
+      const id = crypto.randomUUID();
+      await pool.query(
         `INSERT IGNORE INTO articles (id, title, slug, summary, content, category, is_premium, read_time_minutes)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [id, art.title, art.slug, art.summary, art.content, art.category, art.is_premium, art.read_time_minutes]

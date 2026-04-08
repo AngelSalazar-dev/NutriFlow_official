@@ -13,7 +13,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const searchParams = request.nextUrl.searchParams;
+    const dateParam = searchParams.get('date');
+    const selectedDate = dateParam ? new Date(dateParam) : new Date();
+    const targetDate = selectedDate.toISOString().split('T')[0];
 
     const [rows] = await query(`
       SELECT 
@@ -33,7 +36,7 @@ export async function GET(request: NextRequest) {
       FROM food_logs
       WHERE user_id = ? AND DATE(log_date) = ?
       ORDER BY created_at DESC
-    `, [user._id, today]) as any[];
+    `, [user._id, targetDate]) as any[];
 
     const logs = rows || [];
 

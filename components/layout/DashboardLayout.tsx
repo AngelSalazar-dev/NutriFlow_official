@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { Bell, User, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { User, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
@@ -19,7 +19,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
   const [isMobile, setIsMobile] = React.useState(false);
-  const [notifications, setNotifications] = React.useState(3);
   const [showUserMenu, setShowUserMenu] = React.useState(false);
 
   React.useEffect(() => {
@@ -115,21 +114,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           <div className="flex items-center gap-3 px-4 sm:px-8">
-            {/* Notifications */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative h-10 w-10 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
-              onClick={() => setNotifications(0)}
-            >
-              <Bell className="h-5 w-5" />
-              {notifications > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 min-w-0 p-0 bg-gradient-to-r from-red-500 to-pink-600 text-white text-[10px] flex items-center justify-center border-0 shadow-lg shadow-red-500/30">
-                  {notifications}
-                </Badge>
-              )}
-            </Button>
-
             {/* User Avatar + Dropdown Menu */}
             <div className="relative">
               <button

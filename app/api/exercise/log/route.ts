@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
 
-    const rows = await query(
+    const [rows] = await query(
       `SELECT id, exercise_name, exercise_type, muscle_groups, met_value,
               duration_min, calories_burned, notes, log_date,
               DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ') as created_at
@@ -108,6 +108,7 @@ export async function POST(request: NextRequest) {
       metValue,
       durationMin,
       notes,
+      date: logDateOverride,
     } = body;
 
     // Validation
@@ -126,7 +127,9 @@ export async function POST(request: NextRequest) {
     );
 
     const now = new Date();
-    const logDate = now.toISOString().split('T')[0];
+    const logDate = logDateOverride
+      ? new Date(logDateOverride).toISOString().split('T')[0]
+      : now.toISOString().split('T')[0];
 
     const [uuidResult] = await query('SELECT UUID() as id');
     const logId = (uuidResult as any)[0].id;

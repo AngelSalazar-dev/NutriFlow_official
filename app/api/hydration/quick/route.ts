@@ -14,16 +14,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { amountMl = 250, beverageType = 'water' } = body;
+    const { amountMl = 250, beverageType = 'water', date: logDateOverride } = body;
 
     if (amountMl <= 0) {
       return NextResponse.json({ error: 'Cantidad inválida' }, { status: 400 });
     }
 
     const logId = crypto.randomUUID();
-    // Obtener fecha local YYYY-MM-DD
-    const now = new Date();
-    const logDate = now.toLocaleDateString('en-CA'); // Formato YYYY-MM-DD
+    const logDate = logDateOverride
+      ? new Date(logDateOverride).toLocaleDateString('en-CA')
+      : new Date().toLocaleDateString('en-CA');
 
     await transaction(async (connection) => {
       // 1. Guardar log detallado
@@ -66,6 +66,7 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const logId = searchParams.get('id');
+    const dateParam = searchParams.get('date');
 
     if (!logId) {
       return NextResponse.json({ error: 'ID requerido' }, { status: 400 });

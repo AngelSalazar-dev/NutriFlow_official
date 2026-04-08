@@ -334,12 +334,14 @@ export default function DashboardPage() {
             
             <div className="flex-1 space-y-6 flex flex-col justify-center">
               {Object.entries(macros).map(([key, data]) => {
+                const current = Math.round(data.current * 10) / 10;
+                const target = Math.round(data.target);
                 const percentage = data.target > 0 ? Math.min(100, Math.round((data.current / data.target) * 100)) : 0;
                 return (
                   <div key={key} className="space-y-2">
                     <div className="flex justify-between items-end text-sm">
                       <span className="font-semibold text-slate-700">{data.label}</span>
-                      <span className="text-slate-500"><strong className="text-slate-900">{data.current}g</strong> / {data.target}g</span>
+                      <span className="text-slate-500"><strong className="text-slate-900">{current}g</strong> / {target}g</span>
                     </div>
                     <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
                       <motion.div

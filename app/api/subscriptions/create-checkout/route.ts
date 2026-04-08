@@ -3,7 +3,8 @@ import { getCurrentUser } from '@/lib/auth-mysql';
 import { query } from '@/lib/mysql';
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-const isSimulationMode = !stripeSecretKey || stripeSecretKey.includes('dummy') || stripeSecretKey.includes('your_stripe');
+// Only simulate if NO key is present OR if it's explicitly a dummy placeholder
+const isSimulationMode = !stripeSecretKey || stripeSecretKey === 'sk_test_your_stripe_secret_key' || stripeSecretKey.includes('dummy');
 
 const PLAN_PRICES: Record<string, { price: number; name: string; interval: string }> = {
   premium: { price: 9.99, name: 'NutriFlow Premium', interval: 'month' },

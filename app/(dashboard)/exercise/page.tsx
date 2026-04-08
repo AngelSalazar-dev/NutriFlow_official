@@ -28,6 +28,8 @@ import {
   Zap,
   Target,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   X,
   Check,
   Loader2,
@@ -130,7 +132,7 @@ const CATEGORY_BG: Record<string, string> = {
 
 export default function ExercisePage() {
   const { user, isPremium } = useAuth();
-  const toast = useToast();
+  const { success: toastSuccess, error: toastError } = useToast();
   const [logs, setLogs] = React.useState<ExerciseLog[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
   const [showAddForm, setShowAddForm] = React.useState(false);
@@ -142,14 +144,16 @@ export default function ExercisePage() {
   const [selectedMuscles, setSelectedMuscles] = React.useState<string[]>([]);
   const [notes, setNotes] = React.useState('');
   const [isSaving, setIsSaving] = React.useState(false);
+  const [selectedDate, setSelectedDate] = React.useState(new Date());
 
   React.useEffect(() => {
     loadLogs();
-  }, []);
+  }, [selectedDate]);
 
   const loadLogs = async () => {
     try {
-      const response = await fetch('/api/exercise/log', { credentials: 'include' });
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      const response = await fetch(`/api/exercise/log?date=${dateStr}`, { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
         const logsArray = data.logs || [];
@@ -215,11 +219,12 @@ export default function ExercisePage() {
           durationMin,
           caloriesBurned,
           notes: notes || undefined,
+          date: selectedDate.toISOString(),
         }),
       });
 
       if (response.ok) {
-        toast.success('Ejercicio registrado', `${selectedExercise.name} — ${caloriesBurned} kcal quemadas`);
+        toastSuccess('Ejercicio registrado', `${selectedExercise.name} — ${caloriesBurned} kcal quemadas`);
         setShowAddForm(false);
         setSelectedExercise(null);
         setDurationMin(30);
@@ -229,11 +234,11 @@ export default function ExercisePage() {
       } else {
         const errData = await response.json().catch(() => ({}));
         console.error('[EXERCISE] Save failed:', response.status, JSON.stringify(errData));
-        toast.error('Error', errData.error || 'No se pudo guardar el ejercicio');
+        toastError('Error', errData.error || 'No se pudo guardar el ejercicio');
       }
     } catch (error) {
       console.error('[EXERCISE] Error adding log:', error);
-      toast.error('Error de conexión', 'No se pudo comunicar con el servidor');
+      toastError('Error de conexión', 'No se pudo comunicar con el servidor');
     } finally {
       setIsSaving(false);
     }
@@ -248,15 +253,15 @@ export default function ExercisePage() {
       });
 
       if (response.ok) {
-        toast.success('Ejercicio eliminado');
+        toastSuccess('Ejercicio eliminado');
         await loadLogs();
       } else {
         const errData = await response.json().catch(() => ({}));
-        toast.error('Error', errData.error || 'No se pudo eliminar el ejercicio');
+        toastError('Error', errData.error || 'No se pudo eliminar el ejercicio');
       }
     } catch (error) {
       console.error('[EXERCISE] Error deleting log:', error);
-      toast.error('Error de conexión', 'No se pudo comunicar con el servidor');
+      toastError('Error de conexión', 'No se pudo comunicar con el servidor');
     }
   };
 
@@ -319,6 +324,24 @@ export default function ExercisePage() {
             </div>
             <div className="text-xs text-slate-400 font-bold uppercase">quemadas hoy</div>
           </div>
+        </div>
+
+        {/* Date Navigation */}
+        <div className="flex items-center justify-between bg-white rounded-2xl border border-slate-200 px-4 py-3 shadow-sm">
+          <Button variant="ghost" size="sm" onClick={() => setSelectedDate(d => { const n = new Date(d); n.setDate(n.getDate() - 1); return n; })} className="gap-1">
+            <ChevronLeft className="h-4 w-4" /> Ayer
+          </Button>
+          <div className="text-center">
+            <div className="font-bold text-slate-900">
+              {selectedDate.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </div>
+            <div className="text-xs text-slate-400">
+              {selectedDate.toDateString() === new Date().toDateString() ? 'Hoy' : ''}
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => setSelectedDate(d => { const n = new Date(d); n.setDate(n.getDate() + 1); return n; })} className="gap-1" disabled={selectedDate.toDateString() === new Date().toDateString()}>
+            Mañana <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
 
         {/* Exercise Selector */}
@@ -390,13 +413,13 @@ export default function ExercisePage() {
           <CardHeader>
             <CardTitle className="text-orange-900 flex items-center gap-2">
               <Flame className="h-5 w-5 text-orange-600" />
-              Entrenamiento de Hoy
+              {selectedDate.toDateString() === new Date().toDateString() ? 'Entrenamiento de Hoy' : `Entrenamiento del ${selectedDate.toLocaleDateString('es', { day: 'numeric', month: 'long' })}`}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {logs.length === 0 ? (
               <div className="text-center py-10 text-stone-400 italic">
-                No has registrado ejercicios hoy... ¡es hora de entrenar!
+                No has registrado ejercicios para este día... {selectedDate.toDateString() === new Date().toDateString() ? '¡es hora de entrenar!' : 'descansa bien.'}
               </div>
             ) : (
               <div className="space-y-3">

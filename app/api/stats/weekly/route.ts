@@ -25,14 +25,21 @@ export async function GET() {
     const mondayStr = monday.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
 
-    const [rows] = await query(
-      `SELECT log_date,
-              COALESCE(SUM(total_calories), 0) as consumed,
-              COALESCE(SUM(exercise_calories_burned), 0) as burned
-       FROM daily_logs
+    // Get food calories per day
+    const [foodData] = await query(
+      `SELECT log_date, SUM(calories) as consumed
+       FROM food_logs
        WHERE user_id = ? AND log_date BETWEEN ? AND ?
-       GROUP BY log_date
-       ORDER BY log_date ASC`,
+       GROUP BY log_date`,
+      [user._id, mondayStr, endDateStr]
+    );
+
+    // Get exercise calories per day
+    const [exerciseData] = await query(
+      `SELECT log_date, SUM(calories_burned) as burned
+       FROM exercise_logs
+       WHERE user_id = ? AND log_date BETWEEN ? AND ?
+       GROUP BY log_date`,
       [user._id, mondayStr, endDateStr]
     );
 
@@ -40,13 +47,32 @@ export async function GET() {
     const dayNames = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
     const dataMap = new Map<string, { consumed: number; burned: number }>();
 
-    for (const row of (rows as any[])) {
+    // Initial fill for the 7 days of this specific week
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const label = dayNames[d.getDay()];
+      dataMap.set(label, { consumed: 0, burned: 0 });
+    }
+
+    // Fill with food data
+    for (const row of (foodData as any[])) {
       const date = new Date(row.log_date);
       const label = dayNames[date.getDay()];
-      dataMap.set(label, {
-        consumed: Math.round(Number(row.consumed) || 0),
-        burned: Math.round(Number(row.burned) || 0),
-      });
+      if (dataMap.has(label)) {
+        const current = dataMap.get(label)!;
+        dataMap.set(label, { ...current, consumed: Math.round(Number(row.consumed) || 0) });
+      }
+    }
+
+    // Fill with exercise data
+    for (const row of (exerciseData as any[])) {
+      const date = new Date(row.log_date);
+      const label = dayNames[date.getDay()];
+      if (dataMap.has(label)) {
+        const current = dataMap.get(label)!;
+        dataMap.set(label, { ...current, burned: Math.round(Number(row.burned) || 0) });
+      }
     }
 
     // Always return 7 days (Mon-Sun order for the current week)
