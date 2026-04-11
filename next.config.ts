@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   // Security & Performance
   poweredByHeader: false,
   compress: true,
-  reactStrictMode: true,
+  reactStrictMode: false, // Disabled: breaks PayPal SDK injection via double-mount in dev
 
   // Turbopack configuration
   turbopack: {},

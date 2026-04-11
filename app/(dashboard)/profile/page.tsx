@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useLang } from '@/context/LangContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,23 +37,24 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 
-const ACTIVITY_LEVELS = [
-  { value: 'sedentary', label: 'Sedentario (poco o nada de ejercicio)', multiplier: 1.2 },
-  { value: 'light', label: 'Ligero (ejercicio 1-3 días/semana)', multiplier: 1.375 },
-  { value: 'moderate', label: 'Moderado (ejercicio 3-5 días/semana)', multiplier: 1.55 },
-  { value: 'active', label: 'Activo (ejercicio 6-7 días/semana)', multiplier: 1.725 },
-  { value: 'very_active', label: 'Muy activo (ejercicio muy intenso)', multiplier: 1.9 },
-];
-
-const GOALS = [
-  { value: 'lose', label: 'Perder peso', icon: '🔥', adj: -500 },
-  { value: 'maintain', label: 'Mantener peso', icon: '⚖️', adj: 0 },
-  { value: 'gain', label: 'Ganar masa muscular', icon: '💪', adj: 300 },
-];
-
 export default function ProfilePage() {
   const { user, updateUser, logout, updateAvatar, isPremium, isPro } = useAuth();
+  const { tr, lang } = useLang();
   const router = useRouter();
+
+  const ACTIVITY_LEVELS = [
+    { value: 'sedentary', label: tr('profile_activity_sedentary') || 'Sedentario', multiplier: 1.2 },
+    { value: 'light', label: tr('profile_activity_light') || 'Ligero', multiplier: 1.375 },
+    { value: 'moderate', label: tr('profile_activity_moderate') || 'Moderado', multiplier: 1.55 },
+    { value: 'active', label: tr('profile_activity_active') || 'Activo', multiplier: 1.725 },
+    { value: 'very_active', label: tr('profile_activity_very_active') || 'Muy activo', multiplier: 1.9 },
+  ];
+
+  const GOALS = [
+    { value: 'lose', label: tr('auth_goal_lose') || 'Perder peso', icon: '🔥', adj: -500 },
+    { value: 'maintain', label: tr('auth_goal_maintain') || 'Mantener peso', icon: '⚖️', adj: 0 },
+    { value: 'gain', label: tr('auth_goal_gain') || 'Ganar masa muscular', icon: '💪', adj: 300 },
+  ];
   const [isLoading, setIsLoading] = React.useState(false);
   const [isAvatarLoading, setIsAvatarLoading] = React.useState(false);
   const [message, setMessage] = React.useState('');
@@ -189,7 +191,7 @@ export default function ProfilePage() {
     : 'U';
 
   const memberSince = user.createdAt
-    ? new Date(user.createdAt).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+    ? new Date(user.createdAt).toLocaleDateString(lang === 'en' ? 'en-US' : 'es-ES', { month: 'long', year: 'numeric' })
     : 'N/A';
 
   return (
@@ -198,50 +200,50 @@ export default function ProfilePage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-heading font-extrabold text-slate-900 tracking-tighter">
-              Mi Perfil
+            <h1 className="text-4xl font-heading font-extrabold text-slate-900 dark:text-slate-100 tracking-tighter">
+              {tr('nav_profile')}
             </h1>
-            <p className="text-lg text-slate-500">
-              Gestiona tu información personal y objetivos
+            <p className="text-lg text-slate-500 dark:text-slate-400">
+              {tr('profile_activity')}
             </p>
           </div>
           <Button
             variant="outline"
-            className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 gap-2"
+            className="border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300 gap-2"
             onClick={() => setShowLogoutConfirm(true)}
           >
             <LogOut className="h-4 w-4" />
-            Cerrar sesión
+            {tr('nav_logout') || 'Cerrar sesión'}
           </Button>
         </div>
 
         {/* Logout Confirmation */}
         {showLogoutConfirm && (
-          <Card className="border-amber-200 bg-amber-50">
+          <Card className="border-amber-200 dark:border-amber-900/30 bg-amber-50 dark:bg-amber-900/10">
             <CardContent className="pt-6">
               <div className="flex items-start gap-4">
-                <AlertTriangle className="h-6 w-6 text-amber-600 mt-0.5 shrink-0" />
+                <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-500 mt-0.5 shrink-0" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-amber-900">¿Cerrar sesión?</h3>
-                  <p className="text-sm text-amber-700 mt-1">
-                    Tendrás que volver a iniciar sesión para acceder a tu cuenta.
+                  <h3 className="font-semibold text-amber-900 dark:text-amber-100">{tr('nav_logout')}?</h3>
+                  <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                    {tr('profile_activity')}
                   </p>
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-amber-200"
+                    className="border-amber-200 dark:border-amber-800 dark:text-amber-400"
                     onClick={() => setShowLogoutConfirm(false)}
                   >
-                    Cancelar
+                    {tr('common_back')}
                   </Button>
                   <Button
                     size="sm"
-                    className="bg-red-600 hover:bg-red-700 text-white"
+                    className="bg-red-600 hover:bg-red-700 text-white border-0 shadow-lg shadow-red-500/20"
                     onClick={handleLogout}
                   >
-                    Cerrar sesión
+                    {tr('nav_logout')}
                   </Button>
                 </div>
               </div>
@@ -250,15 +252,15 @@ export default function ProfilePage() {
         )}
 
         {/* Profile Card */}
-        <Card className="border-slate-200 overflow-hidden">
+        <Card className="border-slate-200 dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
           <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 h-32 relative">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cGF0aCBkPSJNLTEwIDMwaDYwdi0yMGgtNjB6IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCBmaWxsPSJ1cmwoI2EpIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIi8+PC9zdmc+')] opacity-50" />
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cGF0aCBkPSJNLTEwIDMwaDYwdi0yMGgtNjB6IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCBmaWxsPSJ1cmwoI2EpIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIi8+PC9zdmc+')] opacity-30" />
           </div>
           <CardContent className="pt-0 -mt-16 relative">
             <div className="flex flex-col md:flex-row gap-6">
               {/* Avatar */}
               <div className="relative shrink-0">
-                <div className="w-32 h-32 rounded-3xl border-4 border-white shadow-xl overflow-hidden flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600">
+                <div className="w-32 h-32 rounded-3xl border-4 border-white dark:border-slate-900 shadow-xl overflow-hidden flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600">
                   {avatarType === 'preset' && avatarUrl ? (
                     (() => {
                       const preset = AVATAR_PRESETS.find(p => p.id === avatarUrl);
@@ -274,25 +276,25 @@ export default function ProfilePage() {
                 </div>
                 {isPro && (
                   <div className="absolute -bottom-2 -right-2 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold shadow-lg flex items-center gap-1">
-                    <Crown className="h-3 w-3" /> PRO
+                    <Crown className="h-3 w-3" /> {tr('sub_plan_pro_name')}
                   </div>
                 )}
                 {isPremium && !isPro && (
-                  <div className="absolute -bottom-2 -right-2 px-3 py-1 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-xs font-bold shadow-lg flex items-center gap-1">
-                    <Crown className="h-3 w-3" /> Premium
+                  <div className="absolute -bottom-2 -right-2 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold shadow-lg flex items-center gap-1">
+                    <Crown className="h-3 w-3" /> {tr('sub_plan_premium_name')}
                   </div>
                 )}
               </div>
 
               {/* Info */}
               <div className="flex-1 pt-4 md:pt-16">
-                <h2 className="text-3xl font-heading font-bold text-slate-900">{user.name}</h2>
-                <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-slate-500">
+                <h2 className="text-3xl font-heading font-bold text-slate-900 dark:text-slate-100">{user.name}</h2>
+                <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-slate-500 dark:text-slate-400">
                   <span className="flex items-center gap-1.5">
                     <Mail className="h-4 w-4" /> {user.email}
                   </span>
-                  <span className="flex items-center gap-1.5">
-                    <Calendar className="h-4 w-4" /> Desde {memberSince}
+                  <span className="flex items-center gap-1.5 capitalize">
+                    <Calendar className="h-4 w-4" /> {tr('profile_activity')} {memberSince}
                   </span>
                 </div>
               </div>
@@ -302,57 +304,59 @@ export default function ProfilePage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="border-slate-200">
+          <Card className="border-slate-200 dark:border-slate-800 dark:bg-slate-900 border-b-4 border-b-orange-500">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-orange-100">
-                  <Flame className="h-5 w-5 text-orange-600" />
+                <div className="p-2.5 rounded-xl bg-orange-100 dark:bg-orange-900/30">
+                  <Flame className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-slate-900">{calorieGoal}</div>
-                  <div className="text-xs text-slate-500">kcal/día (objetivo)</div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{calorieGoal}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">kcal/{tr('common_back')} ({tr('common_confirm')})</div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-slate-200">
+          <Card className="border-slate-200 dark:border-slate-800 dark:bg-slate-900 border-b-4 border-b-emerald-500">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-emerald-100">
-                  <Zap className="h-5 w-5 text-emerald-600" />
+                <div className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-900/30">
+                  <Zap className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-slate-900">{tdee}</div>
-                  <div className="text-xs text-slate-500">TDEE (gasto total)</div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{tdee}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">TDEE ({tr('food_nutrient_density')})</div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-slate-200">
+          <Card className="border-slate-200 dark:border-slate-800 dark:bg-slate-900 border-b-4 border-b-blue-500">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-blue-100">
-                  <Activity className="h-5 w-5 text-blue-600" />
+                <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-900/30">
+                  <Activity className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-slate-900">{bmr}</div>
-                  <div className="text-xs text-slate-500">BMR (metabolismo)</div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{bmr}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">BMR ({tr('food_nutrient_density')})</div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-slate-200">
+          <Card className="border-slate-200 dark:border-slate-800 dark:bg-slate-900 border-b-4 border-b-violet-500">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-violet-100">
-                  <TrendingUp className="h-5 w-5 text-violet-600" />
+                <div className="p-2.5 rounded-xl bg-violet-100 dark:bg-violet-900/30">
+                  <TrendingUp className="h-5 w-5 text-violet-600 dark:text-violet-400" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-slate-900 capitalize">{formData.goal === 'lose' ? 'Perder' : formData.goal === 'gain' ? 'Ganar' : 'Mantener'}</div>
-                  <div className="text-xs text-slate-500">Objetivo actual</div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 capitalize">
+                    {GOALS.find(g => g.value === formData.goal)?.label || formData.goal}
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{tr('common_confirm')} {tr('common_back')}</div>
                 </div>
               </div>
             </CardContent>
@@ -361,37 +365,41 @@ export default function ProfilePage() {
 
         {/* Body Info & Plan */}
         <div className="grid md:grid-cols-3 gap-4">
-          <Card className="border-slate-200">
+          <Card className="border-slate-200 dark:border-slate-800 dark:bg-slate-900">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3 mb-4">
-                <Scale className="h-5 w-5 text-slate-500" />
-                <span className="text-sm font-medium text-slate-500">Peso</span>
+                <Scale className="h-5 w-5 text-slate-500 dark:text-slate-400" />
+                <span className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{tr('auth_weight') || 'Peso'}</span>
               </div>
-              <div className="text-3xl font-bold text-slate-900">{formData.weight} <span className="text-lg text-slate-400">kg</span></div>
+              <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">{formData.weight} <span className="text-lg text-slate-400">kg</span></div>
             </CardContent>
           </Card>
 
-          <Card className="border-slate-200">
+          <Card className="border-slate-200 dark:border-slate-800 dark:bg-slate-900">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3 mb-4">
-                <Ruler className="h-5 w-5 text-slate-500" />
-                <span className="text-sm font-medium text-slate-500">Altura</span>
+                <Ruler className="h-5 w-5 text-slate-500 dark:text-slate-400" />
+                <span className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{tr('auth_height') || 'Altura'}</span>
               </div>
-              <div className="text-3xl font-bold text-slate-900">{formData.height} <span className="text-lg text-slate-400">cm</span></div>
+              <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">{formData.height} <span className="text-lg text-slate-400">cm</span></div>
             </CardContent>
           </Card>
 
-          <Card className="border-slate-200">
+          <Card className="border-slate-200 dark:border-slate-800 dark:bg-slate-900">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3 mb-4">
-                <Shield className="h-5 w-5 text-slate-500" />
-                <span className="text-sm font-medium text-slate-500">Plan</span>
+                <Shield className="h-5 w-5 text-slate-500 dark:text-slate-400" />
+                <span className="text-sm font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{tr('nav_subscription') || 'Plan'}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-3xl font-bold text-slate-900 capitalize">{user.subscriptionPlan}</span>
+                <span className="text-3xl font-bold text-slate-900 dark:text-slate-100 capitalize">
+                  {user.subscriptionPlan === 'pro' ? tr('sub_plan_pro_name') : 
+                   user.subscriptionPlan === 'premium' ? tr('sub_plan_premium_name') : 
+                   tr('sub_plan_free_name')}
+                </span>
                 {user.subscriptionPlan === 'pro' && (
                   <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-                    <Crown className="h-3 w-3 mr-1" /> Máximo
+                    <Crown className="h-3 w-3 mr-1" /> {tr('sub_plan_pro_name')}
                   </Badge>
                 )}
               </div>
@@ -400,16 +408,16 @@ export default function ProfilePage() {
         </div>
 
         {/* Avatar Selector Card */}
-        <Card className="border-slate-200">
+        <Card className="border-slate-200 dark:border-slate-800 dark:bg-slate-900">
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600">
                 <Camera className="h-5 w-5 text-white" />
               </div>
               <div>
-                <CardTitle className="text-slate-900">Tu Avatar</CardTitle>
-                <CardDescription className="text-slate-500">
-                  Elige un avatar con personalidad o sube tu propia imagen
+                <CardTitle className="text-slate-900 dark:text-slate-100">{tr('prof_avatar') || 'Avatar de Perfil'}</CardTitle>
+                <CardDescription className="text-slate-500 dark:text-slate-400">
+                  {tr('landing_hero_subtitle')}
                 </CardDescription>
               </div>
             </div>
@@ -442,38 +450,44 @@ export default function ProfilePage() {
         </Card>
 
         {/* Edit Profile Form */}
-        <Card className="border-slate-200">
-          <CardHeader>
+        <Card className="border-slate-200 dark:border-slate-800 dark:bg-slate-900 shadow-xl overflow-hidden">
+          <CardHeader className="border-b border-slate-100 dark:border-slate-800/50">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600">
                 <User className="h-5 w-5 text-white" />
               </div>
               <div>
-                <CardTitle className="text-slate-900">Editar Perfil</CardTitle>
-                <CardDescription className="text-slate-500">
-                  Actualiza tu información para recalcular tus objetivos automáticamente
+                <CardTitle className="text-slate-900 dark:text-slate-100">{tr('prof_title') || 'Editar Perfil'}</CardTitle>
+                <CardDescription className="text-slate-500 dark:text-slate-400">
+                  {tr('landing_hero_subtitle')}
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-8">
               {/* Name */}
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-slate-700 font-medium">Nombre completo</Label>
+              <div className="space-y-3">
+                <Label htmlFor="name" className="text-slate-700 dark:text-slate-300 font-bold text-sm flex items-center gap-2">
+                  <User className="h-4 w-4 text-emerald-500" />
+                  {tr('nav_profile')}
+                </Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="h-12 rounded-xl border-slate-200 focus-visible:ring-emerald-500"
+                  className="h-12 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus-visible:ring-emerald-500 dark:text-slate-200"
                 />
               </div>
 
               {/* Age + Sex */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="age" className="text-slate-700 font-medium">Edad</Label>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="age" className="text-slate-700 dark:text-slate-300 font-bold text-sm flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-emerald-500" />
+                    {tr('common_back')}
+                  </Label>
                   <Input
                     id="age"
                     type="number"
@@ -482,28 +496,34 @@ export default function ProfilePage() {
                     value={formData.age}
                     onChange={(e) => setFormData({ ...formData, age: Number(e.target.value) })}
                     required
-                    className="h-12 rounded-xl border-slate-200 focus-visible:ring-emerald-500"
+                    className="h-12 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus-visible:ring-emerald-500 dark:text-slate-200"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sex" className="text-slate-700 font-medium">Sexo</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="sex" className="text-slate-700 dark:text-slate-300 font-bold text-sm flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-emerald-500" />
+                    {tr('dash_no_weekly_data')}
+                  </Label>
                   <select
                     id="sex"
                     value={formData.sex}
                     onChange={(e) => setFormData({ ...formData, sex: e.target.value as 'male' | 'female' })}
-                    className="flex h-12 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                    className="flex h-12 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:text-slate-200"
                     required
                   >
-                    <option value="male">♂️ Hombre</option>
-                    <option value="female">♀️ Mujer</option>
+                    <option value="male" className="dark:bg-slate-900">♂️ {tr('common_back')}</option>
+                    <option value="female" className="dark:bg-slate-900">♀️ {tr('common_back')}</option>
                   </select>
                 </div>
               </div>
 
               {/* Weight + Height */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="weight" className="text-slate-700 font-medium">Peso (kg)</Label>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="weight" className="text-slate-700 dark:text-slate-300 font-bold text-sm flex items-center gap-2">
+                    <Scale className="h-4 w-4 text-emerald-500" />
+                    {tr('comming_soon')} (kg)
+                  </Label>
                   <Input
                     id="weight"
                     type="number"
@@ -513,11 +533,14 @@ export default function ProfilePage() {
                     value={formData.weight}
                     onChange={(e) => setFormData({ ...formData, weight: Number(e.target.value) })}
                     required
-                    className="h-12 rounded-xl border-slate-200 focus-visible:ring-emerald-500"
+                    className="h-12 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus-visible:ring-emerald-500 dark:text-slate-200"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="height" className="text-slate-700 font-medium">Altura (cm)</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="height" className="text-slate-700 dark:text-slate-300 font-bold text-sm flex items-center gap-2">
+                    <Ruler className="h-4 w-4 text-emerald-500" />
+                    {tr('comming_soon')} (cm)
+                  </Label>
                   <Input
                     id="height"
                     type="number"
@@ -526,22 +549,24 @@ export default function ProfilePage() {
                     value={formData.height}
                     onChange={(e) => setFormData({ ...formData, height: Number(e.target.value) })}
                     required
-                    className="h-12 rounded-xl border-slate-200 focus-visible:ring-emerald-500"
+                    className="h-12 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus-visible:ring-emerald-500 dark:text-slate-200"
                   />
                 </div>
               </div>
 
               {/* Activity Level */}
-              <div className="space-y-2">
-                <Label htmlFor="activityLevel" className="text-slate-700 font-medium">Nivel de actividad física</Label>
-                <div className="grid gap-2">
+              <div className="space-y-4">
+                <Label htmlFor="activityLevel" className="text-slate-700 dark:text-slate-300 font-bold text-sm">
+                  {tr('profile_activity')}
+                </Label>
+                <div className="grid gap-3">
                   {ACTIVITY_LEVELS.map((level) => (
                     <label
                       key={level.value}
                       className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
                         formData.activityLevel === level.value
-                          ? 'border-emerald-500 bg-emerald-50'
-                          : 'border-slate-200 hover:border-slate-300'
+                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/10 shadow-md shadow-emerald-500/5'
+                          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-950'
                       }`}
                     >
                       <input
@@ -553,15 +578,15 @@ export default function ProfilePage() {
                         className="sr-only"
                       />
                       <CheckCircle
-                        className={`h-5 w-5 shrink-0 ${
+                        className={`h-5 w-5 shrink-0 transition-colors ${
                           formData.activityLevel === level.value
                             ? 'text-emerald-600'
-                            : 'text-slate-300'
+                            : 'text-slate-300 dark:text-slate-700'
                         }`}
                       />
                       <div className="flex-1">
-                        <span className="text-sm font-medium text-slate-900">{level.label}</span>
-                        <span className="text-xs text-slate-400 ml-2">(×{level.multiplier})</span>
+                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{level.label}</span>
+                        <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">(×{level.multiplier})</span>
                       </div>
                     </label>
                   ))}
@@ -569,16 +594,18 @@ export default function ProfilePage() {
               </div>
 
               {/* Goal */}
-              <div className="space-y-2">
-                <Label htmlFor="goal" className="text-slate-700 font-medium">Objetivo</Label>
-                <div className="grid md:grid-cols-3 gap-3">
+              <div className="space-y-4">
+                <Label htmlFor="goal" className="text-slate-700 dark:text-slate-300 font-bold text-sm">
+                  {tr('common_confirm')}
+                </Label>
+                <div className="grid md:grid-cols-3 gap-4">
                   {GOALS.map((goal) => (
                     <label
                       key={goal.value}
                       className={`flex flex-col items-center gap-2 p-5 rounded-2xl border-2 cursor-pointer transition-all ${
                         formData.goal === goal.value
-                          ? 'border-emerald-500 bg-emerald-50 shadow-lg shadow-emerald-500/10'
-                          : 'border-slate-200 hover:border-slate-300'
+                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/10 shadow-lg shadow-emerald-500/10'
+                          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-950'
                       }`}
                     >
                       <input
@@ -589,9 +616,9 @@ export default function ProfilePage() {
                         onChange={(e) => setFormData({ ...formData, goal: e.target.value as any })}
                         className="sr-only"
                       />
-                      <span className="text-3xl">{goal.icon}</span>
-                      <span className="text-sm font-medium text-slate-900 text-center">{goal.label}</span>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-3xl filter drop-shadow-sm">{goal.icon}</span>
+                      <span className="text-sm font-bold text-slate-900 dark:text-slate-100 text-center">{goal.label}</span>
+                      <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">
                         {goal.adj > 0 ? '+' : ''}{goal.adj} kcal
                       </span>
                     </label>
@@ -600,24 +627,24 @@ export default function ProfilePage() {
               </div>
 
               {/* Calculated Preview */}
-              <Card className="bg-slate-50 border-slate-200">
+              <Card className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-inner">
                 <CardContent className="pt-6">
-                  <h4 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                  <h4 className="text-sm font-black text-slate-700 dark:text-slate-300 mb-6 flex items-center justify-center gap-2 uppercase tracking-widest opacity-70">
                     <Target className="h-4 w-4 text-emerald-600" />
-                    Vista previa de tus objetivos calculados
+                    {tr('dash_action_analytics') || 'Vista Previa'}
                   </h4>
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                      <div className="text-2xl font-bold text-emerald-600">{bmr}</div>
-                      <div className="text-xs text-slate-500 mt-1">BMR (kcal)</div>
+                  <div className="grid grid-cols-3 gap-6 text-center">
+                    <div className="space-y-1">
+                      <div className="text-2xl font-black text-emerald-600 dark:text-emerald-500">{bmr}</div>
+                      <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest px-2">BMR (kcal)</div>
                     </div>
-                    <div>
-                      <div className="text-2xl font-bold text-teal-600">{tdee}</div>
-                      <div className="text-xs text-slate-500 mt-1">TDEE (kcal)</div>
+                    <div className="space-y-1 border-x border-slate-200 dark:border-slate-800">
+                      <div className="text-2xl font-black text-teal-600 dark:text-teal-500">{tdee}</div>
+                      <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest px-2">TDEE (kcal)</div>
                     </div>
-                    <div>
-                      <div className="text-2xl font-bold text-emerald-700">{calorieGoal}</div>
-                      <div className="text-xs text-slate-500 mt-1">Objetivo (kcal)</div>
+                    <div className="space-y-1">
+                      <div className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{calorieGoal}</div>
+                      <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest px-2">{tr('common_confirm')} (kcal)</div>
                     </div>
                   </div>
                 </CardContent>
@@ -625,10 +652,10 @@ export default function ProfilePage() {
 
               {/* Message */}
               {message && (
-                <div className={`p-4 text-sm rounded-xl border ${
+                <div className={`p-4 text-sm font-medium rounded-xl border transition-all animate-in fade-in slide-in-from-top-2 ${
                   message.includes('Error')
-                    ? 'bg-red-50 text-red-700 border-red-200'
-                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900/30'
+                    : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/30'
                 }`}>
                   {message}
                 </div>
@@ -638,17 +665,17 @@ export default function ProfilePage() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-14 text-base font-semibold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/20"
+                className="w-full h-14 text-base font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-xl shadow-emerald-500/20 border-0 transition-all active:scale-[0.98]"
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Guardando...
+                    {tr('landing_start_button')}...
                   </>
                 ) : (
                   <>
                     <Save className="h-5 w-5 mr-2" />
-                    Guardar cambios
+                    {tr('common_confirm')}
                   </>
                 )}
               </Button>
@@ -657,16 +684,16 @@ export default function ProfilePage() {
         </Card>
 
         {/* Danger Zone */}
-        <Card className="border-red-200">
+        <Card className="border-red-200 dark:border-red-900/30 bg-red-50/10 dark:bg-red-900/5">
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-red-100">
-                <Shield className="h-5 w-5 text-red-600" />
+              <div className="p-2.5 rounded-xl bg-red-100 dark:bg-red-900/30">
+                <Shield className="h-5 w-5 text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <CardTitle className="text-red-700">Zona de peligro</CardTitle>
-                <CardDescription className="text-red-500">
-                  Acciones que afectan tu cuenta permanentemente
+                <CardTitle className="text-red-700 dark:text-red-300">{tr('prof_danger_zone') || 'Zona de Peligro'}</CardTitle>
+                <CardDescription className="text-red-500 dark:text-red-400/70">
+                  {tr('common_back') || 'Opciones irrevocables'}
                 </CardDescription>
               </div>
             </div>
@@ -674,11 +701,11 @@ export default function ProfilePage() {
           <CardContent>
             <Button
               variant="outline"
-              className="w-full h-12 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 gap-2"
+              className="w-full h-12 border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300 gap-2 font-bold"
               onClick={() => setShowLogoutConfirm(true)}
             >
               <LogOut className="h-5 w-5" />
-              Cerrar sesión
+              {tr('nav_logout')}
             </Button>
           </CardContent>
         </Card>

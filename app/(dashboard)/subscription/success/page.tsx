@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useLang } from '@/context/LangContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ import { Suspense } from 'react';
 function SubscriptionSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { tr } = useLang();
   const [isVerifying, setIsVerifying] = React.useState(true);
   const [isSuccess, setIsSuccess] = React.useState(false);
 
@@ -50,7 +52,7 @@ function SubscriptionSuccessContent() {
           <Card>
             <CardContent className="py-12 text-center">
               <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-emerald-700" />
-              <p className="text-stone-600">Verificando tu pago...</p>
+              <p className="text-stone-600">{tr('sub_verify_payment')}</p>
             </CardContent>
           </Card>
         </div>
@@ -64,9 +66,9 @@ function SubscriptionSuccessContent() {
         <div className="max-w-md mx-auto py-12">
           <Card>
             <CardContent className="py-12 text-center">
-              <p className="text-stone-600">No pudimos verificar tu pago. Por favor contacta a soporte.</p>
+              <p className="text-stone-600">{tr('sub_verify_error')}</p>
               <Button className="mt-4" onClick={() => router.push('/subscription')}>
-                Volver a suscripciones
+                {tr('sub_verify_back')}
               </Button>
             </CardContent>
           </Card>
@@ -81,21 +83,21 @@ function SubscriptionSuccessContent() {
         <Card>
           <CardHeader className="text-center">
             <CheckCircle2 className="h-16 w-16 text-emerald-700 mx-auto mb-4" />
-            <CardTitle className="text-2xl">¡Pago Exitoso!</CardTitle>
+            <CardTitle className="text-2xl">{tr('sub_success_title')}</CardTitle>
             <CardDescription>
-              Tu suscripción ha sido activada correctamente
+              {tr('sub_success_subtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <p className="text-stone-600">
-              Gracias por actualizar tu plan. Ahora tienes acceso a todas las funciones premium.
+              {tr('sub_success_message')}
             </p>
             <div className="flex gap-2 justify-center">
               <Link href="/dashboard">
-                <Button variant="outline">Ir al Dashboard</Button>
+                <Button variant="outline">{tr('sub_success_dashboard')}</Button>
               </Link>
               <Link href="/exercise">
-                <Button>Explorar Ejercicio</Button>
+                <Button>{tr('sub_success_explore')}</Button>
               </Link>
             </div>
           </CardContent>

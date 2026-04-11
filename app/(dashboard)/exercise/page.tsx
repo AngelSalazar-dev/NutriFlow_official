@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useLang } from '@/context/LangContext';
 import { useToast } from '@/components/ui/toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,60 +63,6 @@ interface Exercise {
   emoji: string;
 }
 
-const EXERCISE_DATABASE: Exercise[] = [
-  // Strength
-  { id: 'str-1', name: 'Sentadilla', met: 5.0, type: 'strength', muscleGroups: ['Cuádriceps', 'Glúteos'], icon: 'legs', emoji: '🏋️' },
-  { id: 'str-2', name: 'Press de banca', met: 4.0, type: 'strength', muscleGroups: ['Pecho', 'Tríceps'], icon: 'chest', emoji: '💪' },
-  { id: 'str-3', name: 'Peso muerto', met: 6.0, type: 'strength', muscleGroups: ['Espalda', 'Isquiotibiales'], icon: 'back', emoji: '🏋️' },
-  { id: 'str-4', name: 'Press militar', met: 3.5, type: 'strength', muscleGroups: ['Hombros', 'Tríceps'], icon: 'shoulders', emoji: '💪' },
-  { id: 'str-5', name: 'Dominadas', met: 8.0, type: 'strength', muscleGroups: ['Espalda', 'Bíceps'], icon: 'back', emoji: '🔝' },
-  { id: 'str-6', name: 'Flexiones', met: 3.8, type: 'strength', muscleGroups: ['Pecho', 'Tríceps'], icon: 'chest', emoji: '💪' },
-  { id: 'str-7', name: 'Curl de bíceps', met: 3.0, type: 'strength', muscleGroups: ['Bíceps'], icon: 'arms', emoji: '💪' },
-  { id: 'str-8', name: 'Extensiones de tríceps', met: 3.0, type: 'strength', muscleGroups: ['Tríceps'], icon: 'arms', emoji: '💪' },
-  { id: 'str-9', name: 'Prensa de piernas', met: 4.5, type: 'strength', muscleGroups: ['Cuádriceps', 'Glúteos'], icon: 'legs', emoji: '🦵' },
-  { id: 'str-10', name: 'Plancha', met: 3.5, type: 'strength', muscleGroups: ['Abdomen'], icon: 'core', emoji: '🎯' },
-  // Cardio
-  { id: 'card-1', name: 'Correr (moderado)', met: 8.0, type: 'cardio', muscleGroups: ['Cardio', 'Cuádriceps'], icon: 'running', emoji: '🏃' },
-  { id: 'card-2', name: 'Correr (rápido)', met: 11.0, type: 'cardio', muscleGroups: ['Cardio', 'Cuádriceps'], icon: 'running', emoji: '🏃' },
-  { id: 'card-3', name: 'Caminar', met: 3.5, type: 'cardio', muscleGroups: ['Cardio'], icon: 'walking', emoji: '🚶' },
-  { id: 'card-4', name: 'Bicicleta estática', met: 7.0, type: 'cardio', muscleGroups: ['Cardio', 'Cuádriceps'], icon: 'cycling', emoji: '🚴' },
-  { id: 'card-5', name: 'Elíptica', met: 5.0, type: 'cardio', muscleGroups: ['Cardio'], icon: 'elliptical', emoji: '🏃' },
-  { id: 'card-6', name: 'Natación', met: 6.0, type: 'cardio', muscleGroups: ['Cardio', 'Espalda'], icon: 'swimming', emoji: '🏊' },
-  { id: 'card-7', name: 'Saltar cuerda', met: 10.0, type: 'cardio', muscleGroups: ['Cardio', 'Pantorrillas'], icon: 'jumping', emoji: '⏱️' },
-  { id: 'card-8', name: 'Senderismo', met: 6.0, type: 'cardio', muscleGroups: ['Cardio', 'Cuádriceps'], icon: 'hiking', emoji: '🥾' },
-  // Flexibility
-  { id: 'flex-1', name: 'Yoga', met: 2.5, type: 'flexibility', muscleGroups: ['Cardio'], icon: 'yoga', emoji: '🧘' },
-  { id: 'flex-2', name: 'Estiramientos', met: 2.3, type: 'flexibility', muscleGroups: ['Cardio'], icon: 'stretch', emoji: '🤸' },
-  { id: 'flex-3', name: 'Pilates', met: 3.0, type: 'flexibility', muscleGroups: ['Abdomen'], icon: 'pilates', emoji: '🧘' },
-  // HIIT
-  { id: 'hiit-1', name: 'HIIT', met: 12.0, type: 'hiit', muscleGroups: ['Cardio', 'Cuádriceps'], icon: 'hiit', emoji: '⚡' },
-  { id: 'hiit-2', name: 'Burpees', met: 10.0, type: 'hiit', muscleGroups: ['Cardio', 'Pecho'], icon: 'burpee', emoji: '🔥' },
-  { id: 'hiit-3', name: 'Jumping Jacks', met: 8.0, type: 'hiit', muscleGroups: ['Cardio'], icon: 'jumping', emoji: '⭐' },
-  { id: 'hiit-4', name: 'Mountain Climbers', met: 9.0, type: 'hiit', muscleGroups: ['Abdomen', 'Cardio'], icon: 'climber', emoji: '🧗' },
-];
-
-const EXERCISE_CATEGORIES = [
-  { id: 'all', label: 'Todos', icon: Target, emoji: '🎯' },
-  { id: 'strength', label: 'Fuerza', icon: Dumbbell, emoji: '💪' },
-  { id: 'cardio', label: 'Cardio', icon: Heart, emoji: '❤️' },
-  { id: 'flexibility', label: 'Flexibilidad', icon: Activity, emoji: '🧘' },
-  { id: 'hiit', label: 'HIIT', icon: Zap, emoji: '⚡' },
-];
-
-const MUSCLE_GROUPS = [
-  { id: 'Pecho', emoji: '🫁' },
-  { id: 'Espalda', emoji: '🔙' },
-  { id: 'Hombros', emoji: '🤷' },
-  { id: 'Bíceps', emoji: '💪' },
-  { id: 'Tríceps', emoji: '🦾' },
-  { id: 'Abdomen', emoji: '🎯' },
-  { id: 'Cuádriceps', emoji: '🦵' },
-  { id: 'Isquiotibiales', emoji: '🦿' },
-  { id: 'Glúteos', emoji: '🍑' },
-  { id: 'Pantorrillas', emoji: '🦶' },
-  { id: 'Cardio', emoji: '❤️' },
-];
-
 const CATEGORY_COLORS: Record<string, string> = {
   strength: 'from-blue-500 to-blue-600',
   cardio: 'from-red-500 to-red-600',
@@ -132,6 +79,7 @@ const CATEGORY_BG: Record<string, string> = {
 
 export default function ExercisePage() {
   const { user, isPremium } = useAuth();
+  const { tr, lang } = useLang();
   const { success: toastSuccess, error: toastError } = useToast();
   const [logs, setLogs] = React.useState<ExerciseLog[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -145,6 +93,39 @@ export default function ExercisePage() {
   const [notes, setNotes] = React.useState('');
   const [isSaving, setIsSaving] = React.useState(false);
   const [selectedDate, setSelectedDate] = React.useState(new Date());
+
+  const EXERCISE_DATABASE: Exercise[] = [
+    { id: 'str-1', name: 'Squat', met: 5.0, type: 'strength', muscleGroups: ['Quads', 'Glutes'], icon: 'legs', emoji: '🏋️' },
+    { id: 'str-2', name: 'Bench Press', met: 4.0, type: 'strength', muscleGroups: ['Chest', 'Triceps'], icon: 'chest', emoji: '💪' },
+    { id: 'str-3', name: 'Deadlift', met: 6.0, type: 'strength', muscleGroups: ['Back', 'Glutes'], icon: 'back', emoji: '🏋️' },
+    { id: 'str-4', name: 'Shoulder Press', met: 3.5, type: 'strength', muscleGroups: ['Shoulders', 'Triceps'], icon: 'shoulders', emoji: '💪' },
+    { id: 'str-10', name: 'Plancha', met: 3.5, type: 'strength', muscleGroups: ['Abs'], icon: 'core', emoji: '🎯' },
+    { id: 'card-1', name: 'Running', met: 8.0, type: 'cardio', muscleGroups: ['Cardio', 'Quads'], icon: 'running', emoji: '🏃' },
+    { id: 'card-3', name: 'Walking', met: 3.5, type: 'cardio', muscleGroups: ['Cardio'], icon: 'walking', emoji: '🚶' },
+    { id: 'flex-1', name: 'Yoga', met: 2.5, type: 'flexibility', muscleGroups: ['Cardio'], icon: 'yoga', emoji: '🧘' },
+    { id: 'hiit-1', name: 'HIIT', met: 12.0, type: 'hiit', muscleGroups: ['Cardio', 'Quads'], icon: 'hiit', emoji: '⚡' },
+  ];
+
+  const EXERCISE_CATEGORIES = [
+    { id: 'all', label: lang === 'en' ? 'All' : 'Todos', icon: Target, emoji: '🎯' },
+    { id: 'strength', label: lang === 'en' ? 'Strength' : 'Fuerza', icon: Dumbbell, emoji: '💪' },
+    { id: 'cardio', label: lang === 'en' ? 'Cardio' : 'Cardio', icon: Heart, emoji: '❤️' },
+    { id: 'flexibility', label: lang === 'en' ? 'Flexibility' : 'Flexibilidad', icon: Activity, emoji: '🧘' },
+    { id: 'hiit', label: 'HIIT', icon: Zap, emoji: '⚡' },
+  ];
+
+  const MUSCLE_GROUPS = [
+    { id: 'Chest', emoji: '🫁' },
+    { id: 'Back', emoji: '🔙' },
+    { id: 'Shoulders', emoji: '🤷' },
+    { id: 'Biceps', emoji: '💪' },
+    { id: 'Triceps', emoji: '🦾' },
+    { id: 'Abs', emoji: '🎯' },
+    { id: 'Quads', emoji: '🦵' },
+    { id: 'Glutes', emoji: '🍑' },
+    { id: 'Calves', emoji: '🦶' },
+    { id: 'Cardio', emoji: '❤️' },
+  ];
 
   React.useEffect(() => {
     loadLogs();
@@ -224,7 +205,7 @@ export default function ExercisePage() {
       });
 
       if (response.ok) {
-        toastSuccess('Ejercicio registrado', `${selectedExercise.name} — ${caloriesBurned} kcal quemadas`);
+        toastSuccess(tr('ex_add_success'), `${selectedExercise.name} — ${caloriesBurned} kcal ${tr('food_verified')}`);
         setShowAddForm(false);
         setSelectedExercise(null);
         setDurationMin(30);
@@ -232,20 +213,17 @@ export default function ExercisePage() {
         setNotes('');
         await loadLogs();
       } else {
-        const errData = await response.json().catch(() => ({}));
-        console.error('[EXERCISE] Save failed:', response.status, JSON.stringify(errData));
-        toastError('Error', errData.error || 'No se pudo guardar el ejercicio');
+        toastError(tr('common_error'), tr('food_register_error'));
       }
     } catch (error) {
-      console.error('[EXERCISE] Error adding log:', error);
-      toastError('Error de conexión', 'No se pudo comunicar con el servidor');
+      toastError(tr('common_error'), tr('common_error'));
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDeleteLog = async (id: string) => {
-    if (!confirm('¿Eliminar este ejercicio?')) return;
+    if (!confirm(tr('food_delete_confirm'))) return;
     try {
       const response = await fetch(`/api/exercise/log?id=${id}`, {
         method: 'DELETE',
@@ -253,15 +231,13 @@ export default function ExercisePage() {
       });
 
       if (response.ok) {
-        toastSuccess('Ejercicio eliminado');
+        toastSuccess(tr('common_delete') + '!');
         await loadLogs();
       } else {
-        const errData = await response.json().catch(() => ({}));
-        toastError('Error', errData.error || 'No se pudo eliminar el ejercicio');
+        toastError(tr('common_error'), tr('common_error'));
       }
     } catch (error) {
-      console.error('[EXERCISE] Error deleting log:', error);
-      toastError('Error de conexión', 'No se pudo comunicar con el servidor');
+      toastError(tr('common_error'), tr('common_error'));
     }
   };
 
@@ -270,36 +246,35 @@ export default function ExercisePage() {
     return (
       <DashboardLayout>
         <div className="max-w-2xl mx-auto text-center py-12">
-          <Card>
+          <Card className="dark:bg-slate-900 dark:border-slate-800">
             <CardHeader>
-              <Crown className="h-16 w-16 text-emerald-700 mx-auto mb-4" />
-              <CardTitle className="text-2xl">Módulo de Ejercicio</CardTitle>
-              <CardDescription>
-                Esta función está disponible solo para usuarios Premium
+              <Crown className="h-16 w-16 text-emerald-700 dark:text-emerald-500 mx-auto mb-4" />
+              <CardTitle className="text-2xl dark:text-slate-100">{tr('nav_exercise')}</CardTitle>
+              <CardDescription className="dark:text-slate-400">
+                {tr('sub_status_free')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-stone-600">
-                Registra tus rutinas, calcula calorías quemadas automáticamente,
-                y haz seguimiento de tu progreso con estadísticas detalladas.
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
+                {tr('landing_hero_subtitle')}
               </p>
               <ul className="text-left space-y-2 max-w-md mx-auto">
-                <li className="flex items-center gap-2">
+                <li className="flex items-center gap-2 dark:text-slate-200">
                   <Dumbbell className="h-5 w-5 text-emerald-600" />
-                  <span>Registro de rutinas y ejercicios</span>
+                  <span>{tr('ex_type_strength')}</span>
                 </li>
-                <li className="flex items-center gap-2">
+                <li className="flex items-center gap-2 dark:text-slate-200">
                   <Flame className="h-5 w-5 text-emerald-600" />
-                  <span>Cálculo automático de calorías quemadas</span>
+                  <span>{tr('food_kcal')}</span>
                 </li>
-                <li className="flex items-center gap-2">
+                <li className="flex items-center gap-2 dark:text-slate-200">
                   <Clock className="h-5 w-5 text-emerald-600" />
-                  <span>Historial de entrenamientos</span>
+                  <span>{tr('dash_no_weekly_data')}</span>
                 </li>
               </ul>
               <Link href="/subscription">
-                <Button size="lg" className="mt-6">
-                  Actualizar a Premium
+                <Button size="lg" className="mt-6 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600">
+                  {tr('sub_upgrade_premium')}
                 </Button>
               </Link>
             </CardContent>
@@ -313,45 +288,45 @@ export default function ExercisePage() {
     <DashboardLayout>
       <div className="space-y-6 pb-32">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-5xl font-heading font-extrabold tracking-tighter text-slate-900">Entrenamiento</h1>
-            <p className="text-lg text-slate-500 font-medium">Registra tu actividad física</p>
+            <h1 className="text-4xl md:text-5xl font-heading font-extrabold tracking-tighter text-slate-900 dark:text-slate-100">{tr('nav_exercise')}</h1>
+            <p className="text-lg text-slate-500 dark:text-slate-400 font-medium">{tr('food_log_subtitle')}</p>
           </div>
           <div className="text-right">
-            <div className="text-4xl font-heading font-extrabold tracking-tight text-orange-600">
-              {totalCalories} <span className="text-2xl text-orange-600/50 font-bold">kcal</span>
+            <div className="text-3xl md:text-4xl font-heading font-extrabold tracking-tight text-orange-600 dark:text-orange-500">
+              {totalCalories} <span className="text-xl md:text-2xl text-orange-600/50 dark:text-orange-500/50 font-bold">{tr('food_kcal')}</span>
             </div>
-            <div className="text-xs text-slate-400 font-bold uppercase">quemadas hoy</div>
+            <div className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase">{tr('food_verified')}</div>
           </div>
         </div>
 
         {/* Date Navigation */}
-        <div className="flex items-center justify-between bg-white rounded-2xl border border-slate-200 px-4 py-3 shadow-sm">
-          <Button variant="ghost" size="sm" onClick={() => setSelectedDate(d => { const n = new Date(d); n.setDate(n.getDate() - 1); return n; })} className="gap-1">
-            <ChevronLeft className="h-4 w-4" /> Ayer
+        <div className="flex items-center justify-between bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 px-4 py-3 shadow-sm transition-colors duration-300">
+          <Button variant="ghost" size="sm" onClick={() => setSelectedDate(d => { const n = new Date(d); n.setDate(n.getDate() - 1); return n; })} className="gap-1 dark:text-slate-300 dark:hover:bg-slate-800">
+            <ChevronLeft className="h-4 w-4" /> {tr('food_yesterday')}
           </Button>
           <div className="text-center">
-            <div className="font-bold text-slate-900">
-              {selectedDate.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' })}
+            <div className="font-bold text-slate-900 dark:text-slate-100">
+              {selectedDate.toLocaleDateString(lang === 'en' ? 'en-US' : 'es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
             </div>
-            <div className="text-xs text-slate-400">
-              {selectedDate.toDateString() === new Date().toDateString() ? 'Hoy' : ''}
+            <div className="text-xs text-slate-400 dark:text-slate-500">
+              {selectedDate.toDateString() === new Date().toDateString() ? tr('dash_today') : ''}
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => setSelectedDate(d => { const n = new Date(d); n.setDate(n.getDate() + 1); return n; })} className="gap-1" disabled={selectedDate.toDateString() === new Date().toDateString()}>
-            Mañana <ChevronRight className="h-4 w-4" />
+          <Button variant="ghost" size="sm" onClick={() => setSelectedDate(d => { const n = new Date(d); n.setDate(n.getDate() + 1); return n; })} className="gap-1 dark:text-slate-300 dark:hover:bg-slate-800" disabled={selectedDate.toDateString() === new Date().toDateString()}>
+            {tr('food_tomorrow')} <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
 
         {/* Exercise Selector */}
-        <Card className="card-nutriflow shadow-lg border-orange-100">
+        <Card className="card-nutriflow shadow-lg border-orange-100 dark:border-orange-900/30 dark:bg-slate-900">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Dumbbell className="h-5 w-5 text-orange-600" />
-              Agregar Ejercicio
+            <CardTitle className="flex items-center gap-2 dark:text-slate-100">
+              <Dumbbell className="h-5 w-5 text-orange-600 dark:text-orange-500" />
+              {tr('common_add')} {tr('nav_exercise')}
             </CardTitle>
-            <CardDescription>Selecciona un ejercicio para registrarlo</CardDescription>
+            <CardDescription className="dark:text-slate-400">{tr('food_search_placeholder')}</CardDescription>
           </CardHeader>
           <CardContent>
             {/* Category Tabs */}
@@ -362,8 +337,8 @@ export default function ExercisePage() {
                   onClick={() => { setSelectedCategory(cat.id); setSearchQuery(''); }}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
                     selectedCategory === cat.id
-                      ? 'bg-orange-600 text-white shadow-md'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      ? 'bg-orange-600 dark:bg-orange-700 text-white shadow-md'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >
                   <span>{cat.emoji}</span>
@@ -374,12 +349,12 @@ export default function ExercisePage() {
 
             {/* Search */}
             <div className="relative mb-4">
-              <Target className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-stone-400" />
+              <Target className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-stone-400 dark:text-slate-500" />
               <input
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setSelectedCategory('all'); }}
-                placeholder="Buscar ejercicio..."
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-orange-500 font-medium"
+                placeholder={`${tr('common_search')}...`}
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 dark:text-slate-100 font-medium transition-all"
               />
             </div>
 
@@ -390,36 +365,38 @@ export default function ExercisePage() {
                   key={ex.id}
                   onClick={() => handleSelectExercise(ex)}
                   className={`p-4 rounded-2xl border-2 transition-all hover:shadow-lg text-left ${
+                    selectedExercise?.id === ex.id ? 'border-orange-500 scale-105' : 'border-transparent dark:border-slate-800'
+                  } ${
                     CATEGORY_BG[ex.type]
-                  } hover:scale-105`}
+                  } dark:bg-slate-800/40 hover:scale-105`}
                 >
                   <div className="text-3xl mb-2">{ex.emoji}</div>
-                  <div className="font-bold text-sm leading-tight">{ex.name}</div>
-                  <div className="text-xs mt-1 opacity-75">MET: {ex.met}</div>
+                  <div className="font-bold text-sm leading-tight dark:text-slate-100">{ex.name}</div>
+                  <div className="text-xs mt-1 opacity-75 dark:text-slate-400">MET: {ex.met}</div>
                 </button>
               ))}
             </div>
 
             {filteredExercises.length === 0 && (
-              <div className="text-center py-8 text-stone-400">
-                No se encontraron ejercicios
+              <div className="text-center py-8 text-slate-400 dark:text-slate-600 italic">
+                {tr('dash_no_weekly_data')}
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Today's Workout Log */}
-        <Card className="card-nutriflow shadow-xl border-orange-100">
+        <Card className="card-nutriflow shadow-xl border-orange-100 dark:border-orange-900/30 dark:bg-slate-900">
           <CardHeader>
-            <CardTitle className="text-orange-900 flex items-center gap-2">
-              <Flame className="h-5 w-5 text-orange-600" />
-              {selectedDate.toDateString() === new Date().toDateString() ? 'Entrenamiento de Hoy' : `Entrenamiento del ${selectedDate.toLocaleDateString('es', { day: 'numeric', month: 'long' })}`}
+            <CardTitle className="text-orange-900 dark:text-orange-100 flex items-center gap-2">
+              <Flame className="h-5 w-5 text-orange-600 dark:text-orange-500" />
+              {selectedDate.toDateString() === new Date().toDateString() ? tr('food_verified') : `${tr('nav_exercise')} ${tr('common_back')} ${selectedDate.toLocaleDateString(lang === 'en' ? 'en-US' : 'es-ES', { day: 'numeric', month: 'long' })}`}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {logs.length === 0 ? (
-              <div className="text-center py-10 text-stone-400 italic">
-                No has registrado ejercicios para este día... {selectedDate.toDateString() === new Date().toDateString() ? '¡es hora de entrenar!' : 'descansa bien.'}
+              <div className="text-center py-10 text-stone-400 dark:text-slate-500 italic">
+                {tr('dash_no_weekly_data')}... {selectedDate.toDateString() === new Date().toDateString() ? tr('landing_start_button') : tr('common_confirm')}.
               </div>
             ) : (
               <div className="space-y-3">
@@ -428,27 +405,27 @@ export default function ExercisePage() {
                   const exData = EXERCISE_DATABASE.find(e => e.name === log.exerciseName);
                   const logId = log.id || `log-${index}`;
                   const createdAt = log.createdAt || log.date || new Date();
-                  const timeStr = new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  const timeStr = new Date(createdAt).toLocaleTimeString(lang === 'en' ? 'en-US' : 'es-ES', { hour: '2-digit', minute: '2-digit' });
                   const cals = Math.round(Number(log.caloriesBurned) || 0);
                   const dur = Number(log.durationMin) || 0;
                   return (
-                    <div key={logId} className="flex items-center justify-between p-4 bg-stone-50 rounded-2xl border border-stone-100 hover:shadow-md transition-shadow">
+                    <div key={logId} className="flex items-center justify-between p-5 bg-slate-50/50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:shadow-xl hover:shadow-orange-500/5 transition-all group">
                       <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-xl bg-gradient-to-br ${categoryColor} text-white shadow-md`}>
+                        <div className={`p-3.5 rounded-2xl bg-gradient-to-br ${categoryColor} text-white shadow-lg shadow-orange-500/10 group-hover:scale-110 transition-transform`}>
                           <span className="text-xl">{exData?.emoji || '🏋️'}</span>
                         </div>
                         <div>
-                          <div className="font-bold text-stone-900">{log.exerciseName}</div>
-                          <div className="text-xs text-stone-500 uppercase font-black flex items-center gap-2">
+                          <div className="font-black text-slate-900 dark:text-slate-100 tracking-tight">{log.exerciseName}</div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black flex items-center gap-2">
                             <Clock className="h-3 w-3" />
                             {dur} min
                           </div>
                           {log.muscleGroups && log.muscleGroups.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1">
+                            <div className="flex flex-wrap gap-1 mt-1.5">
                               {log.muscleGroups.slice(0, 3).map((mg, i) => {
                                 const muscleData = MUSCLE_GROUPS.find(m => m.id === mg);
                                 return (
-                                  <span key={i} className="text-[9px] bg-stone-200 text-stone-600 px-2 py-0.5 rounded-full font-bold">
+                                  <span key={i} className="text-[9px] bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-lg font-bold border border-slate-100 dark:border-slate-600 shadow-sm">
                                     {muscleData?.emoji} {mg}
                                   </span>
                                 );
@@ -459,8 +436,8 @@ export default function ExercisePage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="text-right">
-                          <div className="font-black text-orange-600">{cals} kcal</div>
-                          <div className="text-[9px] text-stone-400 font-bold uppercase">
+                          <div className="font-black text-orange-600 dark:text-orange-500 text-lg">{cals} <span className="text-[10px] text-orange-600/50 dark:text-orange-500/50 font-black">kcal</span></div>
+                          <div className="text-[9px] text-slate-400 dark:text-slate-500 font-black tracking-tighter uppercase">
                             {timeStr}
                           </div>
                         </div>
@@ -468,7 +445,7 @@ export default function ExercisePage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDeleteLog(logId)}
-                          className="text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-full"
+                          className="h-9 w-9 text-slate-300 dark:text-slate-700 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-full transition-all"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -484,14 +461,14 @@ export default function ExercisePage() {
 
       {/* Add Exercise Dialog */}
       <Dialog open={showAddForm} onOpenChange={(open) => { setShowAddForm(open); if (!open) setSelectedExercise(null); }}>
-        <DialogContent className="sm:max-w-lg rounded-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-lg rounded-3xl max-h-[90vh] overflow-y-auto dark:bg-slate-900 dark:border-slate-800">
           <DialogHeader>
-            <DialogTitle className="text-orange-900 font-bold text-xl flex items-center gap-2">
+            <DialogTitle className="text-orange-900 dark:text-orange-100 font-bold text-xl flex items-center gap-2">
               <span className="text-2xl">{selectedExercise?.emoji}</span>
               {selectedExercise?.name}
             </DialogTitle>
-            <DialogDescription>
-              <span className={`inline-block px-2 py-1 rounded-lg text-[10px] font-bold uppercase ${CATEGORY_BG[selectedExercise?.type || 'strength']}`}>
+            <DialogDescription className="dark:text-slate-400">
+              <span className={`inline-block px-2 py-1 rounded-lg text-[10px] font-bold uppercase ${CATEGORY_BG[selectedExercise?.type || 'strength']} dark:bg-slate-800`}>
                 {selectedExercise?.type}
               </span>
               {' '}• MET: {selectedExercise?.met}
@@ -501,15 +478,15 @@ export default function ExercisePage() {
           <div className="space-y-4 py-3">
             {/* Duration */}
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-700 flex items-center gap-2">
+              <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <Timer className="h-3 w-3" />
-                Duración
+                {tr('common_back')}
               </Label>
-              <div className="flex items-center bg-slate-50 rounded-xl border border-slate-200 p-1.5">
+              <div className="flex items-center bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 p-1.5">
                 <button
                   onClick={() => setDurationMin(Math.max(5, durationMin - 5))}
                   disabled={durationMin <= 5}
-                  className="w-10 h-10 rounded-lg bg-orange-100 hover:bg-orange-200 text-orange-700 font-black text-lg disabled:opacity-30 transition-colors"
+                  className="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/50 hover:bg-orange-200 dark:hover:bg-orange-800 text-orange-700 dark:text-orange-300 font-black text-lg disabled:opacity-30 transition-colors"
                 >
                   -
                 </button>
@@ -517,25 +494,25 @@ export default function ExercisePage() {
                   type="number"
                   value={durationMin}
                   onChange={(e) => setDurationMin(Math.max(5, Number(e.target.value)))}
-                  className="text-2xl font-black border-none text-center focus-visible:ring-0 flex-1"
+                  className="text-2xl font-black border-none text-center focus-visible:ring-0 flex-1 dark:bg-transparent dark:text-slate-100"
                   min="5"
                   step="5"
                 />
                 <button
                   onClick={() => setDurationMin(durationMin + 5)}
-                  className="w-10 h-10 rounded-lg bg-orange-100 hover:bg-orange-200 text-orange-700 font-black text-lg transition-colors"
+                  className="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/50 hover:bg-orange-200 dark:hover:bg-orange-800 text-orange-700 dark:text-orange-300 font-black text-lg transition-colors"
                 >
                   +
                 </button>
-                <span className="pl-2 pr-3 font-black text-slate-600 uppercase text-[10px]">min</span>
+                <span className="pl-2 pr-3 font-black text-slate-600 dark:text-slate-400 uppercase text-[10px]">min</span>
               </div>
             </div>
 
             {/* Muscle Groups */}
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-700 flex items-center gap-2">
+              <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                 <Target className="h-3 w-3" />
-                Músculos trabajados
+                {tr('food_nutrient_density')}
               </Label>
               <div className="grid grid-cols-4 gap-1.5">
                 {MUSCLE_GROUPS.map((muscle) => (
@@ -545,7 +522,7 @@ export default function ExercisePage() {
                     className={`p-2 rounded-lg text-[10px] font-bold transition-all ${
                       selectedMuscles.includes(muscle.id)
                         ? 'bg-orange-600 text-white shadow-md scale-105'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
                   >
                     <div className="text-base">{muscle.emoji}</div>
@@ -557,33 +534,33 @@ export default function ExercisePage() {
 
             {/* Notes */}
             <div className="space-y-1">
-              <Label className="text-xs font-bold text-slate-700">Notas (opcional)</Label>
+              <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">{tr('comming_soon')} ({tr('common_back')})</Label>
               <Input
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Series, repeticiones, peso..."
-                className="rounded-xl h-9 text-sm"
+                placeholder="..."
+                className="rounded-xl h-9 text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
               />
             </div>
 
             {/* Calorie Preview */}
-            <div className="flex justify-between items-center px-3 py-2 bg-orange-50 rounded-lg border border-orange-100">
-              <span className="text-[10px] font-bold text-orange-800 uppercase tracking-widest flex items-center gap-1.5">
+            <div className="flex justify-between items-center px-3 py-2 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-100 dark:border-orange-900/30">
+              <span className="text-[10px] font-bold text-orange-800 dark:text-orange-400 uppercase tracking-widest flex items-center gap-1.5">
                 <Flame className="h-3 w-3" />
-                Calorías
+                {tr('food_kcal')}
               </span>
-              <span className="font-black text-orange-600 text-base">
+              <span className="font-black text-orange-600 dark:text-orange-500 text-base">
                 {calculateCaloriesBurned()} kcal
               </span>
             </div>
           </div>
 
           <DialogFooter className="sm:justify-between gap-2">
-            <Button variant="ghost" onClick={() => { setShowAddForm(false); setSelectedExercise(null); }} className="rounded-lg font-bold text-sm">
-              Cancelar
+            <Button variant="ghost" onClick={() => { setShowAddForm(false); setSelectedExercise(null); }} className="rounded-lg font-bold text-sm dark:text-slate-400 dark:hover:bg-slate-800">
+              {tr('common_back')}
             </Button>
-            <Button onClick={handleAddLog} disabled={isSaving} className="bg-orange-600 hover:bg-orange-700 text-white rounded-lg shadow-md font-bold px-6 text-sm">
-              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Registrar'}
+            <Button onClick={handleAddLog} disabled={isSaving} className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-600 text-white rounded-lg shadow-md font-bold px-6 text-sm">
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : tr('common_add')}
             </Button>
           </DialogFooter>
         </DialogContent>

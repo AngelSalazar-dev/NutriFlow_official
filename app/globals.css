@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* ⚡ CRITICAL: Tailwind v4 requires this to enable class-based dark: variants */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   /* NutriFlow Elegant Palette — Slate + Indigo + Violet */
   --color-slate-50: #f8fafc;
@@ -72,6 +75,37 @@
 
 /* Dark mode support removed - Pure light theme enforced */
 
+/* ============================================
+   DARK MODE — triggered by html.dark class
+   ============================================ */
+html.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --primary: #10b981;
+  --primary-foreground: #ffffff;
+  --secondary: #1e293b;
+  --secondary-foreground: #cbd5e1;
+  --accent: #064e3b;
+  --accent-foreground: #a7f3d0;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --border: #334155;
+  --ring: #10b981;
+}
+
+html.dark body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Dark scrollbar */
+html.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  border-color: #1e293b;
+}
+
 * {
   border-color: var(--border);
   -webkit-font-smoothing: antialiased;
@@ -138,15 +172,15 @@ html {
 }
 
 .card-nutriflow {
-  @apply rounded-3xl border border-slate-200/50 bg-white/70 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-2xl transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:shadow-[0_20px_60px_rgb(99,102,241,0.08)];
+  @apply rounded-3xl border border-slate-200/50 dark:border-slate-700/50 bg-white/70 dark:bg-slate-800/70 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none backdrop-blur-2xl transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] hover:shadow-[0_20px_60px_rgb(99,102,241,0.08)];
 }
 
 .card-premium {
-  @apply rounded-3xl border border-indigo-500/20 bg-gradient-to-br from-indigo-50/50 to-violet-50/50 shadow-[0_8px_30px_rgb(99,102,241,0.1)] backdrop-blur-2xl transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)];
+  @apply rounded-3xl border border-indigo-500/20 dark:border-indigo-500/30 bg-gradient-to-br from-indigo-50/50 to-violet-50/50 dark:from-indigo-900/10 dark:to-violet-900/10 shadow-[0_8px_30px_rgb(99,102,241,0.1)] backdrop-blur-2xl transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)];
 }
 
 .card-glass {
-  @apply rounded-3xl border border-white/20 bg-white/60 shadow-xl backdrop-blur-3xl;
+  @apply rounded-3xl border border-white/20 dark:border-white/5 bg-white/60 dark:bg-slate-900/60 shadow-xl backdrop-blur-3xl;
 }
 
 .btn-primary {
@@ -154,12 +188,21 @@ html {
 }
 
 .btn-secondary {
-  @apply inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2;
+  @apply inline-flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-6 py-3 text-sm font-semibold text-slate-900 dark:text-slate-100 shadow-sm transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2 dark:focus:ring-offset-slate-900;
 }
 
 .btn-glow {
   @apply relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 bg-[length:200%_auto] px-8 py-4 text-base font-bold text-white shadow-xl transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 hover:bg-right focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2;
 }
+
+.glass {
+  @apply bg-white/60 dark:bg-slate-900/60 backdrop-blur-3xl border border-white/20 dark:border-white/5;
+}
+
+.skeleton {
+  @apply bg-slate-200 dark:bg-slate-700 rounded animate-pulse;
+}
+
 
 .btn-glow::before {
   content: '';

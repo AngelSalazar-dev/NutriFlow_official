@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Gift, Check, X, Loader2, Sparkles } from 'lucide-react';
+import { useLang } from '@/context/LangContext';
 
 interface PromoCodeRedeemerProps {
   onSuccess?: (data: any) => void;
 }
 
 export function PromoCodeRedeemer({ onSuccess }: PromoCodeRedeemerProps) {
+  const { tr } = useLang();
   const [code, setCode] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
   const [isValidating, setIsValidating] = React.useState(false);
@@ -95,7 +97,7 @@ export function PromoCodeRedeemer({ onSuccess }: PromoCodeRedeemerProps) {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-emerald-800 mb-2">
-            <strong>Plan:</strong> {result.plan === 'pro' ? 'Pro' : 'Premium'}
+            <strong>Plan:</strong> {result.plan === 'pro' ? tr('sub_plan_pro_name') : tr('sub_plan_premium_name')}
           </p>
           <p className="text-sm text-emerald-800">
             <strong>Válido hasta:</strong> {new Date(result.expiresAt).toLocaleDateString()}
@@ -164,7 +166,7 @@ export function PromoCodeRedeemer({ onSuccess }: PromoCodeRedeemerProps) {
               <span className="text-sm font-medium">Código válido</span>
             </div>
             <div className="text-sm text-stone-600">
-              <p><strong>Plan:</strong> {validationResult.plan === 'pro' ? 'Pro' : 'Premium'}</p>
+              <p><strong>Plan:</strong> {validationResult.plan === 'pro' ? tr('sub_plan_pro_name') : tr('sub_plan_premium_name')}</p>
               <p><strong>Duración:</strong> {validationResult.duration}</p>
               <p><strong>Usos restantes:</strong> {validationResult.usesRemaining}</p>
             </div>

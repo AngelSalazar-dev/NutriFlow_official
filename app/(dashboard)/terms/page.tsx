@@ -44,7 +44,7 @@ export default function TermsPage() {
             <ul className="list-disc list-inside space-y-2 text-stone-600 ml-4">
               <li><strong>Gratuito:</strong> Funciones básicas con anuncios</li>
               <li><strong>Premium ($9.99/mes):</strong> Sin anuncios, chat ilimitado, módulo de ejercicio</li>
-              <li><strong>Pro ($19.99/mes):</strong> Todas las funciones, historial ilimitado, exportación de datos</li>
+              <li><strong>{tr('sub_plan_pro_name')} ($19.99/mes):</strong> Todas las funciones, historial ilimitado, exportación de datos</li>
             </ul>
             <p className="text-stone-600 mt-4">
               Las suscripciones se renuevan automáticamente. Puedes cancelar en cualquier momento desde tu perfil.

@@ -193,7 +193,7 @@ export default function ContactPage() {
             <div className="space-y-2">
               <h3 className="font-semibold text-stone-900">¿Ofrecen reembolsos?</h3>
               <p className="text-stone-600">
-                Ofrecemos garantía de devolución de 14 días para el plan Pro. Para otros planes, contacta a soporte.
+                Ofrecemos garantía de devolución de 14 días para el plan {tr('sub_plan_pro_name')}. Para otros planes, contacta a soporte.
               </p>
             </div>
           </CardContent>

@@ -32,20 +32,38 @@ export async function POST(request: NextRequest) {
       const subscriptionEnd = new Date();
       subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 1);
 
+      // Update user's plan
       await query(
-        `UPDATE users SET subscription_plan = ?, subscription_end = ?, updated_at = NOW() WHERE id = ?`,
-        [planId, subscriptionEnd, user._id]
+        `UPDATE users SET subscription_plan = ?, updated_at = NOW() WHERE id = ?`,
+        [planId, user._id]
       );
 
-      // Also insert a subscription record for tracking
-      const [uuidResult] = await query('SELECT UUID() as id');
-      const subId = (uuidResult as any)[0].id;
+      // Upsert subscription record (table uses: tier, not plan)
+      const [existingSub] = await query(
+        `SELECT id FROM subscriptions WHERE user_id = ?`,
+        [user._id]
+      ) as any[];
 
-      await query(
-        `INSERT INTO subscriptions (id, user_id, plan, status, amount_cents, current_period_start, current_period_end, created_at)
-         VALUES (?, ?, ?, 'active', ?, NOW(), ?, NOW())`,
-        [subId, user._id, planId, Math.round(PLAN_PRICES[planId].price * 100), subscriptionEnd]
-      );
+      if (existingSub && existingSub.length > 0) {
+        // Update existing
+        await query(
+          `UPDATE subscriptions SET tier = ?, status = 'active', 
+           current_period_start = NOW(), current_period_end = ?, 
+           cancel_at_period_end = 0, updated_at = NOW()
+           WHERE user_id = ?`,
+          [planId, subscriptionEnd, user._id]
+        );
+      } else {
+        // Insert new
+        const [uuidResult] = await query('SELECT UUID() as id');
+        const subId = (uuidResult as any)[0].id;
+
+        await query(
+          `INSERT INTO subscriptions (id, user_id, tier, status, current_period_start, current_period_end, created_at)
+           VALUES (?, ?, ?, 'active', NOW(), ?, NOW())`,
+          [subId, user._id, planId, subscriptionEnd]
+        );
+      }
 
       return NextResponse.json({
         success: true,

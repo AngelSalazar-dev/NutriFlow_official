@@ -3,6 +3,8 @@ import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/components/ui/toast";
+import { ThemeProvider } from "@/context/ThemeContext";
+import { LangProvider } from "@/context/LangContext";
 import NextTopLoader from "nextjs-toploader";
 import Script from "next/script";
 
@@ -56,7 +58,7 @@ export default function RootLayout({
   const isAdsenseEnabled = adsensePublisherId && adsensePublisherId !== 'ca-pub-XXXXXXXXXXXXXX';
 
   return (
-    <html lang="es" className={`${inter.variable} ${manrope.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${manrope.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         {/* Google AdSense Script optimizado para Next.js */}
         {isAdsenseEnabled && (
@@ -72,8 +74,7 @@ export default function RootLayout({
         className="min-h-full flex flex-col font-sans transition-colors duration-300"
         suppressHydrationWarning
       >
-        <div className="light">
-          <NextTopLoader
+        <NextTopLoader
             color="#10b981"
             initialPosition={0.08}
             crawlSpeed={200}
@@ -86,9 +87,12 @@ export default function RootLayout({
             zIndex={1600}
           />
           <ToastProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <ThemeProvider>
+              <LangProvider>
+                <AuthProvider>{children}</AuthProvider>
+              </LangProvider>
+            </ThemeProvider>
           </ToastProvider>
-        </div>
       </body>
     </html>
   );

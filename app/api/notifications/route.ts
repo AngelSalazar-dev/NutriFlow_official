@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/mysql';
 import { getCurrentUser } from '@/lib/auth-mysql';
 
+const WATER_REMINDERS = [
+  { hour: 10, title: '💧 Recuerda hidratarte', message: 'Llevas un rato activo. Un vaso de agua ahora te mantiene enfocado.' },
+  { hour: 13, title: '💧 Hora de beber agua', message: 'Antes del almuerzo, toma un vaso de agua. Ayuda a la digestión.' },
+  { hour: 16, title: '💧 Pausa para hidratarte', message: 'Ya es tarde, asegúrate de ir alcanzando tu meta de agua hoy.' },
+  { hour: 19, title: '💧 Última llamada de agua', message: 'Antes de que termine el día, completa tu meta de hidratación.' },
+];
+
 const DAILY_TIPS = [
   { title: '💧 Hidratación', message: 'Recuerda beber al menos 2 litros de agua hoy. La deshidratación puede causar fatiga y reducir tu rendimiento.' },
   { title: '🥩 Proteínas', message: 'Intenta consumir 1.6-2.2g de proteína por kg de peso corporal. Es clave para mantener y construir músculo.' },
@@ -36,7 +43,7 @@ const DAILY_TIPS = [
   { title: '💡 Consejo extra', message: 'Prepara tu comida del día siguiente la noche anterior. Así evitas decisiones impulsivas con hambre.' },
 ];
 
-// GET - Get notifications + check for daily tip
+// GET - Get notifications only (no auto-creation)
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -46,46 +53,6 @@ export async function GET(request: NextRequest) {
 
     // Get unread notifications
     const [unreadRows] = await query(`
-      SELECT id, type, title, message, is_read, 
-        DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ') as createdAt
-      FROM notifications
-      WHERE user_id = ? AND is_read = FALSE
-      ORDER BY created_at DESC
-      LIMIT 20
-    `, [user._id]) as any[];
-
-    // Check if user already got a daily tip today
-    const today = new Date().toISOString().split('T')[0];
-    const [todayTips] = await query(`
-      SELECT COUNT(*) as cnt FROM notifications
-      WHERE user_id = ? AND type = 'daily_tip' 
-        AND DATE(created_at) = ?
-    `, [user._id, today]) as any[];
-
-    let newTip = null;
-    if (!todayTips || todayTips[0].cnt === 0) {
-      // Generate daily tip
-      const dayOfMonth = new Date().getDate();
-      const tipIndex = (dayOfMonth - 1) % DAILY_TIPS.length;
-      const tip = DAILY_TIPS[tipIndex];
-
-      const tipId = crypto.randomUUID();
-      await query(`
-        INSERT INTO notifications (id, user_id, type, title, message, created_at)
-        VALUES (?, ?, 'daily_tip', ?, ?, NOW())
-      `, [tipId, user._id, tip.title, tip.message]);
-
-      newTip = {
-        id: tipId,
-        type: 'daily_tip',
-        title: tip.title,
-        message: tip.message,
-        createdAt: new Date().toISOString(),
-      };
-    }
-
-    // Refresh unread list if new tip was added
-    const [finalUnread] = await query(`
       SELECT id, type, title, message, is_read,
         DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ') as createdAt
       FROM notifications
@@ -95,9 +62,8 @@ export async function GET(request: NextRequest) {
     `, [user._id]) as any[];
 
     return NextResponse.json({
-      notifications: finalUnread || [],
-      newTip,
-      unreadCount: (finalUnread || []).length,
+      notifications: unreadRows || [],
+      unreadCount: (unreadRows || []).length,
     });
   } catch (error: any) {
     console.error('[NOTIFICATIONS] Error:', error.message);
@@ -108,7 +74,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Mark notification as read (or all)
+// POST - Create daily notification OR Mark notification as read (or all)
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -117,7 +83,103 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { notificationId, markAll } = body;
+    const { notificationId, markAll, createDaily, createWaterReminder } = body;
+
+    // Smart water reminder
+    if (createWaterReminder) {
+      const now = new Date();
+      const currentHour = now.getHours();
+
+      // Only send during active hours: 9am - 8pm
+      if (currentHour < 9 || currentHour > 20) {
+        return NextResponse.json({ success: true, created: false, reason: 'outside_hours' });
+      }
+
+      // Check how much water logged today
+      const todayStr = now.toISOString().split('T')[0];
+      const [waterLogs] = await query(
+        'SELECT COALESCE(SUM(amount_ml), 0) as total_ml FROM water_logs WHERE user_id = ? AND log_date = ?',
+        [user._id, todayStr]
+      ) as any[];
+      const totalWater = Number(waterLogs?.[0]?.total_ml || 0);
+      const waterGoal = 2500; // default 2.5L
+
+      // Don't remind if goal already met
+      if (totalWater >= waterGoal) {
+        return NextResponse.json({ success: true, created: false, reason: 'goal_met', totalWater });
+      }
+
+      // Check if a water reminder was already sent today at this hour window
+      const reminderWindow = Math.floor(currentHour / 3);
+      const [existingReminders] = await query(
+        `SELECT COUNT(*) as cnt FROM notifications 
+         WHERE user_id = ? AND type = 'water_reminder' AND DATE(created_at) = CURDATE()`,
+        [user._id]
+      ) as any[];
+      const remindersToday = Number(existingReminders?.[0]?.cnt || 0);
+
+      // Max 3 water reminders per day, spaced out
+      if (remindersToday >= 3) {
+        return NextResponse.json({ success: true, created: false, reason: 'max_reminders', count: remindersToday });
+      }
+
+      // Pick the appropriate reminder based on current hour
+      let reminder = WATER_REMINDERS[0];
+      for (const r of WATER_REMINDERS) {
+        if (currentHour >= r.hour) reminder = r;
+      }
+
+      // Add water progress context
+      const progress = Math.round((totalWater / waterGoal) * 100);
+      const msgWithProgress = `${reminder.message} (${totalWater}ml / ${waterGoal}ml — ${progress}%)`;
+
+      // Check if this exact reminder was already sent in the last 2 hours
+      const [recentReminders] = await query(
+        `SELECT id FROM notifications WHERE user_id = ? AND type = 'water_reminder' 
+         AND created_at > DATE_SUB(NOW(), INTERVAL 2 HOUR)`,
+        [user._id]
+      ) as any[];
+      if (recentReminders && recentReminders.length > 0) {
+        return NextResponse.json({ success: true, created: false, reason: 'too_recent' });
+      }
+
+      // Create the reminder
+      const notifId = crypto.randomUUID();
+      await query(
+        `INSERT INTO notifications (id, user_id, type, title, message, is_read)
+         VALUES (?, ?, 'water_reminder', ?, ?, FALSE)`,
+        [notifId, user._id, reminder.title, msgWithProgress]
+      );
+
+      return NextResponse.json({ success: true, created: true, totalWater, progress });
+    }
+
+    // Create daily tip notification
+    if (createDaily) {
+      const dayOfMonth = new Date().getDate();
+      const tip = DAILY_TIPS[(dayOfMonth - 1) % DAILY_TIPS.length];
+
+      // Check if today's notification already exists for this user
+      const [existing] = await query(
+        `SELECT id FROM notifications WHERE user_id = ? AND type = 'daily_tip' 
+         AND DATE(created_at) = CURDATE()`,
+        [user._id]
+      ) as any[];
+
+      if (existing && existing.length > 0) {
+        return NextResponse.json({ success: true, created: false, message: 'Already exists' });
+      }
+
+      // Generate UUID since TiDB Cloud doesn't support DEFAULT (UUID())
+      const notifId = crypto.randomUUID();
+      await query(
+        `INSERT INTO notifications (id, user_id, type, title, message, is_read) 
+         VALUES (?, ?, 'daily_tip', ?, ?, FALSE)`,
+        [notifId, user._id, tip.title, tip.message]
+      );
+
+      return NextResponse.json({ success: true, created: true });
+    }
 
     if (markAll) {
       const [result] = await query(
@@ -136,20 +198,34 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('[NOTIFICATIONS] Error marking read:', error.message);
+    console.error('[NOTIFICATIONS] Error:', error.message);
     return NextResponse.json(
-      { error: 'Error marcando como leído' },
+      { error: 'Error procesando notificación' },
       { status: 500 }
     );
   }
 }
 
-// DELETE - Clear all notifications
+// DELETE - Clear all notifications OR delete single notification
 export async function DELETE(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+    }
+
+    // Try to parse body for single notification delete
+    try {
+      const body = await request.json();
+      if (body.notificationId) {
+        await query(
+          'DELETE FROM notifications WHERE id = ? AND user_id = ?',
+          [body.notificationId, user._id]
+        );
+        return NextResponse.json({ success: true, deleted: body.notificationId });
+      }
+    } catch {
+      // No body, proceed with clear all
     }
 
     await query('DELETE FROM notifications WHERE user_id = ?', [user._id]);

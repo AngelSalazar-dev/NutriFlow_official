@@ -49,15 +49,15 @@ export async function middleware(request: NextRequest) {
   // Content Security Policy
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://www.google.com https://www.googletagmanager.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://api.stripe.com https://www.google-analytics.com",
-    "frame-src 'self' https://js.stripe.com https://www.google.com",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://www.google.com https://www.googletagmanager.com https://www.paypal.com https://www.paypalobjects.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.paypalobjects.com",
+    "font-src 'self' https://fonts.gstatic.com https://www.paypalobjects.com",
+    "img-src 'self' data: https: blob: https://www.paypalobjects.com",
+    "connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://www.paypal.com https://api.paypal.com https://api.sandbox.paypal.com",
+    "frame-src 'self' https://js.stripe.com https://www.google.com https://www.paypal.com https://www.sandbox.paypal.com",
     "object-src 'none'",
     "base-uri 'self'",
-    "form-action 'self'",
+    "form-action 'self' https://www.paypal.com",
     "frame-ancestors 'none'",
   ].join('; ');
   

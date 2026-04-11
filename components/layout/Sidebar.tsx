@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
+import { useLang } from '@/context/LangContext';
 import { cn } from '@/lib/cn';
 import {
   Home,
@@ -25,21 +26,22 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { NotificationBell } from './NotificationBell';
+// import { ThemeLangToggle } from '@/components/ui/ThemeLangToggle';
 // import { AVATAR_PRESETS } from '@/components/ui/AvatarSelector';
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: Home, color: 'text-indigo-500' },
-  { href: '/food-log', label: 'Alimentos', icon: Utensils, color: 'text-blue-500' },
-  { href: '/exercise', label: 'Ejercicio', icon: Dumbbell, color: 'text-purple-500' },
-  { href: '/chat', label: 'Chat IA', icon: MessageCircle, color: 'text-pink-500', badge: 'IA' },
-  { href: '/articles', label: 'Artículos', icon: FileText, color: 'text-amber-500' },
-  { href: '/history', label: 'Historial', icon: BarChart3, color: 'text-violet-500' },
+  { href: '/dashboard', labelKey: 'nav_dashboard' as const, icon: Home, color: 'text-indigo-500' },
+  { href: '/food-log', labelKey: 'nav_food' as const, icon: Utensils, color: 'text-blue-500' },
+  { href: '/exercise', labelKey: 'nav_exercise' as const, icon: Dumbbell, color: 'text-purple-500' },
+  { href: '/chat', labelKey: 'nav_chat' as const, icon: MessageCircle, color: 'text-pink-500', badge: 'IA' },
+  { href: '/articles', labelKey: 'nav_articles' as const, icon: FileText, color: 'text-amber-500' },
+  { href: '/history', labelKey: 'nav_history' as const, icon: BarChart3, color: 'text-violet-500' },
 ];
 
 const bottomNavItems = [
-  { href: '/profile', label: 'Perfil', icon: User, color: 'text-indigo-500' },
-  { href: '/subscription', label: 'Premium', icon: Crown, color: 'text-amber-500' },
-  { href: '/settings', label: 'Ajustes', icon: Settings, color: 'text-slate-400' },
+  { href: '/profile', labelKey: 'nav_profile' as const, icon: User, color: 'text-indigo-500' },
+  { href: '/subscription', labelKey: 'nav_subscription' as const, icon: Crown, color: 'text-amber-500' },
+  { href: '/settings', labelKey: 'nav_settings' as const, icon: Settings, color: 'text-slate-400' },
 ];
 
 interface SidebarProps {
@@ -51,6 +53,7 @@ interface SidebarProps {
 export function Sidebar({ isCollapsed = false, isMobile = false, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const { user, isPremium, isPro, logout } = useAuth();
+  const { tr } = useLang();
   const [showTooltip, setShowTooltip] = React.useState(false);
 
   const handleLogout = async () => {
@@ -60,7 +63,7 @@ export function Sidebar({ isCollapsed = false, isMobile = false, onToggle }: Sid
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-50 h-screen bg-white border-r border-slate-200 text-slate-700 transition-all duration-300 ease-in-out shadow-2xl',
+        'fixed left-0 top-0 z-50 h-screen flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 transition-all duration-300 ease-in-out shadow-2xl',
         isMobile 
           ? (isCollapsed ? '-translate-x-full w-72' : 'translate-x-0 w-72') 
           : (isCollapsed ? 'w-20' : 'w-72')
@@ -69,7 +72,7 @@ export function Sidebar({ isCollapsed = false, isMobile = false, onToggle }: Sid
       onMouseLeave={() => setShowTooltip(false)}
     >
       {/* Header con Logo */}
-      <div className="flex h-20 items-center justify-between border-b border-slate-200 px-6 backdrop-blur-sm">
+      <div className="flex h-20 items-center justify-between border-b border-slate-200 dark:border-slate-700/60 px-6 backdrop-blur-sm">
         <div className={cn('flex items-center gap-3 transition-opacity duration-300', isCollapsed && 'opacity-0 hidden')}>
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/30">
             <Leaf className="h-6 w-6 text-white" />
@@ -78,7 +81,7 @@ export function Sidebar({ isCollapsed = false, isMobile = false, onToggle }: Sid
             <h1 className="text-lg font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
               NutriFlow
             </h1>
-            <p className="text-[10px] text-slate-500">Tu salud, simplificada</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">{tr('sidebar_tagline')}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -145,7 +148,7 @@ export function Sidebar({ isCollapsed = false, isMobile = false, onToggle }: Sid
                       exit={{ opacity: 0, width: 0 }}
                       className="flex flex-1 items-center justify-between ml-1 overflow-hidden"
                     >
-                      <span className="transition-colors whitespace-nowrap">{item.label}</span>
+                      <span className="transition-colors whitespace-nowrap">{tr(item.labelKey)}</span>
                       {item.badge && (
                         <Badge className="bg-gradient-to-r from-pink-600 to-purple-600 text-white text-[10px] border-0 shadow-lg ml-2">
                           {item.badge}
@@ -165,9 +168,9 @@ export function Sidebar({ isCollapsed = false, isMobile = false, onToggle }: Sid
                       initial={{ opacity: 0, x: -10, scale: 0.9 }}
                       animate={{ opacity: 1, x: 0, scale: 1 }}
                       exit={{ opacity: 0, x: -10, scale: 0.9 }}
-                      className="absolute left-[85px] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-white border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 shadow-xl z-50 pointer-events-none"
+                      className="absolute left-[85px] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-xl z-50 pointer-events-none"
                     >
-                      {item.label}
+                      {tr(item.labelKey)}
                       {item.badge && (
                         <Badge className="ml-2 bg-gradient-to-r from-pink-600 to-purple-600 border-0 text-white text-[10px]">
                           {item.badge}
@@ -184,7 +187,7 @@ export function Sidebar({ isCollapsed = false, isMobile = false, onToggle }: Sid
       </nav>
 
       {/* Navegación Inferior */}
-      <div className="border-t border-slate-200 px-3 py-6 space-y-2">
+      <div className="border-t border-slate-200 dark:border-slate-700/60 px-3 py-4 space-y-1">
         
         {bottomNavItems.map((item) => {
           const Icon = item.icon;
@@ -210,31 +213,33 @@ export function Sidebar({ isCollapsed = false, isMobile = false, onToggle }: Sid
                 <Icon className={cn('h-5 w-5 transition-colors', isActive ? 'text-white' : item.color)} />
               </div>
               
-              {(!isCollapsed || isMobile) && <span className="transition-colors">{item.label}</span>}
+              {(!isCollapsed || isMobile) && <span className="transition-colors">{tr(item.labelKey)}</span>}
               
               {isCollapsed && !isMobile && showTooltip && (
-                <div className="absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-white px-3 py-2 text-sm text-slate-700 shadow-xl border border-slate-200 z-50">
-                  {item.label}
+                <div className="absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 shadow-xl border border-slate-200 dark:border-slate-700 z-50">
+                  {tr(item.labelKey)}
                 </div>
               )}
             </Link>
           );
         })}
         
+
+
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="group relative flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-red-50 hover:text-red-600"
+          className="group relative flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 transition-all duration-200 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 transition-all duration-200 group-hover:bg-red-100">
             <LogOut className="h-5 w-5 text-slate-500 transition-colors group-hover:text-red-600" />
           </div>
           
-          {(!isCollapsed || isMobile) && <span className="transition-colors">Cerrar sesión</span>}
+          {(!isCollapsed || isMobile) && <span className="transition-colors">{tr('nav_logout')}</span>}
           
           {isCollapsed && !isMobile && showTooltip && (
-             <div className="absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-white px-3 py-2 text-sm text-slate-700 shadow-xl border border-slate-200 z-50">
-              Cerrar sesión
+             <div className="absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 shadow-xl border border-slate-200 dark:border-slate-700 z-50">
+              {tr('nav_logout')}
             </div>
           )}
         </button>
@@ -242,7 +247,7 @@ export function Sidebar({ isCollapsed = false, isMobile = false, onToggle }: Sid
 
       {/* User Info Footer */}
       {(!isCollapsed || isMobile) && user && (
-        <div className="border-t border-slate-200 px-6 py-4 bg-slate-50/50">
+        <div className="border-t border-slate-200 dark:border-slate-700/60 px-6 py-4 bg-slate-50/50 dark:bg-slate-800/50">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full border-2 border-emerald-500/50 shadow-lg shadow-emerald-500/20 overflow-hidden flex-shrink-0 bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center text-white text-xs font-semibold">
               {user?.avatarType === 'custom' && user?.avatarUrl ? (
@@ -257,7 +262,7 @@ export function Sidebar({ isCollapsed = false, isMobile = false, onToggle }: Sid
                 <p className="text-xs text-slate-500 truncate">{user.email}</p>
                 {isPremium && (
                   <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] border-0 shadow-lg shadow-amber-500/30">
-                    {isPro ? 'PRO' : 'PREMIUM'}
+                    {isPro ? 'Máximo' : 'Elite'}
                   </Badge>
                 )}
               </div>

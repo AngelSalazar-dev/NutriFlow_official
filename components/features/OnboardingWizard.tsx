@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useLang } from '@/context/LangContext';
 import { useToast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,6 +32,7 @@ interface OnboardingStep {
 export function OnboardingWizard() {
   const router = useRouter();
   const { updateUser } = useAuth();
+  const { tr } = useLang();
   const { success } = useToast();
   const [currentStep, setCurrentStep] = React.useState(0);
   const [isCompleting, setIsCompleting] = React.useState(false);
@@ -375,7 +377,7 @@ function FeaturesStep({ formData, setFormData }: { formData: any; setFormData: a
     {
       icon: Crown,
       title: 'Sin Anuncios',
-      description: 'Los usuarios Premium y Pro disfrutan de la app sin interrupciones publicitarias.',
+      description: `Los usuarios ${tr('sub_plan_premium_name')} y ${tr('sub_plan_pro_name')} disfrutan de la app sin interrupciones publicitarias.`,
     },
   ];
 
