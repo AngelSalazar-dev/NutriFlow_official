@@ -183,6 +183,8 @@ type Translations = {
   sub_feature_detailed_nutrition: string;
   sub_feature_wearables: string;
   sub_feature_no_ads: string;
+  sub_feature_ai_training: string;
+  sub_feature_history: string;
   sub_status_free: string;
   sub_current_plan: string;
   // Profile
@@ -385,7 +387,7 @@ type Translations = {
   landing_footer_for_wellness: string;
 };
 
-const t: Record<LangCode, Translations> = {
+const t: Record<LangCode, Translations | Partial<Translations>> = {
   en: {
     nav_dashboard: 'Dashboard', nav_food: 'Foods', nav_exercise: 'Exercise',
     nav_history: 'History', nav_articles: 'Articles', nav_chat: 'AI Chat',
@@ -421,7 +423,7 @@ const t: Record<LangCode, Translations> = {
     common_premium: 'Premium', common_free: 'Free',
     common_date: 'Date', common_days: 'days',
     common_user: 'User', common_wait: 'Please wait',
-    comming_soon: 'Coming Soon', all_items: 'All Items',
+    comming_soon: 'Coming Soon',
     food_nutrient_density: 'Nutrient Density',
     food_bev_coffee: 'Coffee', food_bev_juice: 'Juice', food_bev_milk: 'Milk', food_bev_tea: 'Tea',
     common_contact: 'Contact',
@@ -813,7 +815,7 @@ const t: Record<LangCode, Translations> = {
     profile_activity_very_active: 'Muy Activo',
     common_date: 'Fecha', common_days: 'días',
     common_user: 'Usuario', common_wait: 'Espere',
-    comming_soon: 'Próximamente', all_items: 'Ver Todo',
+    comming_soon: 'Próximamente',
     food_nutrient_density: 'Densidad Nutricional',
     food_bev_coffee: 'Café', food_bev_juice: 'Jugo', food_bev_milk: 'Leche', food_bev_tea: 'Té',
     common_contact: 'Contacto',
