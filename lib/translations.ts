@@ -192,6 +192,8 @@ type Translations = {
   prof_avatar: string;
   prof_save: string;
   prof_activity: string;
+  prof_danger_zone: string;
+  prof_logout_desc: string;
   profile_activity: string;
   profile_activity_active: string;
   profile_activity_light: string;

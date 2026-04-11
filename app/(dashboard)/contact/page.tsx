@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Mail, MessageSquare, Phone, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/components/ui/toast';
+import { useLang } from '@/context/LangContext';
 
 export default function ContactPage() {
+  const { tr } = useLang();
   const { success, error } = useToast();
   const [formData, setFormData] = useState({
     name: '',

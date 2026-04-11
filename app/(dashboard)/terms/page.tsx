@@ -2,8 +2,11 @@
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLang } from '@/context/LangContext';
 
 export default function TermsPage() {
+  const { tr } = useLang();
+
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-8">
