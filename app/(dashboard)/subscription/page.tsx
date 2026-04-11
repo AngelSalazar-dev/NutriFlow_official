@@ -118,7 +118,7 @@ export default function SubscriptionPage() {
     }
   };
 
-  const currentPlan = user?.subscriptionPlan || 'free';
+  const currentPlan = (user?.subscriptionPlan || 'free') as string;
   const [selectedPlan, setSelectedPlan] = React.useState<string | null>(null);
   const [paymentSuccess, setPaymentSuccess] = React.useState(false);
   const [paymentError, setPaymentError] = React.useState<string | null>(null);
