@@ -183,6 +183,7 @@ type Translations = {
   sub_feature_detailed_nutrition: string;
   sub_feature_wearables: string;
   sub_feature_no_ads: string;
+  sub_feature_ads: string;
   sub_feature_ai_training: string;
   sub_feature_history: string;
   sub_status_free: string;
@@ -382,7 +383,6 @@ type Translations = {
   landing_testimonial_1: string;
   landing_testimonial_2: string;
   landing_testimonial_3: string;
-  sub_feature_ai_training: string;
   landing_footer_made_with: string;
   landing_footer_for_wellness: string;
 };
@@ -495,7 +495,6 @@ const t: Record<LangCode, Translations | Partial<Translations>> = {
     sub_cancel_warning: 'Your current plan will be canceled at the end of the billing period.',
     set_acc_delete: 'Delete Account',
     set_acc_delete_confirm: 'Are you sure you want to delete your account?',
-    common_wait: 'Wait',
     set_notif_title: 'Notifications',
     set_notif_push: 'Push Notifications',
     set_notif_email: 'Email Notifications',
@@ -751,7 +750,6 @@ const t: Record<LangCode, Translations | Partial<Translations>> = {
     sub_cancel_warning: 'Tu plan actual se cancelará al final del período de facturación.',
     set_acc_delete: 'Eliminar Cuenta',
     set_acc_delete_confirm: '¿Estás seguro de que quieres eliminar tu cuenta?',
-    common_wait: 'Espera',
     set_notif_title: 'Notificaciones',
     set_notif_push: 'Notificaciones Push',
     set_notif_email: 'Correo Electrónico',
