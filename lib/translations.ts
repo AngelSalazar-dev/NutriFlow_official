@@ -203,6 +203,14 @@ type Translations = {
   profile_activity_moderate: string;
   profile_activity_sedentary: string;
   profile_activity_very_active: string;
+  profile_member_since: string;
+  profile_goal_label: string;
+  profile_tdee_label: string;
+  profile_bmr_label: string;
+  profile_kcal_per_day: string;
+  profile_target: string;
+  logout_confirm_title: string;
+  logout_confirm_desc: string;
   // Settings
   set_title: string;
   set_notifications: string;
@@ -550,6 +558,12 @@ const t: Record<LangCode, Translations | Partial<Translations>> = {
     profile_activity_moderate: 'Moderate',
     profile_activity_sedentary: 'Sedentary',
     profile_activity_very_active: 'Very Active',
+    profile_member_since: 'Member since',
+    profile_goal_label: 'Goal',
+    profile_tdee_label: 'TDEE (daily burn)',
+    profile_bmr_label: 'BMR (base metabolism)',
+    profile_kcal_per_day: 'kcal/day',
+    profile_target: 'Target',
     prof_title: 'Profile', prof_name: 'Full name', prof_email: 'Email',
     prof_avatar: 'Avatar', prof_save: 'Save changes',
     set_title: 'Settings', set_notifications: 'Notifications', set_theme: 'Theme',
@@ -762,7 +776,9 @@ const t: Record<LangCode, Translations | Partial<Translations>> = {
     set_priv_title: 'Privacidad y Datos',
     set_priv_share: 'Compartir Datos Anónimos',
     set_priv_export: 'Exportar mi Información (JSON)',
-    prof_danger_zone: 'Cuenta y Seguridad',
+    logout_confirm_title: 'Confirm logout?',
+    logout_confirm_desc: 'Your current session will be closed.',
+    prof_danger_zone: 'Account & Security',
     prof_logout_desc: 'Has cerrado sesión correctamente',
     art_title: 'Biblioteca de Salud',
     art_subtitle: 'Aprende los secretos de la nutrición moderna con artículos verificados por expertos.',
@@ -814,6 +830,12 @@ const t: Record<LangCode, Translations | Partial<Translations>> = {
     profile_activity_moderate: 'Moderado',
     profile_activity_sedentary: 'Sedentario',
     profile_activity_very_active: 'Muy Activo',
+    profile_member_since: 'Miembro desde',
+    profile_goal_label: 'Objetivo',
+    profile_tdee_label: 'TDEE (gasto diario)',
+    profile_bmr_label: 'BMR (metabolismo basal)',
+    profile_kcal_per_day: 'kcal/día',
+    profile_target: 'Meta',
     food_nutrient_density: 'Densidad Nutricional',
     food_bev_coffee: 'Café', food_bev_juice: 'Jugo', food_bev_milk: 'Leche', food_bev_tea: 'Té',
     common_contact: 'Contacto',

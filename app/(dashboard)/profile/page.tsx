@@ -239,7 +239,7 @@ export default function ProfilePage() {
               {tr('nav_profile')}
             </h1>
             <p className="text-lg text-slate-500 dark:text-slate-400">
-              {tr('profile_activity')}
+              {tr('prof_title') || 'Tu perfil'}
             </p>
           </div>
           <Button
@@ -259,9 +259,9 @@ export default function ProfilePage() {
               <div className="flex items-start gap-4">
                 <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-500 mt-0.5 shrink-0" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-amber-900 dark:text-amber-100">{tr('nav_logout')}?</h3>
+                  <h3 className="font-semibold text-amber-900 dark:text-amber-100">{tr('logout_confirm_title')}</h3>
                   <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                    {tr('profile_activity')}
+                    {tr('logout_confirm_desc')}
                   </p>
                 </div>
                 <div className="flex gap-2 shrink-0">
@@ -329,7 +329,7 @@ export default function ProfilePage() {
                     <Mail className="h-4 w-4" /> {user.email}
                   </span>
                   <span className="flex items-center gap-1.5 capitalize">
-                    <Calendar className="h-4 w-4" /> {tr('profile_activity')} {memberSince}
+                    <Calendar className="h-4 w-4" /> {tr('profile_member_since')} {memberSince}
                   </span>
                 </div>
               </div>
@@ -347,7 +347,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{calorieGoal}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">kcal/{tr('common_back')} ({tr('common_confirm')})</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{tr('profile_kcal_per_day')} ({tr('profile_target')})</div>
                 </div>
               </div>
             </CardContent>
@@ -361,7 +361,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{tdee}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">TDEE ({tr('food_nutrient_density')})</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{tr('profile_tdee_label')}</div>
                 </div>
               </div>
             </CardContent>
@@ -375,7 +375,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{bmr}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">BMR ({tr('food_nutrient_density')})</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{tr('profile_bmr_label')}</div>
                 </div>
               </div>
             </CardContent>
@@ -391,7 +391,7 @@ export default function ProfilePage() {
                   <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 capitalize">
                     {GOALS.find(g => g.value === formData.goal)?.label || formData.goal}
                   </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">{tr('common_confirm')} {tr('common_back')}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{tr('profile_goal_label')}</div>
                 </div>
               </div>
             </CardContent>
