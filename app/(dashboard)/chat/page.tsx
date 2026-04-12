@@ -248,10 +248,10 @@ export default function ChatPage() {
 
   return (
     <DashboardLayout>
-      <div className="flex h-[calc(100vh-80px)] gap-4 transition-colors duration-300">
-        {/* Sidebar */}
+      <div className="flex flex-col md:flex-row h-[calc(100vh-80px)] gap-4 transition-colors duration-300">
+        {/* Sidebar - hidden on mobile by default */}
         {showSidebar && (
-          <Card className="w-72 flex-shrink-0 flex flex-col border-slate-200 dark:border-slate-800 shadow-md dark:bg-slate-900">
+          <Card className="w-full md:w-72 flex-shrink-0 flex flex-col border-slate-200 dark:border-slate-800 shadow-md dark:bg-slate-900 max-h-[40vh] md:max-h-full">
             <CardHeader className="pb-3 pt-4 px-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{tr('chat_conversations') || (lang === 'en' ? 'History' : 'Historial')}</CardTitle>
@@ -323,7 +323,7 @@ export default function ChatPage() {
           <div className="max-w-4xl mx-auto w-full space-y-4 pb-24">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-slate-100 tracking-tighter leading-none flex items-center gap-4">
+                <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-slate-900 dark:text-slate-100 tracking-tighter leading-none flex items-center gap-4">
                   <Sparkles className="h-10 w-10 text-purple-600 dark:text-purple-500 drop-shadow-[0_0_10px_rgba(147,51,234,0.3)]" /> NutriFlow IA
                 </h1>
                 <p className="text-lg text-slate-500 dark:text-slate-400 font-medium mt-1">{tr('chat_welcome_subtitle')}</p>

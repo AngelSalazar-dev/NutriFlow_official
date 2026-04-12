@@ -431,7 +431,7 @@ export default function FoodLogPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-4xl md:text-5xl font-heading font-extrabold tracking-tighter text-slate-900 dark:text-slate-100">{tr('food_log_title')}</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold tracking-tighter text-slate-900 dark:text-slate-100">{tr('food_log_title')}</h1>
             <p className="text-lg text-slate-500 dark:text-slate-400 font-medium">{tr('food_log_subtitle')}</p>
           </div>
           <div className="text-right">

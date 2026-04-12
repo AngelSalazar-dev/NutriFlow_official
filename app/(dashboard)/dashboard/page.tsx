@@ -203,7 +203,7 @@ export default function DashboardPage() {
         {/* Header Animado */}
         <motion.div variants={itemVariants} className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-slate-100 tracking-tighter leading-none">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-slate-900 dark:text-slate-100 tracking-tighter leading-none">
               {tr('dash_greet')}, {user?.name ? user.name.split(' ')[0] : tr('common_user') || 'User'} 👋
             </h1>
             <button

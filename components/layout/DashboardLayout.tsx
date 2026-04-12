@@ -62,7 +62,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     : 'U';
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300 overflow-x-hidden">
       {/* Mobile Overlay */}
       {isMobile && !isSidebarCollapsed && (
         <div

@@ -45,7 +45,7 @@ export default function SettingsPage() {
       <div className="max-w-4xl mx-auto space-y-8 pb-32 px-4">
         {/* Header */}
         <div className="pt-4">
-          <h1 className="text-4xl md:text-5xl font-heading font-black text-slate-900 dark:text-slate-100 tracking-tighter">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-black text-slate-900 dark:text-slate-100 tracking-tighter">
             {tr('nav_settings') || 'Ajustes'}
           </h1>
           <p className="text-lg text-slate-500 dark:text-slate-400 font-medium">

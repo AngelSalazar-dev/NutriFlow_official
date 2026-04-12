@@ -144,7 +144,7 @@ export default function HistoryPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-4xl md:text-5xl font-heading font-extrabold tracking-tighter text-slate-900 dark:text-slate-100">{tr('nav_history')}</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold tracking-tighter text-slate-900 dark:text-slate-100">{tr('nav_history')}</h1>
             <p className="text-lg text-slate-500 dark:text-slate-400 font-medium">{tr('profile_activity')}</p>
           </div>
           <div className="flex items-center gap-2">

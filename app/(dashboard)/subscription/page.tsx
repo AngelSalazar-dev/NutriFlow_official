@@ -188,7 +188,7 @@ export default function SubscriptionPage() {
       <div className="max-w-6xl mx-auto space-y-8 pb-20 px-4">
         {/* Header */}
         <div className="text-center space-y-4 pt-4">
-          <h1 className="text-5xl md:text-6xl font-heading font-black text-slate-900 dark:text-slate-100 tracking-tighter">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-heading font-black text-slate-900 dark:text-slate-100 tracking-tighter">
             {tr('nav_subscription') || 'Suscripción'}
           </h1>
           <p className="text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-medium">
@@ -512,9 +512,9 @@ export default function SubscriptionPage() {
                 <Card
                   key={plan.id}
                   className={cn(
-                    "relative flex flex-col justify-between transition-all duration-500 rounded-[3rem] overflow-hidden group",
+                    "relative flex flex-col justify-between transition-all duration-500 rounded-[2rem] md:rounded-[3rem] overflow-hidden group",
                     plan.highlighted
-                      ? "border-emerald-500/50 dark:border-emerald-400/30 shadow-[0_30px_60px_-15px_rgba(16,185,129,0.15)] bg-white dark:bg-slate-950 scale-105 z-10 border-2"
+                      ? "border-emerald-500/50 dark:border-emerald-400/30 shadow-[0_30px_60px_-15px_rgba(16,185,129,0.15)] bg-white dark:bg-slate-950 md:scale-105 z-10 border-2"
                       : "border-slate-200 dark:border-slate-800 dark:bg-slate-950/50 shadow-xl hover:shadow-2xl hover:-translate-y-2 border-2",
                     isCurrentPlan && "ring-4 ring-amber-400/20 border-amber-400/50"
                   )}

@@ -159,7 +159,7 @@ export default function ArticleDetailPage() {
                  )}
               </div>
 
-              <h1 className="text-5xl md:text-6xl font-heading font-black text-slate-900 dark:text-slate-100 tracking-tighter leading-[0.95]">
+              <h1 className="text-3xl sm:text-5xl md:text-6xl font-heading font-black text-slate-900 dark:text-slate-100 tracking-tighter leading-[0.95]">
                  {translatedArticle?.title}
               </h1>
 

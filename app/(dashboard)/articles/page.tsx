@@ -95,7 +95,7 @@ export default function ArticlesPage() {
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-xs font-black uppercase tracking-widest leading-none">
                 <Sparkles className="h-3 w-3" /> {tr('sub_feature_expert_articles') || 'Contenido Exclusivo'}
               </div>
-              <h1 className="text-5xl md:text-6xl font-heading font-black tracking-tighter leading-none max-w-2xl">
+              <h1 className="text-3xl sm:text-5xl md:text-6xl font-heading font-black tracking-tighter leading-none max-w-2xl">
                 {tr('art_title') || 'Bibloteca de Salud'}
               </h1>
               <p className="text-xl text-emerald-50/80 font-medium max-w-xl leading-relaxed">
