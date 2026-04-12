@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/mysql';
-import { getSpanishSearchTerms } from '@/lib/food-synonyms';
 
 /**
  * GET /api/food/search
@@ -19,26 +18,17 @@ export async function GET(request: NextRequest) {
     const queryParams: any[] = [];
 
     if (q) {
-      // Convert foreign language keywords to Spanish search terms
-      const spanishTerms = getSpanishSearchTerms(q);
-
-      // Build OR conditions for all Spanish terms
+      // Search in name, brand, category, AND ingredients for multi-language support
+      const words = q.trim().split(/\s+/);
       const conditions: string[] = [];
 
-      spanishTerms.forEach(term => {
+      words.forEach(word => {
         conditions.push(`(name LIKE ? OR brand LIKE ? OR category LIKE ? OR ingredients LIKE ?)`);
-        const pattern = `%${term}%`;
+        const pattern = `%${word}%`;
         queryParams.push(pattern, pattern, pattern, pattern);
       });
 
-      // Also search for the original query in case it's already Spanish
-      if (!spanishTerms.includes(q.toLowerCase().trim())) {
-        conditions.push(`(name LIKE ? OR brand LIKE ? OR category LIKE ? OR ingredients LIKE ?)`);
-        const pattern = `%${q}%`;
-        queryParams.push(pattern, pattern, pattern, pattern);
-      }
-
-      queryStr += ` WHERE ${conditions.join(' OR ')}`;
+      queryStr += ` WHERE ${conditions.join(' AND ')}`;
       // Priority: verified > priority > alphabetical
       queryStr += ` ORDER BY is_verified DESC, is_priority DESC, name ASC LIMIT 50`;
     } else if (frequent === 'true') {
