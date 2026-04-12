@@ -35,6 +35,9 @@ import {
   Award,
   Camera,
   Image as ImageIcon,
+  Gift,
+  Copy,
+  Check,
 } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -56,6 +59,35 @@ export default function ProfilePage() {
     { value: 'gain', label: tr('auth_goal_gain') || 'Ganar masa muscular', icon: '💪', adj: 300 },
   ];
   const [isLoading, setIsLoading] = React.useState(false);
+  const [referralCode, setReferralCode] = React.useState<string | null>(null);
+  const [copiedReferral, setCopiedReferral] = React.useState(false);
+
+  React.useEffect(() => {
+    loadReferralCode();
+  }, []);
+
+  const loadReferralCode = async () => {
+    try {
+      const res = await fetch('/api/referral/my-code', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setReferralCode(data.code || user?.referralCode || null);
+      }
+    } catch {
+      console.error('Error loading referral code');
+    }
+  };
+
+  const copyReferralCode = async () => {
+    if (!referralCode) return;
+    try {
+      await navigator.clipboard.writeText(referralCode);
+      setCopiedReferral(true);
+      setTimeout(() => setCopiedReferral(false), 2000);
+    } catch {
+      console.error('Error copying referral code');
+    }
+  };
   const [isAvatarLoading, setIsAvatarLoading] = React.useState(false);
   const [message, setMessage] = React.useState('');
   const [avatarMessage, setAvatarMessage] = React.useState('');
@@ -401,6 +433,49 @@ export default function ProfilePage() {
                   <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
                     <Crown className="h-3 w-3 mr-1" /> {tr('sub_plan_pro_name')}
                   </Badge>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Referral Code Card */}
+          <Card className="border-0 shadow-xl overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-500 to-teal-600">
+            <CardContent className="p-6 text-white relative">
+              <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.3) 1px, transparent 0)', backgroundSize: '20px 20px' }} />
+              <div className="relative z-10 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-xl flex items-center justify-center border border-white/30">
+                    <Gift className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-emerald-100">Código de Referido</p>
+                    <p className="text-lg font-heading font-black tracking-tight">Comparte y gana Premium</p>
+                  </div>
+                </div>
+
+                {referralCode ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20">
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-emerald-200 tracking-widest">Tu código</p>
+                        <p className="text-2xl font-heading font-black tracking-wider">{referralCode}</p>
+                      </div>
+                      <Button
+                        onClick={copyReferralCode}
+                        className="h-12 w-12 rounded-2xl bg-white/20 hover:bg-white/30 text-white border border-white/30 shrink-0"
+                        size="icon"
+                      >
+                        {copiedReferral ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-emerald-100 text-center">
+                      🎁 Tus amigos obtienen <strong>7 días Premium</strong> al registrarse
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  </div>
                 )}
               </div>
             </CardContent>

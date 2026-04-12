@@ -13,6 +13,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { BannerAd, ArticleAd } from '@/components/ads/BannerAd';
 import { cn } from '@/lib/cn';
+import { getArticleTranslation } from '@/lib/article-translations';
+import { getArticleContentTranslation } from '@/lib/article-content-translations';
 
 interface Article {
   _id: string;
@@ -39,6 +41,23 @@ export default function ArticleDetailPage() {
   const [article, setArticle] = React.useState<Article | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isBookmarked, setIsBookmarked] = React.useState(false);
+
+  // Translated article for non-Spanish languages
+  const translatedArticle = React.useMemo(() => {
+    if (!article) return null;
+    if (lang === 'es') return article;
+    const t = getArticleTranslation(article.slug, lang);
+    const translatedContent = getArticleContentTranslation(article.slug, lang);
+    if (t.title) {
+      return {
+        ...article,
+        title: t.title,
+        excerpt: t.excerpt || article.excerpt,
+        content: translatedContent || article.content,
+      };
+    }
+    return article;
+  }, [article, lang]);
 
   React.useEffect(() => {
     loadArticle();
@@ -141,11 +160,11 @@ export default function ArticleDetailPage() {
               </div>
 
               <h1 className="text-5xl md:text-6xl font-heading font-black text-slate-900 dark:text-slate-100 tracking-tighter leading-[0.95]">
-                 {article.title}
+                 {translatedArticle?.title}
               </h1>
 
               <p className="text-xl md:text-2xl font-medium text-slate-500 dark:text-slate-400 leading-relaxed italic border-l-4 border-slate-100 dark:border-slate-800 pl-6 py-2">
-                 {article.excerpt}
+                 {translatedArticle?.excerpt}
               </p>
 
               {article.author && (
@@ -204,7 +223,7 @@ export default function ArticleDetailPage() {
                       strong: ({node, ...props}) => <strong className="font-black text-slate-900 dark:text-slate-50" {...props} />,
                     }}
                  >
-                    {article.content}
+                    {translatedArticle?.content}
                  </ReactMarkdown>
               </div>
            </CardContent>

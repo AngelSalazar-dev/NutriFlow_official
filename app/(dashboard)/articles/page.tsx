@@ -10,6 +10,7 @@ import { BadgeCheck, Clock, ArrowRight, Crown, Sparkles, BookOpen, Search, Hash 
 import Link from 'next/link';
 import { BannerAd, ArticleAd, SponsoredCard } from '@/components/ads/BannerAd';
 import { cn } from '@/lib/cn';
+import { getArticleTranslation } from '@/lib/article-translations';
 
 interface Article {
   _id: string;
@@ -30,7 +31,7 @@ interface Article {
 
 export default function ArticlesPage() {
   const { isPremium } = useAuth();
-  const { tr } = useLang();
+  const { tr, lang } = useLang();
   const [articles, setArticles] = React.useState<Article[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -53,10 +54,28 @@ export default function ArticlesPage() {
     }
   };
 
-  const filteredArticles = articles.filter(art => 
-    art.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    art.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Transformed articles with translations based on current language
+  const translatedArticles = React.useMemo(() => {
+    if (lang === 'es') return articles; // Spanish is base, no translation needed
+    return articles.map(art => {
+      const t = getArticleTranslation(art.slug, lang);
+      if (t.title) {
+        return { ...art, title: t.title, excerpt: t.excerpt || art.excerpt };
+      }
+      return art;
+    });
+  }, [articles, lang]);
+
+  const filteredArticles = translatedArticles.filter(art => {
+    const q = searchQuery.toLowerCase();
+    if (!q) return true;
+    return (
+      art.title.toLowerCase().includes(q) ||
+      art.category.toLowerCase().includes(q) ||
+      (art.excerpt && art.excerpt.toLowerCase().includes(q)) ||
+      (art.content && art.content.toLowerCase().includes(q))
+    );
+  });
 
   return (
     <DashboardLayout>
@@ -104,7 +123,7 @@ export default function ArticlesPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
               <input 
                 type="text" 
-                placeholder={tr('food_search_placeholder') || 'Buscar artículos...'}
+                placeholder={tr('art_search_placeholder') || 'Buscar artículos...'}
                 className="w-full h-14 pl-12 pr-6 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 focus:border-emerald-500/50 outline-none transition-all font-bold text-slate-800 dark:text-slate-100 shadow-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -157,7 +176,7 @@ export default function ArticlesPage() {
                     {article.title}
                   </CardTitle>
                 </CardHeader>
-                
+
                 <CardContent className="flex-1 pb-6">
                   <p className="text-sm font-medium text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
                     {article.excerpt}

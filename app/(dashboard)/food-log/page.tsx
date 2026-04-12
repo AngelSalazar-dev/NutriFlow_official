@@ -51,6 +51,7 @@ import {
   Milk,
 } from 'lucide-react';
 import { FoodItem, searchFoods } from '@/lib/food-database';
+import { getFoodName } from '@/lib/food-name-translations';
 
 interface FoodLog {
   id: string;
@@ -628,7 +629,7 @@ export default function FoodLogPage() {
                         <div className="flex items-center justify-between">
                           <div className="flex-1 cursor-pointer" onClick={() => selectFood(food)}>
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-stone-900 dark:text-slate-100">{food.name}</span>
+                              <span className="font-bold text-stone-900 dark:text-slate-100">{getFoodName(food.name, lang)}</span>
                               {food.isVerified && <CheckCircle className="h-4 w-4 text-blue-500" />}
                             </div>
                             <div className="text-xs text-stone-500 dark:text-slate-400">{food.brand || (food.isBaseIngredient ? tr('landing_features') : tr('landing_hero_title'))}</div>
@@ -637,7 +638,7 @@ export default function FoodLogPage() {
                         </div>
                         {food.ingredients && (
                           <div className="mt-2 text-[10px] text-stone-400 italic border-t border-stone-100 pt-2">
-                            Ingredientes: {food.ingredients}
+                            {lang === 'en' ? 'Ingredients' : 'Ingredientes'}: {food.ingredients}
                           </div>
                         )}
                       </div>
@@ -650,7 +651,7 @@ export default function FoodLogPage() {
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-2xl text-emerald-900 dark:text-emerald-50">{selectedFood.name}</h3>
+                          <h3 className="font-bold text-2xl text-emerald-900 dark:text-emerald-50">{getFoodName(selectedFood.name, lang)}</h3>
                         </div>
                         <p className="text-emerald-600/70 dark:text-emerald-400/70 text-xs font-bold uppercase mt-1 flex items-center gap-1">
                           <Globe2 className="h-3 w-3" /> Fuente: {selectedFood.dataSource || tr('food_verified')}
@@ -778,7 +779,7 @@ export default function FoodLogPage() {
                       <div className="flex items-center gap-4">
                         <div className="p-3.5 bg-white dark:bg-slate-700 shadow-md border border-emerald-100 dark:border-emerald-600/20 rounded-2xl group-hover:scale-110 transition-transform"><Flame className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /></div>
                         <div>
-                          <div className="font-black text-slate-900 dark:text-slate-100 tracking-tight">{log.foodName}</div>
+                          <div className="font-black text-slate-900 dark:text-slate-100 tracking-tight">{getFoodName(log.foodName, lang)}</div>
                           <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black tracking-widest">{MEAL_TYPES.find(m => m.value === log.mealType)?.label} • {servingDisplay}</div>
                         </div>
                       </div>
@@ -820,7 +821,7 @@ export default function FoodLogPage() {
               <Edit2 className="h-5 w-5 text-emerald-500" /> Editar Cantidad
             </DialogTitle>
             <DialogDescription>
-              {editingLog?.foodName}
+              {editingLog ? getFoodName(editingLog.foodName, lang) : ''}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

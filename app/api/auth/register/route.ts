@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { signJWT } from '@/lib/auth-mysql';
 import { isStrongPassword, sanitizeInput, isValidEmail } from '@/lib/validation';
 import { createEmailVerificationToken } from '@/lib/auth-tokens';
+import { logSecurityEvent } from '@/lib/security-logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -180,10 +181,17 @@ export async function POST(request: NextRequest) {
       message: 'Cuenta creada exitosamente. Por favor verifica tu email.',
     });
 
+    logSecurityEvent('AUTH_REGISTER', {
+      userId,
+      email: sanitizedEmail,
+      ip: request.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1',
+      userAgent: request.headers.get('user-agent') || 'unknown'
+    });
+
     response.cookies.set('session', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 60 * 60 * 24 * 30, // 30 days
       path: '/',
     });

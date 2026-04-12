@@ -3,6 +3,7 @@ import { query } from '@/lib/mysql';
 import bcrypt from 'bcryptjs';
 import { signJWT } from '@/lib/auth-mysql';
 import { checkAuthRateLimit, recordFailedLogin, resetAuthRateLimit } from '@/lib/auth-rate-limit';
+import { logSecurityEvent } from '@/lib/security-logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -65,6 +66,12 @@ export async function POST(request: NextRequest) {
     if (users.length === 0) {
       // Record failed attempt for non-existent user
       recordFailedLogin(emailLower);
+      logSecurityEvent('AUTH_LOGIN_FAILURE', {
+        email: emailLower,
+        ip: request.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1',
+        userAgent: request.headers.get('user-agent') || 'unknown',
+        action: 'login_non_existent_user'
+      });
       return NextResponse.json(
         { error: 'Credenciales inválidas' },
         { status: 401 }
@@ -78,6 +85,13 @@ export async function POST(request: NextRequest) {
     if (!isValid) {
       // Record failed attempt
       recordFailedLogin(emailLower);
+      logSecurityEvent('AUTH_LOGIN_FAILURE', {
+        userId: user.id,
+        email: emailLower,
+        ip: request.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1',
+        userAgent: request.headers.get('user-agent') || 'unknown',
+        action: 'login_wrong_password'
+      });
       return NextResponse.json(
         { error: 'Credenciales inválidas' },
         { status: 401 }
@@ -114,9 +128,16 @@ export async function POST(request: NextRequest) {
     response.cookies.set('session', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 60 * 60 * 24 * 30, // 30 days
       path: '/',
+    });
+
+    logSecurityEvent('AUTH_LOGIN_SUCCESS', {
+      userId: user.id,
+      email: user.email,
+      ip: request.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1',
+      userAgent: request.headers.get('user-agent') || 'unknown'
     });
 
     console.log('✅ Login exitoso para:', user.email, '- UserID:', user.id);

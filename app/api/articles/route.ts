@@ -24,6 +24,11 @@ export async function GET() {
       isVerified: !row.is_premium || user?.subscriptionPlan !== 'free',
       publishedAt: row.published_at || new Date().toISOString(),
       readTime: row.read_time_minutes || 5,
+      author: row.author_name ? {
+        name: row.author_name,
+        credentials: row.author_credentials || '',
+      } : undefined,
+      coverImage: row.image_url || null,
     }));
 
     return NextResponse.json({

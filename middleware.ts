@@ -34,40 +34,47 @@ export async function middleware(request: NextRequest) {
   // Security Headers
   const response = NextResponse.next();
   
-  // Prevent clickjacking
-  response.headers.set('X-Frame-Options', 'DENY');
+  // Prevent clickjacking - Only allow embedding on same origin
+  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
   
   // Prevent MIME type sniffing
   response.headers.set('X-Content-Type-Options', 'nosniff');
   
-  // XSS Protection
+  // XSS Protection (Legacy but still useful for older browsers)
   response.headers.set('X-XSS-Protection', '1; mode=block');
   
-  // Referrer Policy
+  // Referrer Policy - Don't leak origin information to 3rd party
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   
-  // Content Security Policy
+  // Permissions Policy - Minimize browser feature surface area
+  response.headers.set(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+  );
+  
+  // Content Security Policy (Harden for production)
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://www.google.com https://www.googletagmanager.com https://www.paypal.com https://www.paypalobjects.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.paypalobjects.com",
     "font-src 'self' https://fonts.gstatic.com https://www.paypalobjects.com",
     "img-src 'self' data: https: blob: https://www.paypalobjects.com",
-    "connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://www.paypal.com https://api.paypal.com https://api.sandbox.paypal.com",
+    "connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://www.paypal.com https://api.paypal.com https://api.sandbox.paypal.com https://*.google-analytics.com",
     "frame-src 'self' https://js.stripe.com https://www.google.com https://www.paypal.com https://www.sandbox.paypal.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self' https://www.paypal.com",
     "frame-ancestors 'none'",
+    "upgrade-insecure-requests",
   ].join('; ');
   
   response.headers.set('Content-Security-Policy', csp);
   
-  // HSTS (only in production)
+  // HSTS (HTTP Strict Transport Security) - Enhanced for production
   if (process.env.NODE_ENV === 'production') {
     response.headers.set(
       'Strict-Transport-Security',
-      'max-age=31536000; includeSubDomains; preload'
+      'max-age=63072000; includeSubDomains; preload' // 2 years
     );
   }
   

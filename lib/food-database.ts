@@ -667,14 +667,120 @@ export const FOOD_DATABASE: FoodItem[] = [
     servingSize: 164,
     servingName: '1 taza',
   },
+  // ==================== INTERNATIONAL FOODS ====================
+  // USA
+  { id: 'us-001', name: 'Hamburger', category: 'americana', calories: 295, protein: 17, carbs: 24, fat: 14, fiber: 1, servingSize: 215, servingName: '1 piece' },
+  { id: 'us-002', name: 'Cheeseburger', category: 'americana', calories: 325, protein: 19, carbs: 26, fat: 16, fiber: 1, servingSize: 230, servingName: '1 piece' },
+  { id: 'us-003', name: 'Hot Dog', category: 'americana', calories: 290, protein: 11, carbs: 24, fat: 17, fiber: 1, servingSize: 140, servingName: '1 piece' },
+  { id: 'us-004', name: 'Mac and Cheese', category: 'americana', calories: 280, protein: 12, carbs: 32, fat: 12, fiber: 2, servingSize: 200, servingName: '1 cup' },
+  { id: 'us-005', name: 'Fried Chicken', category: 'americana', calories: 320, protein: 22, carbs: 16, fat: 20, fiber: 1, servingSize: 150, servingName: '1 piece' },
+  { id: 'us-006', name: 'BBQ Ribs', category: 'americana', calories: 360, protein: 24, carbs: 18, fat: 22, fiber: 0, servingSize: 200, servingName: '1 portion' },
+  { id: 'us-007', name: 'Buffalo Wings', category: 'americana', calories: 290, protein: 18, carbs: 2, fat: 24, fiber: 0, servingSize: 150, servingName: '6 pieces' },
+  { id: 'us-008', name: 'Caesar Salad', category: 'americana', calories: 220, protein: 8, carbs: 12, fat: 16, fiber: 3, servingSize: 250, servingName: '1 bowl' },
+  { id: 'us-009', name: 'Pancakes', category: 'americana', calories: 350, protein: 8, carbs: 55, fat: 12, fiber: 2, servingSize: 200, servingName: '3 pieces' },
+  { id: 'us-010', name: 'Apple Pie', category: 'americana', calories: 320, protein: 3, carbs: 45, fat: 14, fiber: 2, servingSize: 125, servingName: '1 slice' },
+  { id: 'us-011', name: 'Cheesecake', category: 'americana', calories: 380, protein: 8, carbs: 32, fat: 24, fiber: 0, servingSize: 120, servingName: '1 slice' },
+  { id: 'us-012', name: 'Donut', category: 'americana', calories: 270, protein: 4, carbs: 32, fat: 14, fiber: 1, servingSize: 70, servingName: '1 piece' },
+  { id: 'us-013', name: 'Brownie', category: 'americana', calories: 250, protein: 3, carbs: 35, fat: 12, fiber: 2, servingSize: 60, servingName: '1 piece' },
+  { id: 'us-014', name: 'Grilled Chicken Breast', category: 'americana', calories: 165, protein: 31, carbs: 0, fat: 3.6, fiber: 0, servingSize: 174, servingName: '1 breast' },
+  { id: 'us-015', name: 'Scrambled Eggs', category: 'americana', calories: 147, protein: 10, carbs: 1.6, fat: 11, fiber: 0, servingSize: 220, servingName: '2 eggs' },
+  // Italy
+  { id: 'it-001', name: 'Pizza Margherita', category: 'italiana', calories: 266, protein: 11, carbs: 33, fat: 10, fiber: 2, servingSize: 150, servingName: '1 slice' },
+  { id: 'it-002', name: 'Pizza Pepperoni', category: 'italiana', calories: 298, protein: 13, carbs: 30, fat: 14, fiber: 2, servingSize: 150, servingName: '1 slice' },
+  { id: 'it-003', name: 'Spaghetti Carbonara', category: 'italiana', calories: 410, protein: 18, carbs: 48, fat: 16, fiber: 2, servingSize: 300, servingName: '1 plate' },
+  { id: 'it-004', name: 'Spaghetti Bolognese', category: 'italiana', calories: 380, protein: 20, carbs: 50, fat: 10, fiber: 3, servingSize: 350, servingName: '1 plate' },
+  { id: 'it-005', name: 'Lasagna', category: 'italiana', calories: 350, protein: 20, carbs: 32, fat: 16, fiber: 3, servingSize: 250, servingName: '1 slice' },
+  { id: 'it-006', name: 'Fettuccine Alfredo', category: 'italiana', calories: 480, protein: 14, carbs: 48, fat: 26, fiber: 2, servingSize: 300, servingName: '1 plate' },
+  { id: 'it-007', name: 'Risotto', category: 'italiana', calories: 320, protein: 8, carbs: 48, fat: 10, fiber: 1, servingSize: 250, servingName: '1 plate' },
+  { id: 'it-008', name: 'Tiramisu', category: 'italiana', calories: 280, protein: 6, carbs: 32, fat: 14, fiber: 0, servingSize: 120, servingName: '1 portion' },
+  { id: 'it-009', name: 'Bruschetta', category: 'italiana', calories: 150, protein: 4, carbs: 20, fat: 6, fiber: 2, servingSize: 100, servingName: '2 pieces' },
+  { id: 'it-010', name: 'Caprese Salad', category: 'italiana', calories: 220, protein: 12, carbs: 6, fat: 18, fiber: 1, servingSize: 180, servingName: '1 plate' },
+  { id: 'it-011', name: 'Gelato', category: 'italiana', calories: 220, protein: 6, carbs: 28, fat: 10, fiber: 1, servingSize: 100, servingName: '1 scoop' },
+  { id: 'it-012', name: 'Cannoli', category: 'italiana', calories: 320, protein: 8, carbs: 35, fat: 16, fiber: 1, servingSize: 100, servingName: '1 piece' },
+  { id: 'it-013', name: 'Penne Arrabbiata', category: 'italiana', calories: 320, protein: 10, carbs: 52, fat: 8, fiber: 3, servingSize: 280, servingName: '1 plate' },
+  { id: 'it-014', name: 'Gnocchi', category: 'italiana', calories: 380, protein: 12, carbs: 48, fat: 16, fiber: 2, servingSize: 280, servingName: '1 plate' },
+  { id: 'it-015', name: 'Panna Cotta', category: 'italiana', calories: 240, protein: 4, carbs: 20, fat: 16, fiber: 0, servingSize: 120, servingName: '1 portion' },
+  // Japan
+  { id: 'jp-001', name: 'Sushi', category: 'asiatica', calories: 140, protein: 12, carbs: 18, fat: 2, fiber: 0, servingSize: 80, servingName: '2 pieces' },
+  { id: 'jp-002', name: 'Salmon Sushi', category: 'asiatica', calories: 140, protein: 12, carbs: 18, fat: 2, fiber: 0, servingSize: 80, servingName: '2 pieces' },
+  { id: 'jp-003', name: 'Tuna Sushi', category: 'asiatica', calories: 130, protein: 14, carbs: 16, fat: 1, fiber: 0, servingSize: 75, servingName: '2 pieces' },
+  { id: 'jp-004', name: 'Ramen', category: 'asiatica', calories: 550, protein: 22, carbs: 65, fat: 20, fiber: 3, servingSize: 600, servingName: '1 bowl' },
+  { id: 'jp-005', name: 'Tonkotsu Ramen', category: 'asiatica', calories: 550, protein: 22, carbs: 65, fat: 20, fiber: 3, servingSize: 600, servingName: '1 bowl' },
+  { id: 'jp-006', name: 'Tempura', category: 'asiatica', calories: 380, protein: 12, carbs: 38, fat: 20, fiber: 3, servingSize: 200, servingName: '1 plate' },
+  { id: 'jp-007', name: 'Teriyaki Salmon', category: 'asiatica', calories: 320, protein: 28, carbs: 18, fat: 14, fiber: 0, servingSize: 200, servingName: '1 portion' },
+  { id: 'jp-008', name: 'Chicken Teriyaki', category: 'asiatica', calories: 290, protein: 25, carbs: 20, fat: 10, fiber: 1, servingSize: 220, servingName: '1 portion' },
+  { id: 'jp-009', name: 'Gyoza', category: 'asiatica', calories: 220, protein: 10, carbs: 22, fat: 10, fiber: 1, servingSize: 120, servingName: '5 pieces' },
+  { id: 'jp-010', name: 'Udon', category: 'asiatica', calories: 320, protein: 10, carbs: 58, fat: 4, fiber: 2, servingSize: 500, servingName: '1 bowl' },
+  { id: 'jp-011', name: 'Soba', category: 'asiatica', calories: 280, protein: 12, carbs: 52, fat: 2, fiber: 4, servingSize: 300, servingName: '1 plate' },
+  { id: 'jp-012', name: 'Sashimi', category: 'asiatica', calories: 130, protein: 20, carbs: 0, fat: 5, fiber: 0, servingSize: 100, servingName: '5 pieces' },
+  { id: 'jp-013', name: 'Edamame', category: 'asiatica', calories: 122, protein: 11, carbs: 9, fat: 5, fiber: 5, servingSize: 100, servingName: '1 portion' },
+  { id: 'jp-014', name: 'Miso Soup', category: 'asiatica', calories: 40, protein: 3, carbs: 4, fat: 2, fiber: 1, servingSize: 240, servingName: '1 bowl' },
+  // China
+  { id: 'cn-001', name: 'Kung Pao Chicken', category: 'asiatica', calories: 310, protein: 22, carbs: 18, fat: 18, fiber: 2, servingSize: 300, servingName: '1 plate' },
+  { id: 'cn-002', name: 'Chow Mein', category: 'asiatica', calories: 350, protein: 14, carbs: 45, fat: 12, fiber: 3, servingSize: 300, servingName: '1 plate' },
+  { id: 'cn-003', name: 'Fried Rice', category: 'asiatica', calories: 320, protein: 12, carbs: 45, fat: 10, fiber: 2, servingSize: 300, servingName: '1 plate' },
+  { id: 'cn-004', name: 'Spring Rolls', category: 'asiatica', calories: 220, protein: 6, carbs: 25, fat: 12, fiber: 2, servingSize: 120, servingName: '3 pieces' },
+  { id: 'cn-005', name: 'Wonton Soup', category: 'asiatica', calories: 220, protein: 14, carbs: 22, fat: 8, fiber: 1, servingSize: 400, servingName: '1 bowl' },
+  { id: 'cn-006', name: 'Peking Duck', category: 'asiatica', calories: 380, protein: 22, carbs: 18, fat: 26, fiber: 1, servingSize: 200, servingName: '1 portion' },
+  // Thailand
+  { id: 'th-001', name: 'Pad Thai', category: 'asiatica', calories: 400, protein: 16, carbs: 50, fat: 14, fiber: 2, servingSize: 300, servingName: '1 plate' },
+  { id: 'th-002', name: 'Tom Yum Soup', category: 'asiatica', calories: 120, protein: 12, carbs: 10, fat: 4, fiber: 1, servingSize: 300, servingName: '1 bowl' },
+  { id: 'th-003', name: 'Green Curry', category: 'asiatica', calories: 320, protein: 20, carbs: 15, fat: 22, fiber: 3, servingSize: 300, servingName: '1 plate' },
+  { id: 'th-004', name: 'Red Curry', category: 'asiatica', calories: 350, protein: 18, carbs: 12, fat: 26, fiber: 2, servingSize: 300, servingName: '1 plate' },
+  { id: 'th-005', name: 'Thai Iced Tea', category: 'asiatica', calories: 200, protein: 3, carbs: 35, fat: 6, fiber: 0, servingSize: 350, servingName: '1 glass' },
+  { id: 'th-006', name: 'Mango Sticky Rice', category: 'asiatica', calories: 320, protein: 5, carbs: 55, fat: 10, fiber: 2, servingSize: 250, servingName: '1 plate' },
+  // India
+  { id: 'in-001', name: 'Chicken Tikka Masala', category: 'asiatica', calories: 320, protein: 22, carbs: 12, fat: 22, fiber: 2, servingSize: 250, servingName: '1 plate' },
+  { id: 'in-002', name: 'Butter Chicken', category: 'asiatica', calories: 380, protein: 24, carbs: 14, fat: 26, fiber: 2, servingSize: 280, servingName: '1 plate' },
+  { id: 'in-003', name: 'Biryani', category: 'asiatica', calories: 420, protein: 22, carbs: 48, fat: 16, fiber: 2, servingSize: 350, servingName: '1 plate' },
+  { id: 'in-004', name: 'Naan Bread', category: 'asiatica', calories: 260, protein: 7, carbs: 38, fat: 10, fiber: 1, servingSize: 90, servingName: '1 piece' },
+  { id: 'in-005', name: 'Samosa', category: 'asiatica', calories: 260, protein: 6, carbs: 30, fat: 14, fiber: 3, servingSize: 100, servingName: '1 piece' },
+  { id: 'in-006', name: 'Dal', category: 'asiatica', calories: 180, protein: 10, carbs: 22, fat: 6, fiber: 7, servingSize: 200, servingName: '1 plate' },
+  { id: 'in-007', name: 'Lassi', category: 'asiatica', calories: 180, protein: 5, carbs: 32, fat: 4, fiber: 1, servingSize: 250, servingName: '1 glass' },
+  // Spain
+  { id: 'es-001', name: 'Paella', category: 'mediterranea', calories: 380, protein: 22, carbs: 48, fat: 10, fiber: 2, servingSize: 350, servingName: '1 plate' },
+  { id: 'es-002', name: 'Spanish Tortilla', category: 'mediterranea', calories: 220, protein: 10, carbs: 15, fat: 14, fiber: 1, servingSize: 120, servingName: '1 slice' },
+  { id: 'es-003', name: 'Gazpacho', category: 'mediterranea', calories: 70, protein: 2, carbs: 10, fat: 3, fiber: 2, servingSize: 250, servingName: '1 glass' },
+  { id: 'es-004', name: 'Patatas Bravas', category: 'mediterranea', calories: 280, protein: 4, carbs: 30, fat: 16, fiber: 3, servingSize: 200, servingName: '1 plate' },
+  { id: 'es-005', name: 'Churros', category: 'mediterranea', calories: 420, protein: 6, carbs: 55, fat: 20, fiber: 2, servingSize: 150, servingName: '6 pieces' },
+  { id: 'es-006', name: 'Jamón Serrano', category: 'mediterranea', calories: 280, protein: 32, carbs: 0, fat: 16, fiber: 0, servingSize: 100, servingName: '100g' },
+  // France
+  { id: 'fr-001', name: 'Croissant', category: 'mediterranea', calories: 320, protein: 7, carbs: 35, fat: 18, fiber: 1, servingSize: 70, servingName: '1 piece' },
+  { id: 'fr-002', name: 'Baguette', category: 'mediterranea', calories: 270, protein: 9, carbs: 55, fat: 1, fiber: 2, servingSize: 100, servingName: '100g' },
+  { id: 'fr-003', name: 'Quiche Lorraine', category: 'mediterranea', calories: 320, protein: 12, carbs: 22, fat: 22, fiber: 1, servingSize: 180, servingName: '1 slice' },
+  { id: 'fr-004', name: 'Creme Brulee', category: 'mediterranea', calories: 280, protein: 5, carbs: 25, fat: 18, fiber: 0, servingSize: 130, servingName: '1 portion' },
+  { id: 'fr-005', name: 'Macaron', category: 'mediterranea', calories: 95, protein: 2, carbs: 15, fat: 3, fiber: 0, servingSize: 20, servingName: '1 piece' },
+  { id: 'fr-006', name: 'Ratatouille', category: 'mediterranea', calories: 90, protein: 2, carbs: 12, fat: 4, fiber: 4, servingSize: 200, servingName: '1 plate' },
+  // Korea
+  { id: 'kr-001', name: 'Bibimbap', category: 'asiatica', calories: 420, protein: 18, carbs: 55, fat: 14, fiber: 4, servingSize: 400, servingName: '1 plate' },
+  { id: 'kr-002', name: 'Kimchi', category: 'asiatica', calories: 20, protein: 1, carbs: 4, fat: 0, fiber: 2, servingSize: 100, servingName: '100g' },
+  { id: 'kr-003', name: 'Bulgogi', category: 'asiatica', calories: 320, protein: 25, carbs: 18, fat: 16, fiber: 1, servingSize: 250, servingName: '1 plate' },
+  { id: 'kr-004', name: 'Tteokbokki', category: 'asiatica', calories: 320, protein: 8, carbs: 55, fat: 8, fiber: 2, servingSize: 300, servingName: '1 plate' },
+  { id: 'kr-005', name: 'Kimbap', category: 'asiatica', calories: 350, protein: 12, carbs: 48, fat: 12, fiber: 2, servingSize: 250, servingName: '1 roll' },
+  // Lebanon
+  { id: 'lb-001', name: 'Falafel', category: 'mediterranea', calories: 330, protein: 13, carbs: 32, fat: 18, fiber: 5, servingSize: 150, servingName: '5 pieces' },
+  { id: 'lb-002', name: 'Hummus', category: 'mediterranea', calories: 166, protein: 8, carbs: 14, fat: 10, fiber: 6, servingSize: 100, servingName: '100g' },
+  { id: 'lb-003', name: 'Shawarma', category: 'mediterranea', calories: 480, protein: 28, carbs: 42, fat: 22, fiber: 3, servingSize: 300, servingName: '1 wrap' },
+  { id: 'lb-004', name: 'Tabbouleh', category: 'mediterranea', calories: 90, protein: 3, carbs: 12, fat: 4, fiber: 3, servingSize: 150, servingName: '1 salad' },
+  { id: 'lb-005', name: 'Baklava', category: 'mediterranea', calories: 430, protein: 6, carbs: 45, fat: 26, fiber: 2, servingSize: 70, servingName: '1 piece' },
+  // Greece
+  { id: 'gr-001', name: 'Gyros', category: 'mediterranea', calories: 480, protein: 25, carbs: 42, fat: 22, fiber: 2, servingSize: 300, servingName: '1 wrap' },
+  { id: 'gr-002', name: 'Moussaka', category: 'mediterranea', calories: 350, protein: 18, carbs: 22, fat: 22, fiber: 4, servingSize: 300, servingName: '1 portion' },
+  { id: 'gr-003', name: 'Souvlaki', category: 'mediterranea', calories: 320, protein: 22, carbs: 20, fat: 18, fiber: 2, servingSize: 200, servingName: '1 skewer' },
+  { id: 'gr-004', name: 'Tzatziki', category: 'mediterranea', calories: 90, protein: 4, carbs: 6, fat: 6, fiber: 0, servingSize: 100, servingName: '100g' },
+  // Common English foods
+  { id: 'uk-001', name: 'Fish and Chips', category: 'europea', calories: 550, protein: 20, carbs: 55, fat: 28, fiber: 4, servingSize: 400, servingName: '1 portion' },
+  { id: 'uk-002', name: 'Full English Breakfast', category: 'europea', calories: 650, protein: 30, carbs: 35, fat: 42, fiber: 3, servingSize: 450, servingName: '1 plate' },
+  { id: 'uk-003', name: 'Shepherd\'s Pie', category: 'europea', calories: 380, protein: 18, carbs: 35, fat: 18, fiber: 4, servingSize: 300, servingName: '1 portion' },
 ];
 
 import Fuse from 'fuse.js';
 
 const fuseOptions = {
   keys: ['name', 'category'],
-  threshold: 0.3, // Tolerancia a typos (0.0 es exacto, 1.0 es todo)
-  distance: 50,
+  threshold: 0.4, // More flexible for multi-language search
+  distance: 100,
+  includeScore: true,
 };
 
 const fuse = new Fuse(FOOD_DATABASE, fuseOptions);

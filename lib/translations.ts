@@ -332,6 +332,7 @@ type Translations = {
   // Articles
   art_title: string;
   art_subtitle: string;
+  art_search_placeholder: string;
   art_read_min: string;
   art_verified: string;
   art_empty: string;
@@ -509,6 +510,7 @@ const t: Record<LangCode, Translations | Partial<Translations>> = {
     prof_logout_desc: 'You have been logged out successfully',
     art_title: 'Health Library',
     art_subtitle: 'Learn the secrets of modern nutrition with expert-verified articles.',
+    art_search_placeholder: 'Search articles...',
     art_with_ads: 'Ad-Supported Mode',
     art_verified: 'Verified',
     art_read_min: 'min read',
@@ -764,6 +766,7 @@ const t: Record<LangCode, Translations | Partial<Translations>> = {
     prof_logout_desc: 'Has cerrado sesión correctamente',
     art_title: 'Biblioteca de Salud',
     art_subtitle: 'Aprende los secretos de la nutrición moderna con artículos verificados por expertos.',
+    art_search_placeholder: 'Buscar artículos...',
     art_with_ads: 'Modo con Anuncios',
     art_verified: 'Verificado',
     art_read_min: 'min de lectura',
