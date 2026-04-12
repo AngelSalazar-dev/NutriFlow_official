@@ -14,7 +14,7 @@ interface AuthContextType {
   register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (data: Partial<User>) => Promise<void>;
-  updateAvatar: (avatarType: 'initials' | 'preset' | 'custom', avatarUrl?: string) => Promise<void>;
+  updateAvatar: (avatarType: 'initials' | 'preset' | 'custom', avatarUrl?: string, targetType?: 'avatar' | 'banner') => Promise<void>;
   checkChatLimit: () => Promise<{ allowed: boolean; remaining: number; limit: number; used: number }>;
 }
 
