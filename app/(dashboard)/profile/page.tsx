@@ -72,9 +72,12 @@ export default function ProfilePage() {
       if (res.ok) {
         const data = await res.json();
         setReferralCode(data.code || user?.referralCode || null);
+      } else {
+        // Fallback to user's referral code if available
+        setReferralCode(user?.referralCode || null);
       }
     } catch {
-      console.error('Error loading referral code');
+      setReferralCode(user?.referralCode || null);
     }
   };
 

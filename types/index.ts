@@ -23,6 +23,7 @@ export interface User {
   fatGoal?: number;
   createdAt: Date;
   updatedAt: Date;
+  referralCode?: string;
 }
 
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
@@ -194,6 +195,7 @@ export interface Subscription {
   currentPeriodEnd?: Date;
   createdAt: Date;
   updatedAt: Date;
+  referralCode?: string;
 }
 
 // Statistics Types
