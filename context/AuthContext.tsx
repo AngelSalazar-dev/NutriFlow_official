@@ -137,8 +137,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
-  const updateAvatar = React.useCallback(async (avatarType: 'initials' | 'preset' | 'custom', avatarUrl?: string) => {
-    const res = await fetch('/api/user/avatar', {
+  const updateAvatar = React.useCallback(async (avatarType: 'initials' | 'preset' | 'custom', avatarUrl?: string, targetType: 'avatar' | 'banner' = 'avatar') => {
+    const res = await fetch(targetType === 'banner' ? '/api/user/banner' : '/api/user/avatar', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ avatarType, avatarUrl }),
@@ -147,11 +147,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!res.ok) {
       const errorData = await res.json();
-      throw new Error(errorData.error || 'Error al actualizar avatar');
+      throw new Error(errorData.error || `Error al actualizar ${targetType === 'banner' ? 'banner' : 'avatar'}`);
     }
 
     // Update user state directly
-    setUser((prev) => prev ? { ...prev, avatarType, avatarUrl } : null);
+    if (targetType === 'banner') {
+      setUser((prev) => prev ? { ...prev, bannerType: avatarType as 'preset' | 'custom' | null, bannerUrl: avatarUrl ?? null } : null);
+    } else {
+      setUser((prev) => prev ? { ...prev, avatarType, avatarUrl } : null);
+    }
   }, []);
 
   const isPremium = user?.subscriptionPlan === 'premium' || user?.subscriptionPlan === 'pro';

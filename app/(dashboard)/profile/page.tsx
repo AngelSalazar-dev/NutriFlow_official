@@ -12,6 +12,14 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { AvatarSelector } from '@/components/ui/AvatarSelector';
 import { AVATAR_PRESETS } from '@/components/ui/AvatarSelector';
+import { BannerSelector, BANNER_PRESETS } from '@/components/ui/BannerSelector';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/cn';
 import {
   User,
@@ -97,6 +105,9 @@ export default function ProfilePage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
   const [avatarType, setAvatarType] = React.useState<string>(user?.avatarType || 'initials');
   const [avatarUrl, setAvatarUrl] = React.useState<string | null>(user?.avatarUrl || null);
+  const [bannerType, setBannerType] = React.useState<string>(user?.bannerType || 'preset');
+  const [bannerUrl, setBannerUrl] = React.useState<string | null>(user?.bannerUrl || null);
+  const [showBannerSelector, setShowBannerSelector] = React.useState(false);
 
   const [formData, setFormData] = React.useState({
     name: user?.name || '',
@@ -121,6 +132,8 @@ export default function ProfilePage() {
       });
       setAvatarType(user.avatarType || 'initials');
       setAvatarUrl(user.avatarUrl || null);
+      setBannerType(user.bannerType || 'preset');
+      setBannerUrl(user.bannerUrl || null);
     }
   }, [user]);
 
@@ -219,6 +232,35 @@ export default function ProfilePage() {
     }
   };
 
+  // Banner handlers
+  const handleSelectBannerPreset = async (presetId: string) => {
+    setIsAvatarLoading(true);
+    try {
+      await updateAvatar('preset', presetId, 'banner');
+      setBannerType('preset');
+      setBannerUrl(presetId);
+      setShowBannerSelector(false);
+    } catch (err: any) {
+      console.error('Error updating banner:', err.message);
+    } finally {
+      setIsAvatarLoading(false);
+    }
+  };
+
+  const handleUploadBannerImage = async (dataUrl: string) => {
+    setIsAvatarLoading(true);
+    try {
+      await updateAvatar('custom', dataUrl, 'banner');
+      setBannerType('custom');
+      setBannerUrl(dataUrl);
+      setShowBannerSelector(false);
+    } catch (err: any) {
+      console.error('Error uploading banner:', err.message);
+    } finally {
+      setIsAvatarLoading(false);
+    }
+  };
+
   if (!user) return null;
 
   const initials = user.name
@@ -288,8 +330,36 @@ export default function ProfilePage() {
 
         {/* Profile Card */}
         <Card className="border-slate-200 dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-          <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 h-32 relative">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cGF0aCBkPSJNLTEwIDMwaDYwdi0yMGgtNjB6IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCBmaWxsPSJ1cmwoI2EpIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIi8+PC9zdmc+')] opacity-30" />
+          <div
+            className={cn(
+              'h-32 relative cursor-pointer group transition-opacity hover:opacity-90',
+              bannerType === 'custom' && bannerUrl && bannerUrl.startsWith('data:')
+                ? ''
+                : 'bg-gradient-to-r'
+            )}
+            style={
+              bannerType === 'custom' && bannerUrl && bannerUrl.startsWith('data:')
+                ? { backgroundImage: `url(${bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                : {}
+            }
+            onClick={() => setShowBannerSelector(true)}
+          >
+            {!(bannerType === 'custom' && bannerUrl && bannerUrl.startsWith('data:')) && (
+              <div className={cn(
+                'absolute inset-0 bg-gradient-to-r',
+                (bannerType === 'preset' && bannerUrl)
+                  ? BANNER_PRESETS.find(b => b.id === bannerUrl)?.className || 'from-emerald-600 via-teal-600 to-emerald-700'
+                  : 'from-emerald-600 via-teal-600 to-emerald-700'
+              )}>
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cGF0aCBkPSJNLTEwIDMwaDYwdi0yMGgtNjB6IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCBmaWxsPSJ1cmwoI2EpIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIi8+PC9zdmc+')] opacity-30" />
+              </div>
+            )}
+            {/* Hover overlay */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 dark:bg-slate-800/90 px-4 py-2 rounded-full text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Cambiar banner
+              </div>
+            </div>
           </div>
           <CardContent className="pt-0 -mt-16 relative">
             <div className="flex flex-col md:flex-row gap-6">
@@ -788,6 +858,26 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Banner Selector Dialog */}
+      <Dialog open={showBannerSelector} onOpenChange={setShowBannerSelector}>
+        <DialogContent className="sm:max-w-lg rounded-3xl max-h-[90vh] overflow-y-auto dark:bg-slate-900 dark:border-slate-800">
+          <DialogHeader>
+            <DialogTitle className="text-slate-900 dark:text-slate-100">
+              Personalizar Banner
+            </DialogTitle>
+            <DialogDescription className="text-slate-500 dark:text-slate-400">
+              Elige un fondo o sube tu propia imagen
+            </DialogDescription>
+          </DialogHeader>
+          <BannerSelector
+            currentBanner={bannerUrl}
+            currentType={bannerType}
+            onSelectPreset={handleSelectBannerPreset}
+            onUploadImage={handleUploadBannerImage}
+          />
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

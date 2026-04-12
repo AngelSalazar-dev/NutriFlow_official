@@ -14,6 +14,9 @@ export interface User {
   // Avatar
   avatarUrl?: string | null;
   avatarType?: 'initials' | 'preset' | 'custom' | null;
+  // Banner
+  bannerUrl?: string | null;
+  bannerType?: 'preset' | 'custom' | null;
   // Nutritional data
   tdee?: number;
   bmr?: number;

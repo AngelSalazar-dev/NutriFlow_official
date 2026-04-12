@@ -27,6 +27,8 @@ export async function GET() {
         calorieGoal: user.calorieGoal,
         avatarUrl: user.avatarUrl,
         avatarType: user.avatarType,
+        bannerUrl: user.bannerUrl,
+        bannerType: user.bannerType,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
