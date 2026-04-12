@@ -209,6 +209,7 @@ type Translations = {
   profile_bmr_label: string;
   profile_kcal_per_day: string;
   profile_target: string;
+  profile_edit_subtitle: string;
   logout_confirm_title: string;
   logout_confirm_desc: string;
   // Settings
@@ -776,6 +777,7 @@ const t: Record<LangCode, Translations | Partial<Translations>> = {
     set_priv_title: 'Privacidad y Datos',
     set_priv_share: 'Compartir Datos Anónimos',
     set_priv_export: 'Exportar mi Información (JSON)',
+    profile_edit_subtitle: 'Edit your personal information',
     logout_confirm_title: 'Confirm logout?',
     logout_confirm_desc: 'Your current session will be closed.',
     prof_danger_zone: 'Account & Security',
@@ -836,6 +838,9 @@ const t: Record<LangCode, Translations | Partial<Translations>> = {
     profile_bmr_label: 'BMR (metabolismo basal)',
     profile_kcal_per_day: 'kcal/día',
     profile_target: 'Meta',
+    profile_edit_subtitle: 'Edita tu información personal',
+    logout_confirm_title: '¿Confirmar cierre de sesión?',
+    logout_confirm_desc: 'Tu sesión actual será cerrada.',
     food_nutrient_density: 'Densidad Nutricional',
     food_bev_coffee: 'Café', food_bev_juice: 'Jugo', food_bev_milk: 'Leche', food_bev_tea: 'Té',
     common_contact: 'Contacto',

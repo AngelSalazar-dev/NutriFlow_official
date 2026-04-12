@@ -364,12 +364,17 @@ export default function FoodLogPage() {
         body: JSON.stringify({ amountMl, beverageType: selectedBeverage, date: selectedDate.toISOString() }),
       });
       if (response.ok) {
-        loadWaterToday();
+        // Reload water data from server to ensure consistency
+        await loadWaterToday();
         const bevName = BEVERAGE_TYPES.find(b => b.id === selectedBeverage)?.label;
         success(`¡${bevName} ${tr('food_register_success')}!`, `+${amountMl}ml ${tr('common_add')}.`);
         setCustomMl('');
+      } else {
+        const errData = await response.json();
+        toastError(tr('common_error'), errData.error || tr('common_error'));
       }
     } catch (error) {
+      console.error('Error adding water:', error);
       toastError(tr('common_error'), tr('common_error'));
     }
   };

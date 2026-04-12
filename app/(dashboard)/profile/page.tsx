@@ -537,7 +537,7 @@ export default function ProfilePage() {
               <div>
                 <CardTitle className="text-slate-900 dark:text-slate-100">{tr('prof_title') || 'Editar Perfil'}</CardTitle>
                 <CardDescription className="text-slate-500 dark:text-slate-400">
-                  {tr('landing_hero_subtitle')}
+                  {tr('profile_edit_subtitle') || 'Edita tu información personal'}
                 </CardDescription>
               </div>
             </div>
@@ -564,7 +564,7 @@ export default function ProfilePage() {
                 <div className="space-y-3">
                   <Label htmlFor="age" className="text-slate-700 dark:text-slate-300 font-bold text-sm flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-emerald-500" />
-                    {tr('common_back')}
+                    {tr('auth_age')}
                   </Label>
                   <Input
                     id="age"
@@ -580,7 +580,7 @@ export default function ProfilePage() {
                 <div className="space-y-3">
                   <Label htmlFor="sex" className="text-slate-700 dark:text-slate-300 font-bold text-sm flex items-center gap-2">
                     <Activity className="h-4 w-4 text-emerald-500" />
-                    {tr('dash_no_weekly_data')}
+                    {tr('auth_sex')}
                   </Label>
                   <select
                     id="sex"
@@ -589,8 +589,8 @@ export default function ProfilePage() {
                     className="flex h-12 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:text-slate-200"
                     required
                   >
-                    <option value="male" className="dark:bg-slate-900">♂️ {tr('common_back')}</option>
-                    <option value="female" className="dark:bg-slate-900">♀️ {tr('common_back')}</option>
+                    <option value="male" className="dark:bg-slate-900">♂️ {tr('auth_male')}</option>
+                    <option value="female" className="dark:bg-slate-900">♀️ {tr('auth_female')}</option>
                   </select>
                 </div>
               </div>
@@ -600,7 +600,7 @@ export default function ProfilePage() {
                 <div className="space-y-3">
                   <Label htmlFor="weight" className="text-slate-700 dark:text-slate-300 font-bold text-sm flex items-center gap-2">
                     <Scale className="h-4 w-4 text-emerald-500" />
-                    {tr('comming_soon')} (kg)
+                    {tr('auth_weight')}
                   </Label>
                   <Input
                     id="weight"
@@ -617,7 +617,7 @@ export default function ProfilePage() {
                 <div className="space-y-3">
                   <Label htmlFor="height" className="text-slate-700 dark:text-slate-300 font-bold text-sm flex items-center gap-2">
                     <Ruler className="h-4 w-4 text-emerald-500" />
-                    {tr('comming_soon')} (cm)
+                    {tr('auth_height')}
                   </Label>
                   <Input
                     id="height"
@@ -771,7 +771,7 @@ export default function ProfilePage() {
               <div>
                 <CardTitle className="text-red-700 dark:text-red-300">{tr('prof_danger_zone') || 'Zona de Peligro'}</CardTitle>
                 <CardDescription className="text-red-500 dark:text-red-400/70">
-                  {tr('common_back') || 'Opciones irrevocables'}
+                  {tr('logout_confirm_desc') || 'Acciones que no se pueden deshacer'}
                 </CardDescription>
               </div>
             </div>

@@ -21,9 +21,15 @@ export async function POST(request: NextRequest) {
     }
 
     const logId = crypto.randomUUID();
-    const logDate = logDateOverride
-      ? new Date(logDateOverride).toLocaleDateString('en-CA')
-      : new Date().toLocaleDateString('en-CA');
+
+    // Compute date string safely - extract YYYY-MM-DD from ISO or use server's local date
+    let logDate: string;
+    if (logDateOverride) {
+      logDate = new Date(logDateOverride).toISOString().split('T')[0];
+    } else {
+      const now = new Date();
+      logDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    }
 
     await transaction(async (connection) => {
       // 1. Guardar log detallado
@@ -37,7 +43,7 @@ export async function POST(request: NextRequest) {
         INSERT INTO daily_logs (user_id, log_date, water_ml, total_calories, total_protein, total_carbs, total_fat)
         VALUES (?, ?, ?, 0, 0, 0, 0)
         ON DUPLICATE KEY UPDATE
-          water_ml = water_ml + ?
+          water_ml = GREATEST(0, water_ml + ?)
       `, [user._id, logDate, amountMl, amountMl], connection);
     });
 
@@ -88,11 +94,11 @@ export async function DELETE(request: NextRequest) {
       }
 
       const { amount_ml, log_date } = rows[0];
-      
-      // FORMATEO DE FECHA SEGURO (YYYY-MM-DD)
-      // log_date puede venir como objeto Date de MySQL. evitamos toISOString() que desfasa horas.
-      const dateObj = new Date(log_date);
-      const formattedDate = dateObj.toLocaleDateString('en-CA'); // 'YYYY-MM-DD'
+
+      // FORMATEO DE FECHA SEGURO - usar toISOString().split('T')[0] para consistencia
+      const formattedDate = log_date instanceof Date
+        ? log_date.toISOString().split('T')[0]
+        : new Date(log_date).toISOString().split('T')[0];
 
       console.log(`[HYDRATION-DELETE] Eliminando ${amount_ml}ml del día ${formattedDate}`);
 

@@ -15,12 +15,20 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const dateParam = searchParams.get('date');
-    const selectedDate = dateParam ? new Date(dateParam) : new Date();
-    const today = selectedDate.toLocaleDateString('en-CA');
+
+    // Use the date string directly if provided, otherwise compute today's date
+    let today: string;
+    if (dateParam) {
+      // Extract YYYY-MM-DD from the ISO string to avoid timezone issues
+      today = dateParam.split('T')[0];
+    } else {
+      const now = new Date();
+      today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    }
 
     // 1. Obtener el total consolidado
     const [dailyRows] = await query(
-      'SELECT water_ml as totalMl FROM daily_logs WHERE user_id = ? AND log_date = ?',
+      'SELECT COALESCE(SUM(amount_ml), 0) as totalMl FROM water_logs WHERE user_id = ? AND log_date = ?',
       [user._id, today]
     ) as any[];
 
