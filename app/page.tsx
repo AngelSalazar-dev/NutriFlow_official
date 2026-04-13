@@ -26,11 +26,58 @@ import {
   Award,
   ChevronRight,
   Gem,
+  Droplets,
+  Brain,
+  TrendingUp,
+  CheckCircle2,
+  Play,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ParticlesBackground } from '@/components/ui/ParticlesBackground';
 import { useLang } from '@/context/LangContext';
 import { ThemeLangToggle } from '@/components/ui/ThemeLangToggle';
+
+// Scroll-triggered animation hook
+function useScrollAnimation() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1, rootMargin: '50px' }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, isVisible };
+}
+
+// Animated section wrapper
+function AnimatedSection({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const { ref, isVisible } = useScrollAnimation();
+  
+  return (
+    <div
+      ref={ref}
+      className={`transition-all duration-700 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      } ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  );
+}
 
 export default function LandingPage() {
   const { isAuthenticated } = useAuth();
@@ -259,88 +306,183 @@ export default function LandingPage() {
         )}
       </header>
 
-      {/* Hero Section — Clean Elegant with Particles */}
+      {/* Hero Section — Modern Bento + Social Proof */}
       <section className="min-h-screen flex items-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 relative overflow-hidden pt-20 transition-colors duration-500">
         <ParticlesBackground />
 
-        {/* Ambient lighting — emerald/teal glow */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-[150px] animate-pulse-glow" />
-          <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-teal-500/10 dark:bg-teal-500/5 rounded-full blur-[180px] animate-pulse-glow" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-fuchsia-400/5 dark:bg-fuchsia-400/2 rounded-full blur-[120px]" />
+        {/* Gradient mesh background with organic shapes */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {/* Large organic blobs */}
+          <div className="absolute top-[-10%] left-[-5%] w-[700px] h-[700px] bg-gradient-to-br from-emerald-400/20 to-teal-500/10 rounded-full blur-[120px] animate-pulse-glow" />
+          <div className="absolute bottom-[-15%] right-[-10%] w-[800px] h-[800px] bg-gradient-to-br from-fuchsia-400/15 to-purple-500/10 rounded-full blur-[150px] animate-pulse-glow" style={{ animationDelay: '1.5s' }} />
+          <div className="absolute top-[40%] right-[20%] w-[500px] h-[500px] bg-gradient-to-br from-cyan-400/15 to-blue-500/10 rounded-full blur-[100px] animate-pulse-glow" style={{ animationDelay: '0.8s' }} />
+          
+          {/* Subtle grid pattern */}
+          <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '60px 60px' }} />
         </div>
 
-        <div className="container-nutriflow relative z-10 py-20">
-          <div className="max-w-5xl mx-auto text-center space-y-10">
-            {/* Logo Icon */}
-            <div className="flex justify-center animate-fade-in-down">
-              <div className="p-5 rounded-3xl bg-white/60 dark:bg-slate-900/40 backdrop-blur-2xl border border-slate-200/50 dark:border-slate-800/50 shadow-2xl shadow-emerald-500/5">
-                <Leaf className="h-20 w-20 text-emerald-500 dark:text-emerald-400" />
-              </div>
-            </div>
+        <div className="container-nutriflow relative z-10 py-16 md:py-24">
+          <div className="max-w-7xl mx-auto">
+            {/* Top section — badge + headline */}
+            <div className="text-center max-w-4xl mx-auto mb-16 space-y-8">
+              {/* Badge with sparkle */}
+              <AnimatedSection>
+                <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-emerald-100/80 dark:bg-emerald-950/60 backdrop-blur-xl border border-emerald-200/50 dark:border-emerald-800/50 text-sm font-bold text-emerald-700 dark:text-emerald-400 shadow-lg shadow-emerald-500/10">
+                  <Sparkles className="h-4 w-4 animate-pulse" />
+                  {tr('sub_feature_ai_training')}
+                </div>
+              </AnimatedSection>
 
-            {/* Badge */}
-            <div className="flex justify-center animate-fade-in">
-              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-100 dark:bg-emerald-950 border border-emerald-200/50 dark:border-emerald-800/50 text-sm font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
-                <Sparkles className="h-4 w-4" />
-                {tr('sub_feature_ai_training')}
-              </div>
-            </div>
+              {/* Main headline */}
+              <AnimatedSection delay={100}>
+                <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-heading font-extrabold tracking-tighter leading-[1.05]">
+                  {lang === 'es' ? 'La ciencia de tu' : 'The science of your'}
+                  <span className="block mt-2 pb-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+                    {lang === 'es' ? 'mejor versión.' : 'best version.'}
+                  </span>
+                </h1>
+              </AnimatedSection>
 
-            <h1 className="text-6xl md:text-8xl lg:text-9xl font-heading font-extrabold tracking-tighter leading-[1.05] animate-fade-in-up text-slate-900 dark:text-slate-100">
-              {lang === 'es' ? 'La ciencia de tu' : 'The science of your'}
-              <span className="block bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 bg-clip-text text-transparent mt-2 pb-2">
-                {lang === 'es' ? 'mejor versión.' : 'best version.'}
-              </span>
-            </h1>
+              {/* Subtitle */}
+              <AnimatedSection delay={200}>
+                <p className="text-lg sm:text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed font-light">
+                  {tr('landing_hero_subtitle')}
+                </p>
+              </AnimatedSection>
 
-            <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed font-light">
-              {tr('landing_hero_subtitle')}
-            </p>
-
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {isAuthenticated ? (
-                <Link href="/dashboard">
-                  <Button size="lg" className="w-full sm:w-auto h-16 px-10 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black uppercase tracking-widest text-sm shadow-xl shadow-emerald-500/20 border-0 hover:scale-[1.02] transition-transform">
-                    {tr('nav_dashboard')}
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-              ) : (
-                <>
-                  <Link href="/register">
-                    <Button size="lg" className="w-full sm:w-auto h-16 px-10 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black uppercase tracking-widest text-sm shadow-xl shadow-emerald-500/20 border-0 hover:scale-[1.02] transition-transform">
-                      {tr('auth_free_start')}
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                  </Link>
-                  <Link href="/login">
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="w-full sm:w-auto h-16 px-10 rounded-2xl bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold uppercase tracking-widest text-sm shadow-sm"
-                    >
-                      {tr('auth_login')}
-                    </Button>
-                  </Link>
-                </>
-              )}
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-16 border-t border-slate-200 dark:border-slate-800/50 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              {STATS.map((stat, index) => {
-                const Icon = stat.icon;
-                return (
-                  <div key={index} className="text-center group cursor-default">
-                    <Icon className="h-7 w-7 mx-auto mb-3 opacity-40 text-slate-500 dark:text-slate-400 group-hover:opacity-100 group-hover:text-emerald-500 transition-all duration-300" />
-                    <div className="text-4xl md:text-5xl font-heading font-extrabold text-slate-900 dark:text-slate-100 mb-2 tracking-tight leading-none">{stat.value}</div>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-500 font-black uppercase tracking-widest leading-none">{stat.label}</div>
+              {/* Social proof — user avatars */}
+              <AnimatedSection delay={300}>
+                <div className="flex items-center justify-center gap-3">
+                  <div className="flex -space-x-3">
+                    {['🧑‍💻', '👩‍⚕️', '🏋️', '🧘', '👨‍🍳'].map((emoji, i) => (
+                      <div
+                        key={i}
+                        className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 border-2 border-white dark:border-slate-900 flex items-center justify-center text-lg shadow-md"
+                      >
+                        {emoji}
+                      </div>
+                    ))}
                   </div>
-                );
-              })}
+                  <div className="text-sm">
+                    <span className="font-bold text-slate-900 dark:text-slate-100">50K+</span>
+                    <span className="text-slate-500 dark:text-slate-400 ml-1.5">{lang === 'es' ? 'usuarios activos' : 'active users'}</span>
+                  </div>
+                </div>
+              </AnimatedSection>
+
+              {/* CTAs */}
+              <AnimatedSection delay={400}>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+                  {isAuthenticated ? (
+                    <Link href="/dashboard">
+                      <Button size="lg" className="w-full sm:w-auto h-14 px-8 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-sm shadow-xl shadow-emerald-500/20 border-0 hover:shadow-2xl hover:shadow-emerald-500/30 hover:-translate-y-0.5 transition-all duration-300">
+                        {tr('nav_dashboard')}
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                  ) : (
+                    <>
+                      <Link href="/register">
+                        <Button size="lg" className="w-full sm:w-auto h-14 px-8 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-sm shadow-xl shadow-emerald-500/20 border-0 hover:shadow-2xl hover:shadow-emerald-500/30 hover:-translate-y-0.5 transition-all duration-300">
+                          {tr('auth_free_start')}
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Link href="/login">
+                        <Button
+                          size="lg"
+                          variant="outline"
+                          className="w-full sm:w-auto h-14 px-8 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 font-semibold text-sm shadow-sm hover:shadow-md transition-all duration-300"
+                        >
+                          <Play className="mr-2 h-4 w-4" />
+                          {tr('auth_login')}
+                        </Button>
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </AnimatedSection>
             </div>
+
+            {/* Bento grid feature showcase */}
+            <AnimatedSection delay={500}>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-5xl mx-auto">
+                {/* Large card — AI Coach */}
+                <div className="col-span-2 row-span-2 group relative overflow-hidden rounded-[2rem] bg-white/70 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 shadow-xl p-8 hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-500">
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-fuchsia-500/20 to-pink-500/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+                  <div className="relative z-10 space-y-4">
+                    <div className="inline-flex p-3 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-pink-600 shadow-lg">
+                      <Brain className="h-7 w-7 text-white" />
+                    </div>
+                    <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                      {tr('landing_feat_ai_coach')}
+                    </h3>
+                    <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+                      {tr('landing_feat_ai_coach_desc')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Small card — Smart tracking */}
+                <div className="group relative overflow-hidden rounded-[1.5rem] bg-white/70 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 shadow-lg p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-500">
+                  <div className="inline-flex p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-600 mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <Utensils className="h-5 w-5 text-white" />
+                  </div>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-1">{tr('landing_feat_smart')}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{tr('landing_feat_smart_desc')}</p>
+                </div>
+
+                {/* Small card — Premium workouts */}
+                <div className="group relative overflow-hidden rounded-[1.5rem] bg-white/70 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 shadow-lg p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-500">
+                  <div className="inline-flex p-2.5 rounded-xl bg-gradient-to-br from-teal-500 to-purple-600 mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <Dumbbell className="h-5 w-5 text-white" />
+                  </div>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-1">{tr('landing_feat_premium')}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{tr('landing_feat_premium_desc')}</p>
+                </div>
+
+                {/* Small card — Analytics */}
+                <div className="group relative overflow-hidden rounded-[1.5rem] bg-white/70 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 shadow-lg p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-500">
+                  <div className="inline-flex p-2.5 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <BarChart3 className="h-5 w-5 text-white" />
+                  </div>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-1">{tr('landing_feat_analytics')}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{tr('landing_feat_analytics_desc')}</p>
+                </div>
+
+                {/* Small card — Verified */}
+                <div className="group relative overflow-hidden rounded-[1.5rem] bg-white/70 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 shadow-lg p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-500">
+                  <div className="inline-flex p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <Shield className="h-5 w-5 text-white" />
+                  </div>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-1">{tr('landing_feat_verified')}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{tr('landing_feat_verified_desc')}</p>
+                </div>
+              </div>
+            </AnimatedSection>
+
+            {/* Stats row */}
+            <AnimatedSection delay={600}>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mt-16 pt-12 border-t border-slate-200 dark:border-slate-800/50">
+                {[
+                  { value: '50K+', label: lang === 'es' ? 'Usuarios activos' : 'Active Users', icon: Users },
+                  { value: '2M+', label: lang === 'es' ? 'Comidas registradas' : 'Meals logged', icon: Utensils },
+                  { value: '98%', label: lang === 'es' ? 'Satisfacción' : 'Satisfaction', icon: Heart },
+                  { value: '4.9★', label: lang === 'es' ? 'Calificación' : 'Rating', icon: Star },
+                ].map((stat, index) => {
+                  const Icon = stat.icon;
+                  return (
+                    <div key={index} className="text-center group cursor-default">
+                      <div className="inline-flex p-3 rounded-2xl bg-white/60 dark:bg-slate-900/40 mb-3 group-hover:scale-110 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-950/20 transition-all duration-300">
+                        <Icon className="h-5 w-5 text-slate-400 group-hover:text-emerald-500 transition-colors" />
+                      </div>
+                      <div className="text-3xl md:text-4xl font-heading font-extrabold text-slate-900 dark:text-slate-100 mb-1 tracking-tight leading-none">{stat.value}</div>
+                      <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{stat.label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </AnimatedSection>
           </div>
         </div>
       </section>
@@ -368,113 +510,143 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section — Light Gradient */}
-      <section id="features" className="py-24 md:py-32 bg-gradient-to-br from-slate-50 via-emerald-50/20 to-slate-50 dark:from-slate-950 dark:via-emerald-950/10 dark:to-slate-950 transition-colors">
-        <div className="container-nutriflow">
-          <div className="text-center mb-20 space-y-6">
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest">
-              <Zap className="h-4 w-4" />
-              {tr('landing_feat_smart')}
-            </div>
-            <h2 className="text-5xl md:text-7xl font-heading font-extrabold tracking-tighter text-slate-900 dark:text-slate-100">
-              {lang === 'es' ? 'Redefiniendo tu' : 'Redefining your'}
-              <span className="block bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
-                {lang === 'es' ? 'bienestar.' : 'wellness.'}
-              </span>
-            </h2>
-            <p className="text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
-              {tr('landing_feat_ai_coach_desc')}
-            </p>
-          </div>
+      {/* Features Section — Bento Grid + Scroll Animations */}
+      <section id="features" className="py-24 md:py-32 bg-white dark:bg-slate-900 transition-colors relative overflow-hidden">
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-slate-50/50 via-transparent to-slate-50/50 dark:from-slate-950/50 dark:via-transparent dark:to-slate-950/50" />
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="container-nutriflow relative z-10">
+          {/* Section header */}
+          <AnimatedSection>
+            <div className="text-center mb-20 space-y-6">
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-400 text-xs font-bold uppercase tracking-wide">
+                <Zap className="h-4 w-4" />
+                {tr('landing_feat_smart')}
+              </div>
+              <h2 className="text-4xl md:text-6xl lg:text-7xl font-heading font-extrabold tracking-tighter text-slate-900 dark:text-slate-100">
+                {lang === 'es' ? 'Redefiniendo tu' : 'Redefining your'}
+                <span className="block mt-1 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                  {lang === 'es' ? 'bienestar.' : 'wellness.'}
+                </span>
+              </h2>
+              <p className="text-lg md:text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
+                {tr('landing_feat_ai_coach_desc')}
+              </p>
+            </div>
+          </AnimatedSection>
+
+          {/* Bento grid features */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <Card
-                  key={index}
-                  className="group relative bg-white/70 dark:bg-slate-900/50 backdrop-blur-xl border-slate-200/60 dark:border-slate-800/60 hover:-translate-y-2 transition-all duration-500 overflow-hidden"
-                >
-                  <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${feature.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-                  <CardHeader className="pb-4">
-                    <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${feature.accent} mb-4 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-lg transition-all duration-500`}>
-                      <Icon className="h-6 w-6 text-white" />
-                    </div>
-                    <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm font-medium">{feature.description}</p>
-                  </CardContent>
-                </Card>
+                <AnimatedSection key={index} delay={index * 100}>
+                  <Card
+                    className="group relative h-full bg-white dark:bg-slate-900/50 backdrop-blur-xl border-slate-200/60 dark:border-slate-800/60 hover:border-emerald-200 dark:hover:border-emerald-800/60 hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-2 transition-all duration-500 overflow-hidden"
+                  >
+                    {/* Top accent line */}
+                    <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${feature.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                    
+                    <CardHeader className="pb-4">
+                      <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${feature.accent} mb-4 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-xl transition-all duration-500`}>
+                        <Icon className="h-6 w-6 text-white" />
+                      </div>
+                      <CardTitle className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">{feature.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm font-medium">{feature.description}</p>
+                    </CardContent>
+                  </Card>
+                </AnimatedSection>
               );
             })}
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section — Clean White */}
-      <section id="testimonials" className="py-24 md:py-32 bg-white dark:bg-slate-900 transition-colors">
-        <div className="container-nutriflow">
-          <div className="text-center mb-20 space-y-6">
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-800 dark:text-teal-400 text-[10px] font-black uppercase tracking-widest">
-              <Heart className="h-4 w-4" />
-              {tr('landing_testimonials' as any) || 'Testimonials'}
-            </div>
-            <h2 className="text-5xl md:text-7xl font-heading font-extrabold tracking-tighter text-slate-900 dark:text-slate-100">
-              {lang === 'es' ? 'Historias que' : 'Stories that'}
-              <span className="block bg-gradient-to-r from-teal-600 to-fuchsia-600 dark:from-teal-400 dark:to-fuchsia-400 bg-clip-text text-transparent">
-                {lang === 'es' ? 'inspiran.' : 'inspire.'}
-              </span>
-            </h2>
-            <p className="text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-light">
-              {lang === 'es' ? 'Miles de personas ya transformaron su vida con NutriFlow' : 'Thousands of people have already transformed their lives with NutriFlow'}
-            </p>
-          </div>
+      {/* Testimonials Section — Modern Cards with Scroll Reveal */}
+      <section id="testimonials" className="py-24 md:py-32 bg-slate-50 dark:bg-slate-950 transition-colors relative overflow-hidden">
+        {/* Organic background blobs */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-teal-400/10 to-fuchsia-400/10 rounded-full blur-[150px]" />
+          <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-emerald-400/10 to-cyan-400/10 rounded-full blur-[120px]" />
+        </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+        <div className="container-nutriflow relative z-10">
+          {/* Section header */}
+          <AnimatedSection>
+            <div className="text-center mb-20 space-y-6">
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-800 dark:text-teal-400 text-xs font-bold uppercase tracking-wide">
+                <Heart className="h-4 w-4" />
+                {tr('landing_testimonials' as any) || 'Testimonials'}
+              </div>
+              <h2 className="text-4xl md:text-6xl lg:text-7xl font-heading font-extrabold tracking-tighter text-slate-900 dark:text-slate-100">
+                {lang === 'es' ? 'Historias que' : 'Stories that'}
+                <span className="block mt-1 bg-gradient-to-r from-teal-600 via-fuchsia-600 to-pink-600 bg-clip-text text-transparent">
+                  {lang === 'es' ? 'inspiran.' : 'inspire.'}
+                </span>
+              </h2>
+              <p className="text-lg md:text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
+                {lang === 'es' ? 'Miles de personas ya transformaron su vida con NutriFlow' : 'Thousands of people have already transformed their lives with NutriFlow'}
+              </p>
+            </div>
+          </AnimatedSection>
+
+          {/* Testimonial cards */}
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
             {TESTIMONIALS.map((testimonial, index) => (
-              <Card key={index} className="bg-slate-50/50 dark:bg-slate-950/50 border-slate-200/60 dark:border-slate-800/60 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-black text-xl shadow-lg">
-                      {testimonial.avatar}
+              <AnimatedSection key={index} delay={index * 150}>
+                <Card className="h-full bg-white dark:bg-slate-900/50 backdrop-blur-xl border-slate-200/60 dark:border-slate-800/60 hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-2 transition-all duration-500">
+                  <CardHeader className="pb-6">
+                    {/* Avatar + info */}
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-emerald-500/20">
+                        {testimonial.avatar}
+                      </div>
+                      <div>
+                        <div className="font-bold text-slate-900 dark:text-slate-100 tracking-tight">{testimonial.name}</div>
+                        <div className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">{testimonial.role}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-bold text-slate-900 dark:text-slate-100 tracking-tight">{testimonial.name}</div>
-                      <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-widest">{testimonial.role}</div>
+                    {/* Star rating */}
+                    <div className="flex gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                      ))}
                     </div>
-                  </div>
-                  <div className="flex gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-slate-600 dark:text-slate-400 italic leading-relaxed font-medium">"{testimonial.content}"</p>
-                </CardContent>
-              </Card>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed font-medium italic">"{testimonial.content}"</p>
+                  </CardContent>
+                </Card>
+              </AnimatedSection>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing Section — Light Elegant Table */}
-      <section id="pricing" className="py-24 md:py-32 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden relative transition-colors">
+      {/* Pricing Section — Elegant Table with Scroll Animations */}
+      <section id="pricing" className="py-24 md:py-32 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 overflow-hidden relative transition-colors">
         <ParticlesBackground />
         <div className="container-nutriflow relative z-10 max-w-5xl">
-          <div className="text-center mb-20 space-y-6">
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200/50 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest">
-              <Gem className="h-4 w-4" />
-              {tr('landing_prices_title')}
+          {/* Section header */}
+          <AnimatedSection>
+            <div className="text-center mb-20 space-y-6">
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200/50 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wide">
+                <Gem className="h-4 w-4" />
+                {tr('landing_prices_title')}
+              </div>
+              <h2 className="text-4xl md:text-6xl lg:text-7xl font-heading font-extrabold tracking-tighter">
+                {lang === 'es' ? 'Desempeño sin' : 'Performance without'} <span className="bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">{lang === 'es' ? 'concesiones.' : 'compromise.'}</span>
+              </h2>
+              <p className="text-lg md:text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
+                {tr('landing_prices_subtitle')}
+              </p>
             </div>
-            <h2 className="text-5xl md:text-7xl font-heading font-extrabold tracking-tighter">
-              {lang === 'es' ? 'Desempeño sin' : 'Performance without'} <span className="bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">{lang === 'es' ? 'concesiones.' : 'compromise.'}</span>
-            </h2>
-            <p className="text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
-              {tr('landing_prices_subtitle')}
-            </p>
-          </div>
+          </AnimatedSection>
+
+          {/* Pricing table */}
+          <AnimatedSection delay={200}>
 
           <div className="rounded-[40px] border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-3xl overflow-hidden shadow-2xl transition-all duration-500">
             <div className="grid grid-cols-4 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80">
@@ -536,10 +708,11 @@ export default function LandingPage() {
                ))}
             </div>
           </div>
+          </AnimatedSection>
         </div>
       </section>
 
-      {/* CTA Section — Gradient Elegant */}
+      {/* CTA Section — Gradient Elegant with Scroll Reveal */}
       <section className="py-24 md:py-32 bg-gradient-to-br from-emerald-800 via-teal-800 to-emerald-950 text-white relative overflow-hidden transition-all duration-700">
         {/* Ambient orbs */}
         <div className="absolute inset-0 pointer-events-none">
@@ -548,26 +721,28 @@ export default function LandingPage() {
         </div>
 
         <div className="container-nutriflow relative z-10">
+          <AnimatedSection>
           <div className="max-w-4xl mx-auto text-center space-y-12">
-            <div className="flex justify-center animate-float">
-              <div className="p-6 rounded-[2.5rem] bg-white/10 backdrop-blur-3xl border border-white/20 shadow-2xl">
+            <div className="flex justify-center">
+              <div className="p-6 rounded-[2.5rem] bg-white/10 backdrop-blur-3xl border border-white/20 shadow-2xl animate-float">
                 <Heart className="h-20 w-20 text-emerald-400" />
               </div>
             </div>
-            <h2 className="text-6xl md:text-8xl font-heading font-extrabold tracking-tighter leading-none">
+            <h2 className="text-5xl md:text-7xl lg:text-8xl font-heading font-extrabold tracking-tighter leading-none">
               {lang === 'es' ? 'Tu transformación' : 'Your transformation'}
-              <span className="block text-white/60">{lang === 'es' ? 'comienza hoy.' : 'starts today.'}</span>
+              <span className="block text-white/60 mt-1">{lang === 'es' ? 'comienza hoy.' : 'starts today.'}</span>
             </h2>
-            <p className="text-xl md:text-2xl text-white/70 max-w-2xl mx-auto font-light leading-relaxed">
+            <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto font-light leading-relaxed">
               {lang === 'es' ? 'Únete a miles de usuarios que ya están mejorando su salud con NutriFlow' : 'Join thousands of users who are already improving their health with NutriFlow'}
             </p>
             <Link href="/register">
-              <Button size="lg" className="h-20 px-16 rounded-[2rem] bg-white text-emerald-900 border-0 hover:bg-white/90 font-black uppercase tracking-[0.2em] text-sm shadow-2xl shadow-emerald-950/50 transition-all duration-300 hover:-translate-y-2 hover:shadow-white/20">
+              <Button size="lg" className="h-16 px-12 rounded-2xl bg-white text-emerald-900 border-0 hover:bg-white/90 font-bold text-sm shadow-2xl shadow-emerald-950/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-white/20">
                 {tr('auth_free_start')}
-                <ArrowRight className="ml-4 h-6 w-6" />
+                <ArrowRight className="ml-3 h-5 w-5" />
               </Button>
             </Link>
           </div>
+          </AnimatedSection>
         </div>
       </section>
 
