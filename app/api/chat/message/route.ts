@@ -1,13 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth-mysql';
+import { verifyJWT } from '@/lib/auth-mysql';
 import { query } from '@/lib/mysql';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
+async function getUserFromRequest(request: NextRequest) {
+  // Read cookie directly from request headers (more reliable than next/headers in Route Handlers)
+  const cookieHeader = request.headers.get('cookie') || '';
+  const sessionMatch = cookieHeader.match(/session=([^;]+)/);
+  const token = sessionMatch ? sessionMatch[1] : null;
+
+  if (!token) {
+    console.log('[CHAT] No session cookie found in request. Cookie header:', cookieHeader ? '(present, length ' + cookieHeader.length + ')' : '(empty)');
+    return null;
+  }
+
+  const payload = await verifyJWT(token);
+  if (!payload?.userId) {
+    console.log('[CHAT] Invalid JWT payload');
+    return null;
+  }
+
+  const userId = payload.userId as string;
+  const [rows] = await query(`
+    SELECT id, email, name, age, weight_kg, height_cm, sex, goal, activity_level, daily_calorie_target, subscription_plan
+    FROM users WHERE id = ? LIMIT 1
+  `, [userId]);
+
+  const users = Array.isArray(rows) ? rows : [rows];
+  if (!users || users.length === 0) return null;
+
+  const u = users[0] as any;
+  return {
+    _id: u.id,
+    email: u.email,
+    name: u.name,
+    age: u.age,
+    weight: u.weight_kg,
+    height: u.height_cm,
+    sex: u.sex,
+    goal: u.goal,
+    activityLevel: u.activity_level,
+    calorieGoal: u.daily_calorie_target,
+    subscriptionPlan: u.subscription_plan,
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
@@ -248,7 +290,7 @@ Respuesta de NutriBot:`;
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }

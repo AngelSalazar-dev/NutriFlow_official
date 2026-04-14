@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLang } from '@/context/LangContext';
 import { useToast } from '@/components/ui/toast';
@@ -45,6 +46,7 @@ interface Conversation {
 }
 
 export default function ChatPage() {
+  const router = useRouter();
   const { user, isPremium, checkChatLimit } = useAuth();
   const { tr, lang } = useLang();
   const { error: toastError } = useToast();

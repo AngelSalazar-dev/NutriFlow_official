@@ -1,6 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/mysql';
-import { getCurrentUser } from '@/lib/auth-mysql';
+import { verifyJWT } from '@/lib/auth-mysql';
+
+async function getUserFromRequest(request: NextRequest) {
+  const cookieHeader = request.headers.get('cookie') || '';
+  const sessionMatch = cookieHeader.match(/session=([^;]+)/);
+  const token = sessionMatch ? sessionMatch[1] : null;
+  if (!token) return null;
+
+  const payload = await verifyJWT(token);
+  if (!payload?.userId) return null;
+
+  const userId = payload.userId as string;
+  const [rows] = await query(`SELECT id, email, name, subscription_plan FROM users WHERE id = ? LIMIT 1`, [userId]);
+  const users = Array.isArray(rows) ? rows : [rows];
+  if (!users || users.length === 0) return null;
+
+  const u = users[0] as any;
+  return { _id: u.id, email: u.email, name: u.name, subscriptionPlan: u.subscription_plan };
+}
 
 /**
  * GET /api/chat/conversations
@@ -8,7 +26,7 @@ import { getCurrentUser } from '@/lib/auth-mysql';
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
@@ -102,7 +120,7 @@ export async function GET(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const user = await getUserFromRequest(request);
     if (!user) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
