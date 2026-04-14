@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Leaf, Loader2, AlertCircle, Eye, EyeOff, Mail, Lock, Heart, Dumbbell, Activity, Zap, Target } from 'lucide-react';
+import { Leaf, Loader2, AlertCircle, Eye, EyeOff, Mail, Lock, Heart, Dumbbell, Activity, Zap, Target, Shield } from 'lucide-react';
 import { Suspense } from 'react';
 import { ParticlesBackground } from '@/components/ui/ParticlesBackground';
 import { useLang } from '@/context/LangContext';
