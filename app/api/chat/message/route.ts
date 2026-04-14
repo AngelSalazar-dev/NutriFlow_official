@@ -224,7 +224,14 @@ Respuesta de NutriBot:`;
       },
     });
   } catch (error: any) {
-    console.error('[CHAT] Error processing message:', error.message);
+    console.error('[CHAT] ❌ Error processing message:', error);
+    // Log MySQL-specific errors for debugging
+    if (error.message?.includes('session_id')) {
+      console.error('[CHAT] ⚠️ DB SCHEMA ERROR: session_id NOT NULL constraint is blocking saves. Run: npx tsx scripts/fix-chat-messages-schema.ts');
+    }
+    if (error.code === 'ER_NO_DEFAULT_FOR_FIELD') {
+      console.error(`[CHAT] ⚠️ Missing required field: ${error.sqlMessage || error.message}`);
+    }
     return NextResponse.json(
       {
         error: 'Error procesando mensaje',

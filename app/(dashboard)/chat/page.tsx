@@ -47,6 +47,7 @@ interface Conversation {
 export default function ChatPage() {
   const { user, isPremium, checkChatLimit } = useAuth();
   const { tr, lang } = useLang();
+  const { error: toastError } = useToast();
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [input, setInput] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
@@ -59,6 +60,8 @@ export default function ChatPage() {
   const [editingConvId, setEditingConvId] = React.useState<string | null>(null);
   const [editTitle, setEditTitle] = React.useState('');
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  // Track if user explicitly started a new conversation to prevent auto-reload
+  const skipAutoLoadRef = React.useRef(false);
 
   const SUGGESTED_QUESTIONS = [
     { icon: '🍎', question: tr('chat_suggest_1') },
@@ -99,8 +102,8 @@ export default function ChatPage() {
         // Auto-load most recent conversation if none active and we have valid conversations
         const validConvs = convs.filter((c: Conversation) => c.id && c.id !== 'null' && c.id !== 'undefined');
         if (validConvs.length > 0) {
-          // Only auto-load on initial mount (not when user manually starts new conversation)
-          if (!activeConversationId && messages.length === 0) {
+          // Skip auto-load if user explicitly started a new conversation
+          if (!skipAutoLoadRef.current && !activeConversationId && messages.length === 0) {
             await loadConversation(validConvs[0].id);
           }
         }
@@ -111,6 +114,7 @@ export default function ChatPage() {
   };
 
   const loadConversation = async (convId: string) => {
+    skipAutoLoadRef.current = false;
     try {
       const response = await fetch(`/api/chat/conversations?action=load&conversationId=${convId}`, { credentials: 'include' });
       if (response.ok) {
@@ -136,14 +140,18 @@ export default function ChatPage() {
   };
 
   const startNewConversation = () => {
+    skipAutoLoadRef.current = true;
     setMessages([]);
     setActiveConversationId(null);
     setConversationHistory([]);
     setInput('');
+    // Refresh sidebar list without auto-loading
+    loadConversations();
   };
 
   const deleteConversation = async (convId: string) => {
     if (!confirm(tr('food_delete_confirm'))) return;
+    skipAutoLoadRef.current = false;
     try {
       const response = await fetch(`/api/chat/conversations?action=delete&conversationId=${convId}`, {
         method: 'GET',
@@ -232,6 +240,13 @@ export default function ChatPage() {
         const msg = error.message as string;
         if (msg.includes('cuota') || msg.includes('quota')) errorMessage = `⚠️ ${tr('chat_limit_warning')}`;
         else if (msg.includes('API de IA')) errorMessage = `🔧 ${tr('chat_api_error') || 'IA API not configured'}`;
+        else if (msg.includes('Error interno') || msg.includes('Error procesando')) {
+          errorMessage = `❌ ${tr('chat_error_message') || 'Error al enviar mensaje'}`;
+          // Show visible toast for server errors
+          toastError(lang === 'es'
+            ? 'Error al guardar el mensaje. Intenta de nuevo.'
+            : 'Failed to save message. Please try again.');
+        }
         else errorMessage = `❌ ${msg}`;
       }
       setMessages((prev) => [...prev, { role: 'assistant', content: errorMessage, timestamp: new Date() }]);

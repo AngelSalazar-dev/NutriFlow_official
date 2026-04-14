@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS exercise_logs (
 CREATE TABLE IF NOT EXISTS chat_messages (
     id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     user_id CHAR(36) NOT NULL,
-    session_id VARCHAR(100) NOT NULL,
+    session_id VARCHAR(100) NULL,
     conversation_id VARCHAR(100) NULL,
     context_snapshot JSON NULL,
     role ENUM('user', 'assistant', 'system') NOT NULL,
