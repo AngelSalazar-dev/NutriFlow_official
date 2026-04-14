@@ -256,11 +256,12 @@ function LoginForm() {
           {/* Large decorative circles for depth */}
           <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-emerald-500/20 blur-[120px] animate-pulse" />
           <div className="absolute bottom-[-15%] left-[-10%] w-[600px] h-[600px] rounded-full bg-teal-500/20 blur-[150px] animate-pulse [animation-delay:2s]" />
-          
+          <div className="absolute top-[40%] right-[20%] w-[400px] h-[400px] rounded-full bg-fuchsia-400/10 blur-[100px] animate-pulse [animation-delay:1s]" />
+
           {/* Grid pattern overlay */}
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
         </div>
-        
+
         {/* Gradient overlay for text protection */}
         <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-teal-950/40 to-transparent z-20" />
 
@@ -272,6 +273,30 @@ function LoginForm() {
            <p className="text-slate-300 text-xl leading-relaxed font-light">
              {tr('auth_health_rules_desc')}
            </p>
+
+           {/* Social proof — user avatars */}
+           <div className="flex items-center justify-center gap-3 pt-4">
+             <div className="flex -space-x-3">
+               {['🧑‍💻', '👩‍⚕️', '🏋️', '🧘', '👨‍🍳'].map((emoji, i) => (
+                 <div
+                   key={i}
+                   className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 border-2 border-white/20 flex items-center justify-center text-lg shadow-md backdrop-blur-xl"
+                 >
+                   {emoji}
+                 </div>
+               ))}
+             </div>
+             <div className="text-sm text-white/90">
+               <span className="font-bold">50K+</span>
+               <span className="text-white/70 ml-1.5">{lang === 'es' ? 'confían en nosotros' : 'trust us'}</span>
+             </div>
+           </div>
+
+           {/* Security badge */}
+           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-xs font-bold text-white/80 mt-2">
+             <Shield className="h-3.5 w-3.5" />
+             {lang === 'es' ? 'Encriptación de grado bancario' : 'Bank-grade encryption'}
+           </div>
         </div>
       </div>
     </div>
