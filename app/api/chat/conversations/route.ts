@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     // List conversations
     if (!action || action === 'list') {
-      const convs = await query(`
+      const convsResult = await query(`
         SELECT
           cm.conversation_id as id,
           DATE_FORMAT(MAX(cm.created_at), '%Y-%m-%dT%H:%i:%sZ') as updatedAt,
@@ -50,6 +50,11 @@ export async function GET(request: NextRequest) {
         ORDER BY MAX(cm.created_at) DESC
         LIMIT 50
       `, [user._id]) as any[];
+
+      // query() returns [rows, fields], extract rows
+      const convs = Array.isArray(convsResult[0]) ? convsResult[0] : convsResult;
+
+      console.log('[CHAT] List conversations: found', convs.length, 'for user', user._id);
 
       const conversations = convs
         .filter((c: any) => c.id && c.id !== 'null' && c.id !== 'undefined')
@@ -72,12 +77,16 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'conversationId requerido' }, { status: 400 });
       }
 
-      const msgs = await query(`
+      const msgsResult = await query(`
         SELECT id, role, content, DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ') as created_at
         FROM chat_messages
         WHERE user_id = ? AND conversation_id = ?
         ORDER BY created_at ASC
       `, [user._id, convId]) as any[];
+
+      const msgs = Array.isArray(msgsResult[0]) ? msgsResult[0] : msgsResult;
+
+      console.log('[CHAT] Load conversation:', convId, '- found', msgs.length, 'messages');
 
       const messages = msgs.map((m: any) => ({
         id: m.id,
