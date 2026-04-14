@@ -96,13 +96,17 @@ export default function ChatPage() {
         const convs = data.conversations || [];
         setConversations(convs);
 
-        // Auto-load most recent conversation if none active
-        if (!activeConversationId && convs.length > 0 && convs[0].id) {
-          loadConversation(convs[0].id);
+        // Auto-load most recent conversation if none active and we have valid conversations
+        const validConvs = convs.filter((c: Conversation) => c.id && c.id !== 'null' && c.id !== 'undefined');
+        if (validConvs.length > 0) {
+          // Only auto-load on initial mount (not when user manually starts new conversation)
+          if (!activeConversationId && messages.length === 0) {
+            await loadConversation(validConvs[0].id);
+          }
         }
       }
     } catch (error) {
-      // Silently handle errors
+      console.error('[CHAT] Error loading conversations:', error);
     }
   };
 
@@ -120,6 +124,7 @@ export default function ChatPage() {
         }));
         setMessages(loadedMessages);
         setActiveConversationId(convId);
+        // CRITICAL: Rebuild conversationHistory from DB messages so AI has context after page refresh
         setConversationHistory(loadedMessages.map((m: ChatMessage) => ({ role: m.role, content: m.content })));
         setMenuOpenId(null);
       } else {

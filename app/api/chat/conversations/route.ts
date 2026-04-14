@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       `, [user._id]) as any[];
 
       const conversations = convs
-        .filter((c: any) => c.id)
+        .filter((c: any) => c.id && c.id !== 'null' && c.id !== 'undefined')
         .map((c: any) => ({
           id: String(c.id),
           updatedAt: String(c.updatedAt || ''),
