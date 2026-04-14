@@ -222,6 +222,16 @@ export default function ChatPage() {
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
         console.error('[CHAT UI] Server error:', response.status, JSON.stringify(errData));
+
+        // Handle 401 - session expired
+        if (response.status === 401) {
+          toastError(lang === 'es'
+            ? 'Sesión expirada. Redirigiendo al login...'
+            : 'Session expired. Redirecting to login...');
+          router.push('/login?redirect=/chat');
+          return;
+        }
+
         throw new Error(errData.message || errData.error || `Error ${response.status}`);
       }
 
