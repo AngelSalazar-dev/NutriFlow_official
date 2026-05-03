@@ -7,7 +7,7 @@ import { User } from '@/types';
 const JWT_SECRET_STRING = process.env.JWT_SECRET;
 
 if (!JWT_SECRET_STRING && process.env.NODE_ENV === 'production') {
-  console.warn('⚠️ WARNING: JWT_SECRET environment variable is missing. Using fallback for build. Generate one and add it to Vercel.');
+  throw new Error('JWT_SECRET environment variable is required in production. Generate one with: node scripts/generate-jwt-secret.js');
 }
 
 const JWT_SECRET = new TextEncoder().encode(
