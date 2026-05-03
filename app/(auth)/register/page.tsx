@@ -38,7 +38,9 @@ interface ValidationErrors {
   height?: string;
 }
 
-export default function RegisterPage() {
+import { Suspense } from 'react';
+
+function RegisterForm() {
   const router = useRouter();
   const { register, isAuthenticated } = useAuth();
   const { tr, lang } = useLang();
@@ -548,5 +550,17 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <Loader2 className="h-10 w-10 text-emerald-600 animate-spin" />
+      </div>
+    }>
+      <RegisterForm />
+    </Suspense>
   );
 }
