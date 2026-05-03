@@ -3,28 +3,25 @@ import { cookies } from 'next/headers';
 import { query } from './mysql';
 import { User } from '@/types';
 
-// Enforce JWT_SECRET in production - fail fast if not set
-const JWT_SECRET_STRING = process.env.JWT_SECRET;
-
-if (!JWT_SECRET_STRING && process.env.NODE_ENV === 'production') {
-  throw new Error('JWT_SECRET environment variable is required in production. Generate one with: node scripts/generate-jwt-secret.js');
-}
-
-const JWT_SECRET = new TextEncoder().encode(
-  JWT_SECRET_STRING || 'dev-secret-do-not-use-in-production'
-);
+const getJwtSecret = () => {
+  const secretString = process.env.JWT_SECRET;
+  if (!secretString && process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable is required in production. Generate one with: node scripts/generate-jwt-secret.js');
+  }
+  return new TextEncoder().encode(secretString || 'dev-secret-do-not-use-in-production');
+};
 
 export async function signJWT(payload: JWTPayload): Promise<string> {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('30d')
-    .sign(JWT_SECRET);
+    .sign(getJwtSecret());
 }
 
 export async function verifyJWT(token: string): Promise<any> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, getJwtSecret());
     return payload;
   } catch (error) {
     return null;
