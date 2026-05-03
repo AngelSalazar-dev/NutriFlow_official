@@ -69,8 +69,8 @@ export function Sidebar({ isCollapsed = false, isMobile = false, onToggle }: Sid
       {/* Header con Logo */}
       <div className="flex h-20 items-center justify-between border-b border-slate-200 dark:border-slate-700/60 px-6 backdrop-blur-sm shrink-0">
         <div className={cn('flex items-center gap-3 transition-opacity duration-300', isCollapsed && 'opacity-0 hidden')}>
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/30">
-            <Leaf className="h-6 w-6 text-white" />
+          <div className="flex h-12 w-12 items-center justify-center overflow-hidden shrink-0">
+            <img src="/logos/isotipo.png" alt="NutriFlow" className="h-full w-full object-contain" />
           </div>
           <div>
             <h1 className="text-lg font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">

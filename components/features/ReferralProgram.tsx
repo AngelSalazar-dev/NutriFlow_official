@@ -33,7 +33,7 @@ export function ReferralProgram() {
 
   const loadReferralCode = async () => {
     try {
-      const response = await fetch('/api/referral/my-code');
+      const response = await fetch('/api/referral');
       if (response.ok) {
         const data = await response.json();
         setStats(data);
@@ -226,7 +226,7 @@ export function ReferralProgram() {
         {/* Bottom Tip */}
         <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-800 text-center">
           <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
-            <strong className="text-emerald-900 dark:text-emerald-200">🎁 Bonus para amigos:</strong> Tus referidos también obtienen <strong>7 días Premium gratis</strong> al registrarse con tu código.
+            <strong className="text-emerald-900 dark:text-emerald-200">🎁 Bonus para amigos:</strong> Tus referidos también obtienen <strong>3 días Premium gratis</strong> al registrarse con tu código.
           </p>
         </div>
       </CardContent>

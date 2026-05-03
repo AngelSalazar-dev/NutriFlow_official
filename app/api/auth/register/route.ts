@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
       height,
       activityLevel,
       goal,
+      referralCode: providedReferralCode,
     } = body;
 
     // Sanitize inputs
@@ -115,16 +116,29 @@ export async function POST(request: NextRequest) {
     // Generar ID único
     const userId = crypto.randomUUID();
 
-    // Generar código de referido único
-    const referralCode = name.substring(0, 3).toUpperCase() + Math.random().toString(36).substring(2, 8).toUpperCase();
+    // Determinar si fue referido por alguien
+    let referredBy = null;
+    if (providedReferralCode) {
+      const [referrerRows] = await query(
+        'SELECT user_id FROM referral_codes WHERE code = ?',
+        [providedReferralCode.toUpperCase()]
+      ) as any[];
+      
+      if (referrerRows && referrerRows.length > 0) {
+        referredBy = referrerRows[0].user_id;
+      }
+    }
+
+    // Generar código de referido inicial
+    const referralCode = sanitizedName.substring(0, 3).toUpperCase() + Math.random().toString(36).substring(2, 7).toUpperCase();
 
     // Insertar usuario
     await query(`
       INSERT INTO users (
         id, email, password_hash, name, age, weight_kg, height_cm,
         sex, activity_level, goal, subscription_plan,
-        daily_calorie_target, tdee, bmr, referral_code
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'free', ?, ?, ?, ?)
+        daily_calorie_target, tdee, bmr, referral_code, referred_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'free', ?, ?, ?, ?, ?)
     `, [
       userId,
       sanitizedEmail,
@@ -140,7 +154,43 @@ export async function POST(request: NextRequest) {
       tdee,
       bmr,
       referralCode,
+      referredBy
     ]);
+
+    // Procesar recompensa para el referente si existe
+    if (referredBy) {
+      const rewardDays = 3;
+      const [referrerRows] = await query(
+        'SELECT subscription_plan, subscription_end FROM users WHERE id = ?',
+        [referredBy]
+      ) as any[];
+
+      if (referrerRows && referrerRows.length > 0) {
+        const referrer = referrerRows[0];
+        const now = new Date();
+        const currentEnd = referrer.subscription_end ? new Date(referrer.subscription_end) : now;
+        const baseDate = currentEnd > now ? currentEnd : now;
+        
+        const newSubscriptionEnd = new Date(baseDate);
+        newSubscriptionEnd.setDate(newSubscriptionEnd.getDate() + rewardDays);
+
+        await query(
+          `UPDATE users 
+           SET subscription_plan = 'premium', 
+               subscription_end = ?, 
+               referral_credits = referral_credits + ?
+           WHERE id = ?`,
+          [newSubscriptionEnd, rewardDays, referredBy]
+        );
+
+        // Registrar el referido
+        await query(
+          `INSERT INTO referrals (id, referrer_id, referred_user_id, referral_code, rewarded, created_at)
+           VALUES (UUID(), ?, ?, ?, TRUE, NOW())`,
+          [referredBy, userId, providedReferralCode.toUpperCase()]
+        );
+      }
+    }
 
     // Create email verification token
     const verificationToken = await createEmailVerificationToken(userId);

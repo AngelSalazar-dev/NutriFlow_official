@@ -203,6 +203,27 @@ html {
   @apply bg-slate-200 dark:bg-slate-700 rounded animate-pulse;
 }
 
+/* Pro Max UI Utilities */
+.glass-pro {
+  @apply bg-white/40 dark:bg-slate-950/40 backdrop-blur-[24px] border border-white/20 dark:border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.08)];
+}
+
+.glass-morphism {
+  @apply bg-white/60 dark:bg-slate-900/40 backdrop-blur-[12px] border border-white/30 dark:border-white/10;
+}
+
+.card-spotlight {
+  @apply relative overflow-hidden before:absolute before:inset-0 before:bg-[radial-gradient(var(--spotlight-color,rgba(255,255,255,0.1))_0%,transparent_100%)] before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500;
+}
+
+.text-gradient-ai {
+  @apply bg-gradient-to-r from-emerald-400 via-teal-500 to-indigo-500 bg-clip-text text-transparent animate-gradient bg-[length:200%_auto];
+}
+
+.border-gradient-animate {
+  @apply relative rounded-3xl p-[1px] overflow-hidden before:absolute before:inset-[-1000%] before:animate-[spin_4s_linear_infinite] before:bg-[conic-gradient(from_90deg_at_50%_50%,#10b981_0%,#4f46e5_50%,#10b981_100%)] after:absolute after:inset-[1px] after:rounded-[calc(1.5rem-1px)] after:bg-white dark:after:bg-slate-950;
+}
+
 
 .btn-glow::before {
   content: '';
@@ -328,6 +349,15 @@ html {
 
 .animate-pulse-slow {
   animation: pulse-slow 4s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin 12s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Skeleton loader */

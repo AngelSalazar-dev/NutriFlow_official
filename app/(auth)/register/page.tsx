@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,8 @@ export default function RegisterPage() {
   const router = useRouter();
   const { register, isAuthenticated } = useAuth();
   const { tr, lang } = useLang();
+  const searchParams = useSearchParams();
+  const referralCodeFromUrl = searchParams.get('ref');
   const { success, error: toastError } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState('');
@@ -135,6 +137,7 @@ export default function RegisterPage() {
         height: Number(formData.height),
         activityLevel: formData.activityLevel as any,
         goal: formData.goal as any,
+        referralCode: referralCodeFromUrl,
       });
 
       success('¡Cuenta creada!', 'Redirigiendo al dashboard...');
@@ -458,7 +461,7 @@ export default function RegisterPage() {
                       variant="outline"
                       onClick={() => setStep(step - 1)}
                       disabled={isLoading}
-                      className="flex-1 h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all hover:bg-slate-50 dark:hover:bg-slate-800"
+                      className="flex-1 h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
                     >
                       <ChevronLeft className="mr-2 h-4 w-4" />
                       {tr('auth_back')}

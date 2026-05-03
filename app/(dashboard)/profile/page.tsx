@@ -68,6 +68,7 @@ export default function ProfilePage() {
   ];
   const [isLoading, setIsLoading] = React.useState(false);
   const [referralCode, setReferralCode] = React.useState<string | null>(null);
+  const [isReferralLoading, setIsReferralLoading] = React.useState(true);
   const [copiedReferral, setCopiedReferral] = React.useState(false);
 
   React.useEffect(() => {
@@ -76,7 +77,7 @@ export default function ProfilePage() {
 
   const loadReferralCode = async () => {
     try {
-      const res = await fetch('/api/referral/my-code', { credentials: 'include' });
+      const res = await fetch('/api/referral', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setReferralCode(data.code || user?.referralCode || null);
@@ -86,6 +87,8 @@ export default function ProfilePage() {
       }
     } catch {
       setReferralCode(user?.referralCode || null);
+    } finally {
+      setIsReferralLoading(false);
     }
   };
 
@@ -108,6 +111,7 @@ export default function ProfilePage() {
   const [bannerType, setBannerType] = React.useState<string>(user?.bannerType || 'preset');
   const [bannerUrl, setBannerUrl] = React.useState<string | null>(user?.bannerUrl || null);
   const [showBannerSelector, setShowBannerSelector] = React.useState(false);
+  const [showAvatarSelector, setShowAvatarSelector] = React.useState(false);
 
   const [formData, setFormData] = React.useState({
     name: user?.name || '',
@@ -365,7 +369,10 @@ export default function ProfilePage() {
             <div className="flex flex-col md:flex-row gap-6">
               {/* Avatar */}
               <div className="relative shrink-0">
-                <div className="w-32 h-32 rounded-3xl border-4 border-white dark:border-slate-900 shadow-xl overflow-hidden flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600">
+                <div 
+                  className="w-32 h-32 rounded-3xl border-4 border-white dark:border-slate-900 shadow-xl overflow-hidden flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600 cursor-pointer group/avatar relative"
+                  onClick={() => setShowAvatarSelector(true)}
+                >
                   {avatarType === 'preset' && avatarUrl ? (
                     (() => {
                       const preset = AVATAR_PRESETS.find(p => p.id === avatarUrl);
@@ -378,6 +385,11 @@ export default function ProfilePage() {
                   ) : (
                     <span className="text-white text-4xl font-bold">{initials}</span>
                   )}
+                  
+                  {/* Overlay on hover */}
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                    <Camera className="h-8 w-8 text-white" />
+                  </div>
                 </div>
                 {isPro && (
                   <div className="absolute -bottom-2 -right-2 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold shadow-lg flex items-center gap-1">
@@ -526,7 +538,11 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {referralCode ? (
+                {isReferralLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  </div>
+                ) : referralCode ? (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-4 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20">
                       <div>
@@ -542,12 +558,19 @@ export default function ProfilePage() {
                       </Button>
                     </div>
                     <p className="text-xs text-emerald-100 text-center">
-                      🎁 Tus amigos obtienen <strong>7 días Premium</strong> al registrarse
+                      🎁 Tus amigos obtienen <strong>3 días Premium</strong> al registrarse
                     </p>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center py-4">
-                    <Loader2 className="h-6 w-6 animate-spin" />
+                  <div className="py-2 text-center">
+                    <p className="text-sm text-emerald-100/70">No se pudo cargar el código</p>
+                    <Button 
+                      variant="link" 
+                      className="text-white hover:text-white underline"
+                      onClick={loadReferralCode}
+                    >
+                      Reintentar
+                    </Button>
                   </div>
                 )}
               </div>
@@ -555,47 +578,54 @@ export default function ProfilePage() {
           </Card>
         </div>
 
-        {/* Avatar Selector Card */}
-        <Card className="border-slate-200 dark:border-slate-800 dark:bg-slate-900">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600">
-                <Camera className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <CardTitle className="text-slate-900 dark:text-slate-100">{tr('prof_avatar') || 'Avatar de Perfil'}</CardTitle>
-                <CardDescription className="text-slate-500 dark:text-slate-400">
-                  {tr('landing_hero_subtitle')}
-                </CardDescription>
-              </div>
+        {/* Avatar Selector Dialog */}
+        <Dialog open={showAvatarSelector} onOpenChange={setShowAvatarSelector}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 custom-scrollbar">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <Camera className="h-6 w-6 text-emerald-500" />
+                {tr('prof_avatar') || 'Avatar de Perfil'}
+              </DialogTitle>
+              <DialogDescription className="text-slate-500 dark:text-slate-400">
+                Elige un avatar predefinido o sube tu propia imagen.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              {avatarMessage && (
+                <div className={cn(
+                  'mb-4 p-3 text-sm rounded-xl border transition-all',
+                  avatarMessage.startsWith('✅')
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : 'bg-red-50 text-red-700 border-red-200'
+                )}>
+                  {avatarMessage}
+                </div>
+              )}
+              {isAvatarLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+                </div>
+              ) : (
+                <AvatarSelector
+                  currentAvatar={avatarUrl}
+                  currentType={avatarType}
+                  onSelectPreset={async (id) => {
+                    await handleSelectPreset(id);
+                    setTimeout(() => setShowAvatarSelector(false), 1500);
+                  }}
+                  onUploadImage={async (url) => {
+                    await handleUploadImage(url);
+                    setTimeout(() => setShowAvatarSelector(false), 1500);
+                  }}
+                  onUseInitials={async () => {
+                    await handleUseInitials();
+                    setTimeout(() => setShowAvatarSelector(false), 1500);
+                  }}
+                />
+              )}
             </div>
-          </CardHeader>
-          <CardContent>
-            {avatarMessage && (
-              <div className={cn(
-                'mb-4 p-3 text-sm rounded-xl border transition-all',
-                avatarMessage.startsWith('✅')
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                  : 'bg-red-50 text-red-700 border-red-200'
-              )}>
-                {avatarMessage}
-              </div>
-            )}
-            {isAvatarLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-              </div>
-            ) : (
-              <AvatarSelector
-                currentAvatar={avatarUrl}
-                currentType={avatarType}
-                onSelectPreset={handleSelectPreset}
-                onUploadImage={handleUploadImage}
-                onUseInitials={handleUseInitials}
-              />
-            )}
-          </CardContent>
-        </Card>
+          </DialogContent>
+        </Dialog>
 
         {/* Edit Profile Form */}
         <Card className="border-slate-200 dark:border-slate-800 dark:bg-slate-900 shadow-xl overflow-hidden">

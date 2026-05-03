@@ -230,11 +230,11 @@ export default function LandingPage() {
             : 'border-b border-transparent bg-white/70 dark:bg-slate-900/40 backdrop-blur-lg'
         }`}>
         <div className="container-nutriflow flex h-20 items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="p-2.5 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-emerald-500/25 transition-all duration-300">
-              <Leaf className="h-5 w-5 text-white" />
+          <Link href="/" className="flex items-center gap-3 group mr-12 shrink-0">
+            <div className="p-1 overflow-visible">
+              <img src="/logos/isotipo.png" alt="NutriFlow" className="h-10 w-auto object-contain dark:brightness-125" />
             </div>
-            <span className="font-heading text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            <span className="font-heading text-xl md:text-2xl font-black tracking-tighter text-slate-900 dark:text-slate-100">
               NutriFlow
             </span>
           </Link>
@@ -319,25 +319,28 @@ export default function LandingPage() {
           
           {/* Subtle grid pattern */}
           <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '60px 60px' }} />
+          
+          {/* AI Orb — Floating intelligence indicator */}
+          <div className="absolute top-[20%] right-[10%] hidden lg:block">
+            <div className="relative w-64 h-64">
+              <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-[60px] animate-pulse-slow" />
+              <div className="absolute inset-4 border border-emerald-500/30 rounded-full animate-spin-slow" />
+              <div className="absolute inset-10 border border-teal-500/20 rounded-full animate-spin-slow [animation-direction:reverse] [animation-duration:15s]" />
+              <div className="absolute inset-[35%] bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl rotate-45 shadow-2xl shadow-emerald-500/40 animate-float" />
+            </div>
+          </div>
         </div>
 
         <div className="container-nutriflow relative z-10 py-16 md:py-24">
           <div className="max-w-7xl mx-auto">
             {/* Top section — badge + headline */}
             <div className="text-center max-w-4xl mx-auto mb-16 space-y-8">
-              {/* Badge with sparkle */}
-              <AnimatedSection>
-                <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-emerald-100/80 dark:bg-emerald-950/60 backdrop-blur-xl border border-emerald-200/50 dark:border-emerald-800/50 text-sm font-bold text-emerald-700 dark:text-emerald-400 shadow-lg shadow-emerald-500/10">
-                  <Sparkles className="h-4 w-4 animate-pulse" />
-                  {tr('sub_feature_ai_training')}
-                </div>
-              </AnimatedSection>
 
               {/* Main headline */}
               <AnimatedSection delay={100}>
                 <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-heading font-extrabold tracking-tighter leading-[1.05]">
                   {lang === 'es' ? 'La ciencia de tu' : 'The science of your'}
-                  <span className="block mt-2 pb-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+                  <span className="block mt-2 pb-2 text-gradient-ai">
                     {lang === 'es' ? 'mejor versión.' : 'best version.'}
                   </span>
                 </h1>
@@ -408,10 +411,10 @@ export default function LandingPage() {
             <AnimatedSection delay={500}>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-5xl mx-auto">
                 {/* Large card — AI Coach */}
-                <div className="col-span-2 row-span-2 group relative overflow-hidden rounded-[2rem] bg-white/70 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 shadow-xl p-8 hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-1 transition-all duration-500">
+                <div className="col-span-2 row-span-2 group relative overflow-hidden rounded-[2.5rem] glass-pro shadow-xl p-8 hover:shadow-2xl hover:shadow-emerald-500/20 hover:-translate-y-1 transition-all duration-500 card-spotlight border-gradient-animate">
                   <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-fuchsia-500/20 to-pink-500/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
                   <div className="relative z-10 space-y-4">
-                    <div className="inline-flex p-3 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-pink-600 shadow-lg">
+                    <div className="inline-flex p-3 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-pink-600 shadow-lg shadow-fuchsia-500/20">
                       <Brain className="h-7 w-7 text-white" />
                     </div>
                     <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -424,12 +427,12 @@ export default function LandingPage() {
                 </div>
 
                 {/* Small card — Smart tracking */}
-                <div className="group relative overflow-hidden rounded-[1.5rem] bg-white/70 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 shadow-lg p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-500">
-                  <div className="inline-flex p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-600 mb-3 group-hover:scale-110 transition-transform duration-300">
+                <div className="group relative overflow-hidden rounded-[1.5rem] glass-morphism shadow-lg p-6 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-500 card-spotlight">
+                  <div className="inline-flex p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-600 mb-3 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-emerald-500/20">
                     <Utensils className="h-5 w-5 text-white" />
                   </div>
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-1">{tr('landing_feat_smart')}</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{tr('landing_feat_smart_desc')}</p>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-1 tracking-tight">{tr('landing_feat_smart')}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{tr('landing_feat_smart_desc')}</p>
                 </div>
 
                 {/* Small card — Premium workouts */}
@@ -542,13 +545,13 @@ export default function LandingPage() {
               return (
                 <AnimatedSection key={index} delay={index * 100}>
                   <Card
-                    className="group relative h-full bg-white dark:bg-slate-900/50 backdrop-blur-xl border-slate-200/60 dark:border-slate-800/60 hover:border-emerald-200 dark:hover:border-emerald-800/60 hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-2 transition-all duration-500 overflow-hidden"
+                    className="group relative h-full glass-pro hover:border-emerald-200 dark:hover:border-emerald-800/60 hover:shadow-2xl hover:shadow-emerald-500/20 hover:-translate-y-2 transition-all duration-500 overflow-hidden card-spotlight"
                   >
                     {/* Top accent line */}
                     <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${feature.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
                     
                     <CardHeader className="pb-4">
-                      <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${feature.accent} mb-4 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-xl transition-all duration-500`}>
+                      <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${feature.accent} mb-4 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-xl transition-all duration-500 shadow-lg`}>
                         <Icon className="h-6 w-6 text-white" />
                       </div>
                       <CardTitle className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">{feature.title}</CardTitle>
@@ -648,7 +651,7 @@ export default function LandingPage() {
           {/* Pricing table */}
           <AnimatedSection delay={200}>
 
-          <div className="rounded-[40px] border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-3xl overflow-hidden shadow-2xl transition-all duration-500">
+          <div className="rounded-[40px] glass-pro overflow-hidden shadow-2xl transition-all duration-500">
             <div className="grid grid-cols-4 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80">
               <div className="p-8 flex items-end">
                 <span className="text-xs font-black uppercase tracking-widest text-slate-500">{lang === 'es' ? 'Características' : 'Features'}</span>
@@ -713,11 +716,22 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section — Gradient Elegant with Scroll Reveal */}
-      <section className="py-24 md:py-32 bg-gradient-to-br from-emerald-800 via-teal-800 to-emerald-950 text-white relative overflow-hidden transition-all duration-700">
+      <section className="py-24 md:py-32 bg-slate-900 text-white relative overflow-hidden transition-all duration-700">
+        {/* Video Background */}
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className="absolute inset-0 w-full h-full object-cover opacity-30 z-0"
+        >
+          <source src="/logos/video logo.mp4" type="video/mp4" />
+        </video>
+
         {/* Ambient orbs */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-20 -right-20 w-96 h-96 bg-white/5 rounded-full blur-[100px] animate-pulse-slow" />
-          <div className="absolute -bottom-20 -left-20 w-[500px] h-[500px] bg-emerald-400/10 rounded-full blur-[120px] animate-pulse-slow" style={{ animationDelay: '2s' }} />
+        <div className="absolute inset-0 pointer-events-none z-10">
+          <div className="absolute -top-20 -right-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] animate-pulse-slow" />
+          <div className="absolute -bottom-20 -left-20 w-[500px] h-[500px] bg-teal-400/10 rounded-full blur-[120px] animate-pulse-slow" style={{ animationDelay: '2s' }} />
         </div>
 
         <div className="container-nutriflow relative z-10">
@@ -753,8 +767,8 @@ export default function LandingPage() {
             {/* Brand Column */}
             <div className="md:col-span-2 space-y-6">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20">
-                  <Leaf className="h-6 w-6 text-white" />
+                <div className="p-1 overflow-visible">
+                  <img src="/logos/isotipo.png" alt="NutriFlow" className="h-10 w-auto object-contain dark:brightness-125" />
                 </div>
                 <span className="font-heading text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tighter">NutriFlow</span>
               </div>

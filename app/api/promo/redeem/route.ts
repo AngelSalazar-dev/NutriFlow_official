@@ -13,6 +13,49 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
+    // Ensure promo table exists
+    try {
+      await query(`
+        CREATE TABLE IF NOT EXISTS promo_codes (
+          id VARCHAR(36) PRIMARY KEY,
+          code VARCHAR(50) UNIQUE NOT NULL,
+          plan_type ENUM('premium', 'pro') NOT NULL,
+          duration_type ENUM('days', 'months', 'lifetime') NOT NULL,
+          duration_value INT NOT NULL,
+          max_uses INT DEFAULT NULL,
+          used_count INT DEFAULT 0,
+          expires_at DATETIME DEFAULT NULL,
+          is_active BOOLEAN DEFAULT TRUE,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+      `);
+
+      // Inject demo code ANGJUARJ3 if it doesn't exist
+      await query(`
+        INSERT IGNORE INTO promo_codes (id, code, plan_type, duration_type, duration_value, max_uses)
+        VALUES (UUID(), 'ANGJUARJ3', 'premium', 'months', 1, 1000)
+      `);
+
+      // Try adding columns to users table if they don't exist
+      const alterQueries = [
+        `ALTER TABLE users ADD COLUMN promo_code_id VARCHAR(36) DEFAULT NULL`,
+        `ALTER TABLE users ADD COLUMN promo_applied_at DATETIME DEFAULT NULL`,
+        `ALTER TABLE users ADD COLUMN promo_expires_at DATETIME DEFAULT NULL`
+      ];
+      
+      for (const q of alterQueries) {
+        try {
+          await query(q);
+        } catch (e: any) {
+          if (e.code !== 'ER_DUP_FIELDNAME') {
+            console.warn('Error adding column to users:', e.message);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Ignoring DDL error for promo_codes/users:', e);
+    }
+
     const body = await request.json();
     const { code } = body;
 
@@ -23,10 +66,16 @@ export async function POST(request: NextRequest) {
     const normalizedCode = code.trim().toUpperCase();
 
     // Check if user already used a promo code
-    const [existingUser] = await query(
-      'SELECT promo_code_id FROM users WHERE id = ? AND promo_code_id IS NOT NULL',
-      [user._id]
-    ) as any[];
+    let existingUser: any[] = [];
+    try {
+      const result = await query(
+        'SELECT promo_code_id FROM users WHERE id = ? AND promo_code_id IS NOT NULL',
+        [user._id]
+      );
+      existingUser = result[0] as any[];
+    } catch (e) {
+      console.warn('Error checking existing user promo, continuing', e);
+    }
 
     if (existingUser && existingUser.length > 0 && existingUser[0].promo_code_id) {
       return NextResponse.json(
@@ -119,6 +168,32 @@ export async function GET(request: NextRequest) {
     }
 
     const normalizedCode = code.trim().toUpperCase();
+
+    // Ensure promo table exists and insert a default code if needed
+    try {
+      await query(`
+        CREATE TABLE IF NOT EXISTS promo_codes (
+          id VARCHAR(36) PRIMARY KEY,
+          code VARCHAR(50) UNIQUE NOT NULL,
+          plan_type ENUM('premium', 'pro') NOT NULL,
+          duration_type ENUM('days', 'months', 'lifetime') NOT NULL,
+          duration_value INT NOT NULL,
+          max_uses INT DEFAULT NULL,
+          used_count INT DEFAULT 0,
+          expires_at DATETIME DEFAULT NULL,
+          is_active BOOLEAN DEFAULT TRUE,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+      `);
+      
+      // Inject demo code ANGJUARJ3 if it doesn't exist
+      await query(`
+        INSERT IGNORE INTO promo_codes (id, code, plan_type, duration_type, duration_value, max_uses)
+        VALUES (UUID(), 'ANGJUARJ3', 'premium', 'months', 1, 1000)
+      `);
+    } catch (e) {
+      console.warn('Ignoring DDL error for promo_codes:', e);
+    }
 
     const [codeRows] = await query(
       `SELECT code, plan_type, duration_type, duration_value, max_uses, used_count, expires_at, is_active
