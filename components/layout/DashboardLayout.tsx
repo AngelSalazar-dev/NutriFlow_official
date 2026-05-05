@@ -110,7 +110,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight leading-none">
                 {tr('dash_welcome')}
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 capitalize">
+              <p className="text-[10px] sm:text-sm text-slate-500 dark:text-slate-400 capitalize">
                 {new Date().toLocaleDateString(lang === 'en' ? 'en-US' : 'es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             </div>

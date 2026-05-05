@@ -7,23 +7,17 @@ import { useLang } from '@/context/LangContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, Crown, Sparkles, Zap, Gift, Users, Shield, CreditCard, Clock, Calendar, AlertCircle, ArrowRight, TrendingUp, Receipt, Download, XCircle, Loader2 } from 'lucide-react';
+import { Check, Crown, Sparkles, Zap, Gift, Users, Shield, CreditCard, Clock, Calendar, AlertCircle, ArrowRight, TrendingUp, Receipt, Download, XCircle, Loader2, X } from 'lucide-react';
 import { PromoCodeRedeemer } from '@/components/features/PromoCodeRedeemer';
 import { ReferralProgram } from '@/components/features/ReferralProgram';
 import dynamic from 'next/dynamic';
 import { cn } from '@/lib/cn';
+import { CheckoutModal } from '@/components/features/CheckoutModal';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
-const PayPalCheckout = dynamic(
-  () => import('@/components/ui/paypal-checkout').then((mod) => mod.PayPalCheckout),
-  { ssr: false, loading: () => (
-    <div className="flex flex-col items-center justify-center py-6 space-y-3">
-      <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
-      <div className="text-center text-sm font-bold text-slate-500 dark:text-slate-400">
-        {window.localStorage.getItem('nutriflow_lang') === 'es' ? 'Cargando pasarela segura...' : 'Loading secure gateway...'}
-      </div>
-    </div>
-  ) }
-);
+// No longer needed inline, moved to CheckoutModal
 
 export default function SubscriptionPage() {
   const router = useRouter();
@@ -125,6 +119,33 @@ export default function SubscriptionPage() {
   const [cancelSuccess, setCancelSuccess] = React.useState(false);
   const [planChangeConfirm, setPlanChangeConfirm] = React.useState<{ show: boolean; newPlan: string; isUpgrade: boolean } | null>(null);
   const [isProcessingChange, setIsProcessingChange] = React.useState(false);
+  const [checkoutModal, setCheckoutModal] = React.useState<{ isOpen: boolean; planId: string; planName: string; price: number } | null>(null);
+  const [isSupportOpen, setIsSupportOpen] = React.useState(false);
+  const [supportLoading, setSupportLoading] = React.useState(false);
+  const [supportData, setSupportData] = React.useState({ subject: '', message: '' });
+
+  const handleSupportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supportData.message) return;
+    setSupportLoading(true);
+    try {
+      const res = await fetch('/api/support/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(supportData),
+        credentials: 'include',
+      });
+      if (res.ok) {
+        setIsSupportOpen(false);
+        setSupportData({ subject: '', message: '' });
+        alert(lang === 'en' ? 'Ticket submitted! We will contact you soon.' : '¡Ticket enviado! Te contactaremos pronto.');
+      }
+    } catch (error) {
+      console.error('[SUPPORT] Error:', error);
+    } finally {
+      setSupportLoading(false);
+    }
+  };
 
   const handlePlanSelect = async (planId: string) => {
     // If user already has a paid plan, show confirmation dialog
@@ -135,7 +156,16 @@ export default function SubscriptionPage() {
       return;
     }
     // Otherwise, proceed directly to payment
-    setSelectedPlan(planId);
+    // Otherwise, proceed directly to checkout modal
+    const plan = PLANS.find(p => p.id === planId);
+    if (plan) {
+      setCheckoutModal({
+        isOpen: true,
+        planId: plan.id,
+        planName: plan.name,
+        price: plan.price
+      });
+    }
   };
 
   const confirmPlanChange = async () => {
@@ -243,73 +273,21 @@ export default function SubscriptionPage() {
           </div>
         )}
 
-        {/* Plan Change Confirmation Modal */}
-        {planChangeConfirm?.show && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-8 space-y-6 animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-800">
-              <div className="text-center space-y-3">
-                <div className={cn(
-                  "w-16 h-16 rounded-2xl mx-auto flex items-center justify-center",
-                  planChangeConfirm.isUpgrade 
-                    ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600" 
-                    : "bg-amber-100 dark:bg-amber-900/30 text-amber-600"
-                )}>
-                  {planChangeConfirm.isUpgrade ? <TrendingUp className="h-8 w-8" /> : <AlertCircle className="h-8 w-8" />}
-                </div>
-                <h3 className="text-2xl font-heading font-black text-slate-900 dark:text-slate-100 tracking-tight">
-                  {planChangeConfirm.isUpgrade 
-                    ? tr('sub_upgrade_confirm')
-                    : tr('sub_change_confirm')
-                  }
-                </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                  {planChangeConfirm.isUpgrade
-                    ? tr('sub_upgrade_desc')
-                    : tr('sub_change_desc')
-                  }
-                  {' '}
-                  {lang === 'en'
-                    ? `You currently have ${getPlanName(currentPlan)}.`
-                    : `Actualmente tienes ${getPlanName(currentPlan)}.`
-                  }
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
-                  ⚠️ {tr('sub_cancel_warning')}
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1 h-12 rounded-2xl font-bold"
-                  onClick={() => setPlanChangeConfirm(null)}
-                  disabled={isProcessingChange}
-                >
-                  {tr('common_cancel') || 'Cancelar'}
-                </Button>
-                <Button
-                  className={cn(
-                    "flex-1 h-12 rounded-2xl font-bold",
-                    planChangeConfirm.isUpgrade
-                      ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                      : "bg-amber-600 hover:bg-amber-700 text-white"
-                  )}
-                  onClick={confirmPlanChange}
-                  disabled={isProcessingChange}
-                >
-                  {isProcessingChange ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    tr('common_next') || 'Continuar'
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+      {/* Checkout Modal */}
+      {checkoutModal && (
+        <CheckoutModal
+          isOpen={checkoutModal.isOpen}
+          planId={checkoutModal.planId}
+          planName={checkoutModal.planName}
+          price={checkoutModal.price}
+          onClose={() => setCheckoutModal(null)}
+          onSuccess={() => {
+            setPaymentSuccess(true);
+            setCheckoutModal(null);
+            loadSubscriptionData();
+          }}
+        />
+      )}
 
         {/* Current Subscription Status */}
         {currentPlan !== 'free' && subData && (
@@ -468,7 +446,10 @@ export default function SubscriptionPage() {
                     <Button
                       variant="outline"
                       className="w-full justify-center gap-3 h-12 rounded-2xl border-slate-100 dark:border-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 hover:border-emerald-300 dark:hover:border-emerald-800 font-bold transition-all"
-                      onClick={() => router.push('/subscription?tab=plans')}
+                      onClick={() => {
+                        const el = document.getElementById('plans-section');
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      }}
                     >
                       <ArrowRight className="h-4 w-4" /> {tr('sub_change_plan') || 'Cambiar Plan'}
                     </Button>
@@ -485,7 +466,10 @@ export default function SubscriptionPage() {
                     <p className="text-xs text-white/70 font-medium leading-relaxed">
                       {tr('sub_help_desc') || 'Si tienes problemas con tu suscripción, contacta a soporte.'}
                     </p>
-                    <Button className="w-full rounded-2xl bg-white text-indigo-700 hover:bg-indigo-50 font-black uppercase tracking-widest text-[10px] h-11 border-0 shadow-lg shadow-indigo-900/20 active:scale-95 transition-all">
+                    <Button 
+                      onClick={() => setIsSupportOpen(true)}
+                      className="w-full rounded-2xl bg-white text-indigo-700 hover:bg-indigo-50 font-black uppercase tracking-widest text-[10px] h-11 border-0 shadow-lg shadow-indigo-900/20 active:scale-95 transition-all"
+                    >
                       {tr('sub_help_cta') || 'Soporte 24/7'}
                     </Button>
                   </CardContent>
@@ -495,7 +479,61 @@ export default function SubscriptionPage() {
           </div>
         )}
 
-        <div className="pt-8">
+        {/* Support Modal */}
+        <AnimatePresence>
+          {isSupportOpen && (
+            <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsSupportOpen(false)}
+                className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl p-8 border border-slate-200 dark:border-slate-800"
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">Soporte Elite</h3>
+                  <button onClick={() => setIsSupportOpen(false)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"><X className="h-5 w-5" /></button>
+                </div>
+                <form onSubmit={handleSupportSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Asunto</label>
+                    <Input 
+                      value={supportData.subject}
+                      onChange={(e) => setSupportData({...supportData, subject: e.target.value})}
+                      placeholder="Problema con mi plan..." 
+                      className="rounded-2xl h-12 bg-slate-50 dark:bg-slate-800 border-0" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mensaje</label>
+                    <Textarea 
+                      value={supportData.message}
+                      onChange={(e) => setSupportData({...supportData, message: e.target.value})}
+                      placeholder="Escribe aquí tu problema..." 
+                      className="rounded-2xl min-h-[120px] bg-slate-50 dark:bg-slate-800 border-0" 
+                      required
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    disabled={supportLoading}
+                    className="w-full h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-xl shadow-indigo-500/20"
+                  >
+                    {supportLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Enviar Ticket'}
+                  </Button>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        <div id="plans-section" className="pt-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-heading font-black text-slate-900 dark:text-slate-100 tracking-tight uppercase">
               {tr('sub_upgrade_premium') || 'Mejora tu plan'}
@@ -580,32 +618,17 @@ export default function SubscriptionPage() {
                         {tr('sub_current_plan') || 'Tu plan actual'}
                       </div>
                     ) : (
-                      <div className="w-full">
-                        {selectedPlan === plan.id ? (
-                          <div className="animate-in slide-in-from-bottom-5 duration-500">
-                            <PayPalCheckout
-                              planId={plan.id}
-                              onSuccess={() => { setPaymentSuccess(true); setSelectedPlan(null); loadSubscriptionData(); }}
-                              onError={(msg) => setPaymentError(msg)}
-                            />
-                            <Button variant="ghost" className="w-full mt-4 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-red-500" onClick={() => setSelectedPlan(null)}>
-                                {tr('common_back') || 'Cancelar'}
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button
-                            className={cn(
-                              "w-full h-16 rounded-[2rem] font-black uppercase tracking-[0.14em] text-xs transition-all active:scale-[0.98] shadow-2xl",
-                              plan.highlighted
-                                ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30 border-0"
-                                : "bg-slate-900 hover:bg-black text-white dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 border-0"
-                            )}
-                            onClick={() => handlePlanSelect(plan.id)}
-                          >
-                            {plan.cta} <ArrowRight className="h-4 w-4 ml-2" />
-                          </Button>
+                      <Button
+                        className={cn(
+                          "w-full h-16 rounded-[2rem] font-black uppercase tracking-[0.14em] text-xs transition-all active:scale-[0.98] shadow-2xl",
+                          plan.highlighted
+                            ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30 border-0"
+                            : "bg-slate-900 hover:bg-black text-white dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 border-0"
                         )}
-                      </div>
+                        onClick={() => handlePlanSelect(plan.id)}
+                      >
+                        {plan.cta} <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
                     )}
                   </CardFooter>
                 </Card>

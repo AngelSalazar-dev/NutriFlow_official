@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyJWT } from '@/lib/auth-mysql';
 import { query } from '@/lib/mysql';
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+import { AIManager } from '@/lib/ai/strategy';
 
 async function getUserFromRequest(request: NextRequest) {
   // Read cookie directly from request headers (more reliable than next/headers in Route Handlers)
@@ -54,16 +52,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
-    if (!GEMINI_API_KEY) {
-      console.error('[CHAT] GEMINI_API_KEY not configured');
-      return NextResponse.json(
-        { error: 'API de IA no configurada. Contacta al administrador.' },
-        { status: 503 }
-      );
-    }
 
     const body = await request.json();
-    const { message, conversationHistory = [], conversationId } = body;
+    const { message, conversationHistory = [], conversationId, preferredProvider } = body;
 
     if (!message || !message.trim()) {
       return NextResponse.json(
@@ -176,61 +167,11 @@ Mensaje del usuario: ${message}
 
 Respuesta de NutriBot:`;
 
-    // Call Gemini API
-    console.log('[CHAT] Calling Gemini API...');
-    const geminiResponse = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: userContext
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 4096,
-        },
-        safetySettings: [
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
-        ]
-      }),
-    });
-
-    if (!geminiResponse.ok) {
-      const errorData = await geminiResponse.json().catch(() => ({}));
-      console.error('[CHAT] Gemini API Error:', geminiResponse.status, JSON.stringify(errorData));
-      throw new Error(`Gemini API error: ${errorData?.error?.message || geminiResponse.statusText || 'Unknown error'}`);
-    }
-
-    const geminiData = await geminiResponse.json();
-    console.log('[CHAT] Gemini response received');
-
-    // Extract response
-    let assistantMessage = '';
-    if (geminiData.candidates && geminiData.candidates.length > 0) {
-      const candidate = geminiData.candidates[0];
-      console.log('[CHAT] finishReason:', candidate.finishReason);
-      console.log('[CHAT] tokenCount:', candidate.tokenCount, 'thoughtsTokenCount:', geminiData.usageMetadata?.thoughtsTokenCount);
-      if (candidate.content?.parts?.[0]?.text) {
-        assistantMessage = candidate.content.parts[0].text;
-      } else if (candidate.finishReason === 'SAFETY') {
-        assistantMessage = '⚠️ Tu mensaje fue bloqueado por las políticas de seguridad. Por favor reformula tu pregunta.';
-      } else if (candidate.finishReason === 'MAX_TOKENS') {
-        assistantMessage = '⚠️ La respuesta fue demasiado larga. Intenta hacer una pregunta más específica.';
-      } else {
-        assistantMessage = 'Lo siento, no pude generar una respuesta.';
-      }
-    } else {
-      assistantMessage = 'Lo siento, ocurrió un error al procesar tu mensaje.';
-    }
+    // Call AI using Strategy Pattern
+    const aiManager = new AIManager();
+    const aiResult = await aiManager.generate(userContext, preferredProvider);
+    const assistantMessage = aiResult.text;
+    console.log(`[CHAT] Response received from ${aiResult.provider}`);
 
     // Save assistant response
     const assistantMsgId = crypto.randomUUID();

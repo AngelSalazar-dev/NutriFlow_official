@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useLang } from '@/context/LangContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Flame, Droplets, Utensils, Dumbbell, Activity, TrendingUp, Zap, ChevronRight } from 'lucide-react';
+import { Flame, Droplets, Utensils, Dumbbell, Activity, TrendingUp, Zap, ChevronRight, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -200,61 +200,92 @@ export default function DashboardPage() {
         initial="hidden"
         animate="visible"
       >
-        {/* Header Animado */}
-        <motion.div variants={itemVariants} className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-slate-900 dark:text-slate-100 tracking-tighter leading-none">
-              {tr('dash_greet')}, {user?.name ? user.name.split(' ')[0] : tr('common_user') || 'User'} 👋
-            </h1>
-            <button
-              onClick={handleRefresh}
-              className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-              title={tr('dash_update_data')}
-            >
-              <svg className={`h-5 w-5 text-slate-600 dark:text-slate-400 ${isStatsLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </button>
-          </div>
-          <p className="text-lg text-slate-500 dark:text-slate-400 font-medium">
-            {tr('dash_progress_msg')}
-          </p>
-        </motion.div>
-
-        {/* Info Card Premium (Welcome / Status) */}
-        <motion.div variants={itemVariants} className="relative overflow-hidden rounded-3xl border border-emerald-200 dark:border-emerald-800/50 bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100 dark:from-emerald-950/20 dark:via-teal-950/10 dark:to-emerald-900/20 p-8 shadow-sm">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 opacity-20 pointer-events-none">
-            <Zap className="h-64 w-64 text-emerald-500" />
-          </div>
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-200/50 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-sm font-semibold">
-                <Activity className="h-4 w-4" /> {tr('dash_activity_level')}: {
-                  user.activityLevel === 'sedentary' ? (lang === 'en' ? 'Sedentary' : 'Sedentario') :
-                  user.activityLevel === 'light' ? (lang === 'en' ? 'Light' : 'Ligero') :
-                  user.activityLevel === 'moderate' ? (lang === 'en' ? 'Moderate' : 'Moderado') :
-                  user.activityLevel === 'active' ? (lang === 'en' ? 'Active' : 'Activo') :
-                  user.activityLevel === 'very_active' ? (lang === 'en' ? 'Very Active' : 'Muy Activo') :
-                  (lang === 'en' ? 'Unknown' : 'Desconocido')
-                }
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-emerald-950 dark:text-emerald-50">
-                {user.subscriptionPlan === 'free' ? (
-                  <>{tr('sub_title')} {tr('sub_plan_free_name')}</>
-                ) : (
-                  <>
-                    {lang === 'en' ? 'Welcome to' : 'Bienvenido a'} {
-                      user.subscriptionPlan === 'pro' ? tr('sub_plan_pro_name') :
-                      user.subscriptionPlan === 'premium' ? tr('sub_plan_premium_name') :
-                      tr('sub_plan_free_name')
-                    } ✨
-                  </>
-                )}
-              </h2>
-              <p className="text-emerald-800 dark:text-emerald-300 max-w-md leading-relaxed">
-                {tr('dash_calories')}: <strong className="font-bold">{calorieGoal} kcal</strong>. 
+        {/* High-Impact Premium Header */}
+        <motion.div variants={itemVariants} className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-emerald-500/10 blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-1000" />
+          <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
+            <div className="space-y-3">
+              <h1 className="text-5xl sm:text-7xl md:text-8xl font-black text-slate-900 dark:text-slate-100 tracking-tighter leading-[0.8] animate-in slide-in-from-left duration-700">
+                {tr('dash_greet')},<br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500">
+                  {user?.name ? user.name.split(' ')[0] : tr('common_user') || 'User'}
+                </span> 👋
+              </h1>
+              <p className="text-xl md:text-2xl text-slate-500 dark:text-slate-400 font-medium tracking-tight opacity-80">
                 {tr('dash_progress_msg')}
               </p>
+            </div>
+            
+            <motion.button
+              whileHover={{ rotate: 180 }}
+              transition={{ duration: 0.5 }}
+              onClick={handleRefresh}
+              className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl hover:shadow-2xl transition-all"
+              title={tr('dash_update_data')}
+            >
+              <svg className={`h-6 w-6 text-slate-600 dark:text-slate-400 ${isStatsLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </motion.button>
+          </div>
+        </motion.div>
+
+        {/* Dynamic Status Banner (Juicy) */}
+        <motion.div variants={itemVariants} className="relative overflow-hidden rounded-[3rem] border border-emerald-500/20 bg-slate-950 p-10 shadow-2xl group">
+           {/* Background animated gradients */}
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-emerald-500/20 to-transparent skew-x-12 transform translate-x-20" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/20 blur-[80px] rounded-full" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+            <div className="space-y-6">
+              <div className="flex flex-wrap gap-3">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-2xl bg-emerald-500/10 text-emerald-400 text-xs font-black uppercase tracking-widest border border-emerald-500/20">
+                  <Activity className="h-4 w-4" /> {tr('dash_activity_level')}: {
+                    user.activityLevel === 'sedentary' ? (lang === 'en' ? 'Sedentary' : 'Sedentario') :
+                    user.activityLevel === 'light' ? (lang === 'en' ? 'Light' : 'Ligero') :
+                    user.activityLevel === 'moderate' ? (lang === 'en' ? 'Moderate' : 'Moderado') :
+                    user.activityLevel === 'active' ? (lang === 'en' ? 'Active' : 'Activo') :
+                    user.activityLevel === 'very_active' ? (lang === 'en' ? 'Very Active' : 'Muy Activo') :
+                    (lang === 'en' ? 'Unknown' : 'Desconocido')
+                  }
+                </div>
+                {user.subscriptionPlan !== 'free' && (
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-2xl bg-amber-500/10 text-amber-400 text-xs font-black uppercase tracking-widest border border-amber-500/20">
+                    <Crown className="h-4 w-4" /> ELITE MEMBER
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter">
+                  {user.subscriptionPlan === 'free' ? (
+                    <span className="opacity-90">{tr('sub_title')} {tr('sub_plan_free_name')}</span>
+                  ) : (
+                    <span className="flex items-center gap-4">
+                      {lang === 'en' ? 'Welcome to' : 'Bienvenido a'} {
+                        user.subscriptionPlan === 'pro' ? tr('sub_plan_pro_name') :
+                        user.subscriptionPlan === 'premium' ? tr('sub_plan_premium_name') :
+                        tr('sub_plan_free_name')
+                      }
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        ✨
+                      </motion.div>
+                    </span>
+                  )}
+                </h2>
+                <p className="text-slate-400 text-lg font-medium max-w-xl leading-relaxed">
+                  Your daily goal is <strong className="text-emerald-400 text-2xl font-black">{calorieGoal}</strong> kcal. 
+                  Currently at <strong className="text-white text-2xl font-black">{caloriesConsumed}</strong> kcal.
+                </p>
+              </div>
+            </div>
+            
+            {/* Massive Zap Icon */}
+            <div className="hidden lg:block opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700">
+               <Zap className="h-40 w-40 text-emerald-500 drop-shadow-[0_0_50px_rgba(16,185,129,0.5)]" />
             </div>
           </div>
         </motion.div>
@@ -430,34 +461,36 @@ function StatCard({ icon, title, value, subtitle, progress, color }: any) {
   };
   
   const bgMap: Record<string, string> = {
-    orange: 'bg-orange-50',
-    blue: 'bg-blue-50',
-    emerald: 'bg-emerald-50',
-    purple: 'bg-purple-50',
+    orange: 'bg-orange-50 dark:bg-orange-950/20',
+    blue: 'bg-blue-50 dark:bg-blue-950/20',
+    emerald: 'bg-emerald-50 dark:bg-emerald-950/20',
+    purple: 'bg-purple-50 dark:bg-purple-950/20',
   };
   
   return (
-    <div className="group relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer">
-      <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-10 transition-opacity duration-300 scale-150">
+    <div className="group relative overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer">
+      <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-20 transition-opacity duration-500 scale-[2]">
         {icon}
       </div>
-      <div className="flex items-center justify-between mb-4 mt-2">
-        <div className="text-slate-500 dark:text-slate-400 text-xs font-bold tracking-widest uppercase">{title}</div>
-        <div className={`p-2.5 rounded-2xl ${bgMap[color]} dark:bg-slate-800 dark:shadow-inner shadow-inner group-hover:scale-110 transition-transform`}>
+      <div className="flex items-center justify-between mb-6">
+        <div className="text-slate-400 dark:text-slate-500 text-[10px] font-black tracking-[0.2em] uppercase">{title}</div>
+        <div className={`p-4 rounded-2xl ${bgMap[color]} shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-transform`}>
           {icon}
         </div>
       </div>
-      <div className="text-5xl font-heading font-extrabold tracking-tighter text-slate-900 dark:text-slate-100 mb-1">{value}</div>
-      <div className="text-sm font-medium text-slate-400 dark:text-slate-500 mb-6">{subtitle}</div>
+      <div className="text-6xl font-heading font-black tracking-tighter text-slate-900 dark:text-slate-100 mb-2 leading-none">{value}</div>
+      <div className="text-xs font-black text-slate-400 dark:text-slate-500 mb-8 uppercase tracking-widest">{subtitle}</div>
       
-      {/* Mini Progress bar */}
-      <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+      {/* Mini Progress bar (Juicy) */}
+      <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
          <motion.div 
            initial={{ width: 0 }}
            animate={{ width: `${progress}%` }}
-           transition={{ duration: 1, delay: 0.2 }}
-           className={`h-full ${colorMap[color]} rounded-full`}
-         />
+           transition={{ duration: 1.5, delay: 0.2, type: "spring" }}
+           className={`h-full ${colorMap[color]} rounded-full shadow-[0_0_15px_rgba(0,0,0,0.1)] relative`}
+         >
+            <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20" />
+         </motion.div>
       </div>
     </div>
   );

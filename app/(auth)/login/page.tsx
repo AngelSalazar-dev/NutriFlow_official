@@ -107,7 +107,7 @@ function LoginForm() {
               <ThemeLangToggle />
             </div>
             
-            <CardTitle className="text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tighter leading-none">
+            <CardTitle className="text-3xl md:text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tighter leading-none">
               {tr('auth_welcome_back')}
             </CardTitle>
             <CardDescription className="text-base text-slate-500 dark:text-slate-400 font-medium">
@@ -294,8 +294,8 @@ function LoginForm() {
 
            {/* Security badge */}
            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-xs font-bold text-white/80 mt-2">
-             <Shield className="h-3.5 w-3.5" />
-             {lang === 'es' ? 'Encriptación de grado bancario' : 'Bank-grade encryption'}
+             <Shield className="h-3.5 w-3.5 text-emerald-400" />
+             {lang === 'es' ? 'Acceso seguro' : 'Secure Access'}
            </div>
         </div>
       </div>

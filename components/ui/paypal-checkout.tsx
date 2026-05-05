@@ -76,7 +76,13 @@ export function PayPalCheckout({ planId, onSuccess, onError }: PayPalCheckoutPro
 
     try {
       const buttons = (window as any).paypal.Buttons({
-        style: { layout: 'vertical', shape: 'rect' },
+        style: { 
+          layout: 'vertical', 
+          shape: 'pill',
+          color: 'gold', // Premium gold color
+          label: 'pay',
+          height: 48
+        },
         createOrder: async () => {
           const res = await fetch('/api/payments/create-order', {
             method: 'POST',
@@ -120,14 +126,19 @@ export function PayPalCheckout({ planId, onSuccess, onError }: PayPalCheckoutPro
   return (
     <div className="w-full relative min-h-[150px] flex flex-col items-center justify-center">
       {errorStatus && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-50 text-red-600 p-4 rounded-xl text-center border border-red-200 z-20">
-            <span className="font-bold text-sm mb-1">Bloqueo detectado</span>
-            <span className="text-xs">{errorStatus}</span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 p-4 rounded-xl text-center border border-red-200 dark:border-red-900/30 z-20">
+            <span className="font-black text-xs uppercase tracking-widest mb-1">Bloqueo detectado</span>
+            <span className="text-[10px] font-bold opacity-80">{errorStatus}</span>
         </div>
       )}
       {!isReady && !errorStatus && (
-        <div className="absolute inset-0 flex items-center justify-center text-sm font-medium text-slate-500 animate-pulse">
-          Conectando de forma segura con PayPal...
+        <div className="absolute inset-0 flex flex-col items-center justify-center space-y-3 z-20">
+          <div className="h-2 w-24 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-full bg-amber-500 animate-[loading_1.5s_infinite]" />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 animate-pulse">
+            Secure Connection
+          </span>
         </div>
       )}
       <div ref={containerRef} className="w-full relative z-10" />

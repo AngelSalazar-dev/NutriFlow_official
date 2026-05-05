@@ -650,67 +650,68 @@ export default function LandingPage() {
 
           {/* Pricing table */}
           <AnimatedSection delay={200}>
-
-          <div className="rounded-[40px] glass-pro overflow-hidden shadow-2xl transition-all duration-500">
-            <div className="grid grid-cols-4 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80">
-              <div className="p-8 flex items-end">
-                <span className="text-xs font-black uppercase tracking-widest text-slate-500">{lang === 'es' ? 'Características' : 'Features'}</span>
-              </div>
-
-              {/* Column Headers */}
-              {PLANS.map((plan) => (
-                <div key={plan.id} className="p-8 text-center border-l border-slate-200 dark:border-slate-800 flex flex-col justify-end relative bg-slate-50/30 dark:bg-slate-900/30">
-                  {plan.highlighted && (
-                     <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500" />
-                  )}
-                  <h3 className="text-2xl font-black mb-2 text-slate-900 dark:text-slate-100 tracking-tight">{plan.name}</h3>
-                  <div className="text-4xl font-black tracking-tighter mb-6 text-slate-900 dark:text-slate-50">
-                    {plan.price === 0 ? (lang === 'es' ? 'Gratis' : 'Free') : `$${plan.price}`}
-                    {plan.price !== 0 && <span className="text-xs text-slate-500 dark:text-slate-400 font-black uppercase tracking-widest ml-1">{tr('sub_month')}</span>}
+            <div className="overflow-x-auto pb-4">
+              <div className="rounded-[40px] glass-pro shadow-2xl transition-all duration-500 w-max md:w-full">
+                <div className="grid grid-cols-4 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80">
+                  <div className="p-8 flex items-end">
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-500">{lang === 'es' ? 'Características' : 'Features'}</span>
                   </div>
-                  <Link href={isAuthenticated ? '/subscription' : '/register'} className="w-full">
-                    <Button
-                      variant={plan.highlighted ? 'default' : 'outline'}
-                      className={`w-full h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all duration-300 ${plan.highlighted ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:scale-[1.02] text-white border-0' : 'border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'}`}
-                    >
-                      {plan.cta}
-                    </Button>
-                  </Link>
-                </div>
-              ))}
-            </div>
 
-            {/* Matrix Rows */}
-            <div className="divide-y divide-slate-100 dark:divide-slate-800 text-sm md:text-base">
-               {[
-                 { feature: tr('landing_row_kcal'), allow: [true, true, true] },
-                 { feature: tr('landing_row_water'), allow: [true, true, true] },
-                 { feature: tr('landing_row_ai_limit'), allow: ["10/día", "Ilimitado", "Ilimitado"] },
-                 { feature: tr('landing_row_history'), allow: ["14 Días", "30 Días", "Sin límite"] },
-                 { feature: tr('landing_row_vision'), allow: [false, true, true] },
-                 { feature: tr('landing_row_ads'), allow: [false, true, true] },
-                 { feature: tr('landing_row_routines'), allow: [false, false, true] },
-                 { feature: tr('landing_row_export'), allow: [false, false, true] },
-               ].map((row, i) => (
-                 <div key={i} className={`grid grid-cols-4 transition-colors ${i%2===0 ? 'bg-slate-50/30 dark:bg-slate-900/20' : 'bg-white/30 dark:bg-slate-900/40'} hover:bg-emerald-50/50 dark:hover:bg-emerald-950/10`}>
-                   <div className="p-6 font-bold text-slate-700 dark:text-slate-300 flex items-center text-xs uppercase tracking-widest">{row.feature}</div>
-                   {row.allow.map((val, j) => (
-                     <div key={j} className={`p-6 border-l border-slate-100 dark:border-slate-800 flex items-center justify-center font-bold ${val === false ? 'opacity-20' : ''}`}>
-                       {val === true ? (
-                         <div className={`p-1.5 rounded-full ${PLANS[j].highlighted ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
-                            <Check className="h-4 w-4" />
-                         </div>
-                       ) : val === false ? (
-                         <span className="text-slate-400 dark:text-slate-600 text-2xl font-light">×</span>
-                       ) : (
-                         <span className={`text-xs font-black uppercase tracking-widest ${PLANS[j].highlighted ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'}`}>{val}</span>
-                       )}
-                     </div>
-                   ))}
-                 </div>
-               ))}
+                  {/* Column Headers */}
+                  {PLANS.map((plan) => (
+                    <div key={plan.id} className="p-8 text-center border-l border-slate-200 dark:border-slate-800 flex flex-col justify-end relative bg-slate-50/30 dark:bg-slate-900/30 w-48">
+                      {plan.highlighted && (
+                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 to-teal-500" />
+                      )}
+                      <h3 className="text-2xl font-black mb-2 text-slate-900 dark:text-slate-100 tracking-tight">{plan.name}</h3>
+                      <div className="text-4xl font-black tracking-tighter mb-6 text-slate-900 dark:text-slate-50">
+                        {plan.price === 0 ? (lang === 'es' ? 'Gratis' : 'Free') : `$${plan.price}`}
+                        {plan.price !== 0 && <span className="text-xs text-slate-500 dark:text-slate-400 font-black uppercase tracking-widest ml-1">{tr('sub_month')}</span>}
+                      </div>
+                      <Link href={isAuthenticated ? '/subscription' : '/register'} className="w-full">
+                        <Button
+                          variant={plan.highlighted ? 'default' : 'outline'}
+                          className={`w-full h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all duration-300 ${plan.highlighted ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:scale-[1.02] text-white border-0' : 'border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'}`}
+                        >
+                          {plan.cta}
+                        </Button>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Matrix Rows */}
+                <div className="divide-y divide-slate-100 dark:divide-slate-800 text-sm md:text-base">
+                  {[
+                    { feature: tr('landing_row_kcal'), allow: [true, true, true] },
+                    { feature: tr('landing_row_water'), allow: [true, true, true] },
+                    { feature: tr('landing_row_ai_limit'), allow: ["10/día", "Ilimitado", "Ilimitado"] },
+                    { feature: tr('landing_row_history'), allow: ["14 Días", "30 Días", "Sin límite"] },
+                    { feature: tr('landing_row_vision'), allow: [false, true, true] },
+                    { feature: tr('landing_row_ads'), allow: [false, true, true] },
+                    { feature: tr('landing_row_routines'), allow: [false, false, true] },
+                    { feature: tr('landing_row_export'), allow: [false, false, true] },
+                  ].map((row, i) => (
+                    <div key={i} className={`grid grid-cols-4 transition-colors ${i%2===0 ? 'bg-slate-50/30 dark:bg-slate-900/20' : 'bg-white/30 dark:bg-slate-900/40'} hover:bg-emerald-50/50 dark:hover:bg-emerald-950/10`}>
+                      <div className="p-6 font-bold text-slate-700 dark:text-slate-300 flex items-center text-xs uppercase tracking-widest">{row.feature}</div>
+                      {row.allow.map((val, j) => (
+                        <div key={j} className={`p-6 border-l border-slate-100 dark:border-slate-800 flex items-center justify-center font-bold ${val === false ? 'opacity-20' : ''} w-48`}>
+                          {val === true ? (
+                            <div className={`p-1.5 rounded-full ${PLANS[j].highlighted ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                              <Check className="h-4 w-4" />
+                            </div>
+                          ) : val === false ? (
+                            <span className="text-slate-400 dark:text-slate-600 text-2xl font-light">×</span>
+                          ) : (
+                            <span className={`text-xs font-black uppercase tracking-widest ${PLANS[j].highlighted ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'}`}>{val}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
           </AnimatedSection>
         </div>
       </section>
@@ -736,26 +737,26 @@ export default function LandingPage() {
 
         <div className="container-nutriflow relative z-10">
           <AnimatedSection>
-          <div className="max-w-4xl mx-auto text-center space-y-12">
-            <div className="flex justify-center">
-              <div className="p-6 rounded-[2.5rem] bg-white/10 backdrop-blur-3xl border border-white/20 shadow-2xl animate-float">
-                <Heart className="h-20 w-20 text-emerald-400" />
+            <div className="max-w-4xl mx-auto text-center space-y-12">
+              <div className="flex justify-center">
+                <div className="p-6 rounded-[2.5rem] bg-white/10 backdrop-blur-3xl border border-white/20 shadow-2xl animate-float">
+                  <Heart className="h-20 w-20 text-emerald-400" />
+                </div>
               </div>
+              <h2 className="text-5xl md:text-7xl lg:text-8xl font-heading font-extrabold tracking-tighter leading-none">
+                {lang === 'es' ? 'Tu transformación' : 'Your transformation'}
+                <span className="block text-white/60 mt-1">{lang === 'es' ? 'comienza hoy.' : 'starts today.'}</span>
+              </h2>
+              <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto font-light leading-relaxed">
+                {lang === 'es' ? 'Únete a miles de usuarios que ya están mejorando su salud con NutriFlow' : 'Join thousands of users who are already improving their health with NutriFlow'}
+              </p>
+              <Link href="/register">
+                <Button size="lg" className="h-16 px-12 rounded-2xl bg-white text-emerald-900 border-0 hover:bg-white/90 font-bold text-sm shadow-2xl shadow-emerald-950/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-white/20">
+                  {tr('auth_free_start')}
+                  <ArrowRight className="ml-3 h-5 w-5" />
+                </Button>
+              </Link>
             </div>
-            <h2 className="text-5xl md:text-7xl lg:text-8xl font-heading font-extrabold tracking-tighter leading-none">
-              {lang === 'es' ? 'Tu transformación' : 'Your transformation'}
-              <span className="block text-white/60 mt-1">{lang === 'es' ? 'comienza hoy.' : 'starts today.'}</span>
-            </h2>
-            <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto font-light leading-relaxed">
-              {lang === 'es' ? 'Únete a miles de usuarios que ya están mejorando su salud con NutriFlow' : 'Join thousands of users who are already improving their health with NutriFlow'}
-            </p>
-            <Link href="/register">
-              <Button size="lg" className="h-16 px-12 rounded-2xl bg-white text-emerald-900 border-0 hover:bg-white/90 font-bold text-sm shadow-2xl shadow-emerald-950/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-white/20">
-                {tr('auth_free_start')}
-                <ArrowRight className="ml-3 h-5 w-5" />
-              </Button>
-            </Link>
-          </div>
           </AnimatedSection>
         </div>
       </section>
@@ -776,8 +777,8 @@ export default function LandingPage() {
                 {tr('landing_footer_brand')}
               </p>
               <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
-                <Shield className="h-4 w-4" />
-                <span>{lang === 'es' ? 'Encriptación de grado bancario' : 'Bank-grade encryption'}</span>
+                <Shield className="h-4 w-4 text-emerald-500" />
+                <span>{lang === 'es' ? 'Pago 100% seguro' : '100% Secure Payment'}</span>
               </div>
             </div>
 

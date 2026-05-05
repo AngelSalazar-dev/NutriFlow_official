@@ -1,80 +1,113 @@
 import mysql from 'mysql2/promise';
 
-// MySQL connection pool
-let pool: mysql.Pool | null = null;
-
-export function getPool() {
-  if (!pool) {
-    // TiDB Cloud requires SSL
-    const isTiDBCloud = process.env.MYSQL_HOST?.includes('tidbcloud.com');
-    const useSSL = isTiDBCloud || process.env.NODE_ENV === 'production';
-
-    pool = mysql.createPool({
-      host: process.env.MYSQL_HOST || 'localhost',
-      user: process.env.MYSQL_USER || 'root',
-      password: process.env.MYSQL_PASSWORD || '',
-      database: process.env.MYSQL_DATABASE || 'nutriflow_db',
-      port: parseInt(process.env.MYSQL_PORT || '3306'),
-      // Cambiamos rejectUnauthorized a false para evitar errores de certificado SSL en desarrollo local con TiDB Cloud
-      ssl: useSSL ? { rejectUnauthorized: false } : undefined,
-      waitForConnections: true,
-      connectionLimit: 20, // Aumentado para evitar saturación
-      queueLimit: 0,
-      enableKeepAlive: true,
-      keepAliveInitialDelay: 0,
-      connectTimeout: 10000, // 10 segundos (reducido de 20s)
-    });
-
-    console.log('✅ MySQL connection pool created' + (useSSL ? ' (SSL enabled - permissive)' : ''));
-  }
-
-  return pool;
+interface IDatabase {
+  query<T = any>(sql: string, params?: any[], connection?: mysql.PoolConnection): Promise<[T, any]>;
+  transaction<T>(callback: (connection: mysql.PoolConnection) => Promise<T>): Promise<T>;
+  getConnection(): Promise<mysql.PoolConnection>;
 }
 
-export async function query<T = any>(
-  sql: string,
-  params?: any[],
-  providedConnection?: mysql.PoolConnection
-): Promise<[T, any]> {
-  const connection = providedConnection || await getPool().getConnection();
+class Database implements IDatabase {
+  private static instance: Database | null = null;
+  private pool: mysql.Pool | null = null;
 
-  try {
-    const result = await connection.execute(sql, params);
-    return result as unknown as [T, any];
-  } finally {
-    if (!providedConnection) {
-      connection.release();
+  private constructor() {}
+
+  public static getInstance(): Database {
+    if (!Database.instance) {
+      Database.instance = new Database();
+    }
+    return Database.instance;
+  }
+
+  public getPool(): mysql.Pool {
+    if (!this.pool) {
+      const isTiDBCloud = process.env.MYSQL_HOST?.includes('tidbcloud.com');
+      const useSSL = isTiDBCloud || process.env.NODE_ENV === 'production';
+
+      this.pool = mysql.createPool({
+        host: process.env.MYSQL_HOST || 'localhost',
+        user: process.env.MYSQL_USER || 'root',
+        password: process.env.MYSQL_PASSWORD || '',
+        database: process.env.MYSQL_DATABASE || 'nutriflow_db',
+        port: parseInt(process.env.MYSQL_PORT || '3306'),
+        ssl: useSSL ? { rejectUnauthorized: false } : undefined,
+        waitForConnections: true,
+        connectionLimit: 20,
+        queueLimit: 0,
+        enableKeepAlive: true,
+        keepAliveInitialDelay: 0,
+        connectTimeout: 10000,
+      });
+      console.log(`✅ Database pool initialized ${useSSL ? '(SSL)' : ''}`);
+    }
+    return this.pool;
+  }
+
+  public async getConnection(): Promise<mysql.PoolConnection> {
+    return await this.getPool().getConnection();
+  }
+
+  public async query<T = any>(sql: string, params?: any[], connection?: mysql.PoolConnection): Promise<[T, any]> {
+    const conn = connection || await this.getConnection();
+    try {
+      const result = await conn.execute(sql, params);
+      return result as unknown as [T, any];
+    } finally {
+      if (!connection) conn.release();
+    }
+  }
+
+  public async transaction<T>(callback: (connection: mysql.PoolConnection) => Promise<T>): Promise<T> {
+    const conn = await this.getConnection();
+    await conn.beginTransaction();
+    try {
+      const result = await callback(conn);
+      await conn.commit();
+      return result;
+    } catch (error) {
+      await conn.rollback();
+      throw error;
+    } finally {
+      conn.release();
+    }
+  }
+
+  public async close(): Promise<void> {
+    if (this.pool) {
+      await this.pool.end();
+      this.pool = null;
     }
   }
 }
 
-export async function transaction<T>(
-  callback: (connection: mysql.PoolConnection) => Promise<T>
-): Promise<T> {
-  const connection = await getPool().getConnection();
-  await connection.beginTransaction();
-
-  try {
-    const result = await callback(connection);
-    await connection.commit();
+class LoggingDatabaseDecorator implements IDatabase {
+  constructor(private db: IDatabase) {}
+  async query<T = any>(sql: string, params?: any[], connection?: mysql.PoolConnection) {
+    const start = Date.now();
+    const result = await this.db.query<T>(sql, params, connection);
+    console.log(`[DB Query] ${Date.now() - start}ms | ${sql.substring(0, 50)}...`);
     return result;
-  } catch (error) {
-    await connection.rollback();
-    throw error;
-  } finally {
-    connection.release();
   }
+  async transaction<T>(callback: (connection: mysql.PoolConnection) => Promise<T>) {
+    const start = Date.now();
+    const result = await this.db.transaction(callback);
+    console.log(`[DB Transaction] ${Date.now() - start}ms`);
+    return result;
+  }
+  async getConnection() { return this.db.getConnection(); }
 }
 
-export async function closePool() {
-  if (pool) {
-    await pool.end();
-    pool = null;
-    console.log('👋 MySQL pool closed');
-  }
-}
+let dbInstance: IDatabase | null = null;
+const getDB = (): IDatabase => {
+  if (!dbInstance) dbInstance = new LoggingDatabaseDecorator(Database.getInstance());
+  return dbInstance;
+};
 
-// Helper to convert MySQL rows to plain objects
+export const query = (sql: string, params?: any[], connection?: mysql.PoolConnection) => getDB().query(sql, params, connection);
+export const transaction = <T>(callback: (connection: mysql.PoolConnection) => Promise<T>) => getDB().transaction(callback);
+export const getPool = () => Database.getInstance().getPool();
+export const closePool = () => Database.getInstance().close();
+
 export function rowToObject<T = any>(row: any): T {
   if (!row) return {} as T;
   return JSON.parse(JSON.stringify(row));
@@ -85,3 +118,6 @@ export function rowsToObjects<T = any>(rows: any): T[] {
   if (!Array.isArray(rows)) return [rowToObject<T>(rows)];
   return rows.map(row => rowToObject<T>(row));
 }
+
+
+

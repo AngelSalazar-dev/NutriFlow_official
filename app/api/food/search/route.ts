@@ -29,8 +29,22 @@ export async function GET(request: NextRequest) {
       });
 
       queryStr += ` WHERE ${conditions.join(' AND ')}`;
-      // Priority: verified > priority > alphabetical
-      queryStr += ` ORDER BY is_verified DESC, is_priority DESC, name ASC LIMIT 50`;
+      // Priority: 
+      // 1. Matches in name (higher weight)
+      // 2. Verified status
+      // 3. Priority flag
+      // 4. Alphabetical
+      queryStr += ` ORDER BY 
+        (CASE 
+          WHEN name LIKE ? THEN 1 
+          WHEN name LIKE ? THEN 2 
+          ELSE 3 
+        END), 
+        is_verified DESC, 
+        is_priority DESC, 
+        name ASC LIMIT 50`;
+        
+      queryParams.push(`${q}%`, `%${q}%`); // For the CASE ordering
     } else if (frequent === 'true') {
       queryStr += ` ORDER BY is_priority DESC, is_verified DESC, name ASC LIMIT 20`;
     } else if (category) {

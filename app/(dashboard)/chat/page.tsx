@@ -355,17 +355,17 @@ export default function ChatPage() {
           <div className="max-w-4xl mx-auto w-full space-y-4 pb-24">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-slate-900 dark:text-slate-100 tracking-tighter leading-none flex items-center gap-4">
-                  <Sparkles className="h-10 w-10 text-purple-600 dark:text-purple-500 drop-shadow-[0_0_10px_rgba(147,51,234,0.3)]" /> NutriFlow IA
+                <h1 className="text-2xl sm:text-4xl md:text-6xl font-black text-slate-900 dark:text-slate-100 tracking-tighter leading-none flex items-center gap-2 sm:gap-4">
+                  <Sparkles className="h-6 w-6 sm:h-10 sm:w-10 text-purple-600 dark:text-purple-500 drop-shadow-[0_0_10px_rgba(147,51,234,0.3)]" /> NutriFlow IA
                 </h1>
-                <p className="text-lg text-slate-500 dark:text-slate-400 font-medium mt-1">{tr('chat_welcome_subtitle')}</p>
+                <p className="text-sm sm:text-lg text-slate-500 dark:text-slate-400 font-medium mt-1">{tr('chat_welcome_subtitle')}</p>
               </div>
-              <div className="text-right">
+              <div className="text-right flex-shrink-0">
                 {!isPremium && chatLimit && (
-                  <><div className="text-3xl md:text-4xl font-heading font-extrabold tracking-tight text-purple-600 dark:text-purple-500">{chatLimit.remaining} <span className="text-lg text-purple-600/50 dark:text-purple-500/50 font-bold">/ {chatLimit.limit}</span></div><div className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase">{tr('chat_limit_title')}</div></>
+                  <><div className="text-2xl md:text-4xl font-heading font-extrabold tracking-tight text-purple-600 dark:text-purple-500 leading-none">{chatLimit.remaining} <span className="text-xs md:text-lg text-purple-600/50 dark:text-purple-500/50 font-bold">/ {chatLimit.limit}</span></div><div className="text-[10px] md:text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tighter">{tr('chat_limit_title')}</div></>
                 )}
                 {isPremium && (
-                  <><div className="text-3xl md:text-4xl font-heading font-extrabold tracking-tight text-emerald-600 dark:text-emerald-500">∞</div><div className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase">{tr('chat_limit_unlimited')}</div></>
+                  <><div className="text-2xl md:text-4xl font-heading font-extrabold tracking-tight text-emerald-600 dark:text-emerald-500 leading-none">∞</div><div className="text-[10px] md:text-xs text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tighter">{tr('chat_limit_unlimited')}</div></>
                 )}
               </div>
             </div>
@@ -448,7 +448,7 @@ export default function ChatPage() {
                       </div>
                     </div>
                   )}
-                  <div ref={messagesEndRef} />
+                  <div ref={messagesEndRef} className="h-4" />
                 </div>
 
                 <div className="border-t border-slate-100 dark:border-slate-800/50 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-b-xl">
