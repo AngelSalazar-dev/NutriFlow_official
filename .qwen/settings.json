@@ -33,7 +33,25 @@
       "Bash(sc *)",
       "Bash(rmdir *)",
       "Bash(del *)",
-      "Bash(git remote *)"
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(cmdkey *)",
+      "Bash(vercel *)",
+      "Bash(set *)",
+      "Bash(nslookup *)",
+      "Bash(cmd *)",
+      "Bash(choco *)",
+      "Bash(pip install *)",
+      "Bash(pip3 install *)",
+      "Bash(python *)",
+      "WebFetch(github.com)",
+      "Bash(netstat *)",
+      "Bash(curl.exe *)",
+      "Bash(echo.)",
+      "Bash(git *)",
+      "Bash(find *)",
+      "Bash(rm *)",
+      "WebFetch(21st.dev)"
     ]
   },
   "$version": 3
