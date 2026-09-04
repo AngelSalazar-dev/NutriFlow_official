@@ -51,6 +51,7 @@ export default function RegisterScreen() {
     try {
       await register({
         ...formData,
+        confirmPassword: formData.password,
         age: Number(formData.age),
         weight: Number(formData.weight),
         height: Number(formData.height),
