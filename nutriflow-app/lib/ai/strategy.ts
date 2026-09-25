@@ -42,7 +42,7 @@ export class GeminiService implements AIService {
 
 export class GroqService implements AIService {
   private apiKey: string;
-  private model: string = 'llama-3.3-70b-versatile';
+  private model: string = 'openai/gpt-oss-120b';
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
@@ -61,7 +61,7 @@ export class GroqService implements AIService {
         model: this.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
-        max_tokens: 2048
+        max_tokens: 4096
       }),
     });
 
@@ -99,7 +99,7 @@ export class OpenRouterService implements AIService {
         model: this.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
-        max_tokens: 2048
+        max_tokens: 4096
       }),
     });
 
@@ -145,8 +145,8 @@ export class AIManager {
       }
     }
 
-    // Fallback logic
-    const priority = ['gemini', 'groq', 'openrouter'];
+    // Fallback logic: Groq (fastest free) -> OpenRouter (free router) -> Gemini
+    const priority = ['groq', 'openrouter', 'gemini'];
     let lastError: any;
 
     for (const key of priority) {
