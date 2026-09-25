@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NutriFlow</string>
+    
+    <!-- Authentication -->
+    <string name="login_title">Bienvenido de nuevo</string>
+    <string name="login_subtitle">Inicia sesión para continuar</string>
+    <string name="register_title">Crear cuenta</string>
+    <string name="register_subtitle">Comienza tu transformación hoy</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Contraseña</string>
+    <string name="name_hint">Nombre completo</string>
+    <string name="login_button">Iniciar sesión</string>
+    <string name="register_button">Registrarse</string>
+    <string name="forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="no_account">¿No tienes cuenta?</string>
+    <string name="have_account">¿Ya tienes cuenta?</string>
+    <string name="sign_up">Regístrate</string>
+    <string name="sign_in">Inicia sesión</string>
+    
+    <!-- Navigation -->
+    <string name="nav_dashboard">Inicio</string>
+    <string name="nav_food">Alimentación</string>
+    <string name="nav_exercise">Ejercicio</string>
+    <string name="nav_profile">Perfil</string>
+    
+    <!-- Dashboard -->
+    <string name="welcome">Hola, %1$s</string>
+    <string name="calories_consumed">Calorías consumidas</string>
+    <string name="calories_burned">Calorías quemadas</string>
+    <string name="water_intake">Agua</string>
+    <string name="protein">Proteína</string>
+    <string name="carbs">Carbohidratos</string>
+    <string name="fat">Grasas</string>
+    <string name="today_summary">Resumen de hoy</string>
+    <string name="weekly_progress">Progreso semanal</string>
+    
+    <!-- Food -->
+    <string name="add_food">Agregar alimento</string>
+    <string name="search_food">Buscar alimento</string>
+    <string name="meal_breakfast">Desayuno</string>
+    <string name="meal_lunch">Almuerzo</string>
+    <string name="meal_dinner">Cena</string>
+    <string name="meal_snack">Merienda</string>
+    <string name="food_name">Nombre del alimento</string>
+    <string name="calories">Calorías</string>
+    <string name="protein_g">Proteína (g)</string>
+    <string name="carbs_g">Carbs (g)</string>
+    <string name="fat_g">Grasa (g)</string>
+    <string name="serving_size">Tamaño de porción</string>
+    <string name="save_food">Guardar</string>
+    
+    <!-- Exercise -->
+    <string name="add_exercise">Agregar ejercicio</string>
+    <string name="exercise_name">Nombre del ejercicio</string>
+    <string name="duration_min">Duración (min)</string>
+    <string name="met_value">Valor MET</string>
+    <string name="calories_burned_label">Calorías quemadas</string>
+    <string name="start_workout">Iniciar entrenamiento</string>
+    <string name="stop_workout">Detener</string>
+    
+    <!-- Profile -->
+    <string name="profile_title">Mi Perfil</string>
+    <string name="weight">Peso (kg)</string>
+    <string name="height">Altura (cm)</string>
+    <string name="age">Edad</string>
+    <string name="sex">Sexo</string>
+    <string name="activity_level">Nivel de actividad</string>
+    <string name="goal">Objetivo</string>
+    <string name="save_profile">Guardar cambios</string>
+    <string name="logout">Cerrar sesión</string>
+    <string name="settings">Configuración</string>
+    
+    <!-- Common -->
+    <string name="loading">Cargando…</string>
+    <string name="error">Error</string>
+    <string name="success">Éxito</string>
+    <string name="cancel">Cancelar</string>
+    <string name="confirm">Confirmar</string>
+    <string name="delete">Eliminar</string>
+    <string name="edit">Editar</string>
+    <string name="save">Guardar</string>
+    <string name="retry">Reintentar</string>
+    <string name="no_data">Sin datos</string>
+    <string name="try_again">Inténtalo de nuevo</string>
+    
+    <!-- Messages -->
+    <string name="login_success">Inicio de sesión exitoso</string>
+    <string name="login_failed">Error al iniciar sesión</string>
+    <string name="register_success">Registro exitoso</string>
+    <string name="register_failed">Error al registrar</string>
+    <string name="network_error">Error de conexión</string>
+    <string name="something_went_wrong">Algo salió mal</string>
+    
+    <!-- Onboarding -->
+    <string name="onboarding_title_1">Controla tu alimentación</string>
+    <string name="onboarding_title_2">Sigue tu progreso</string>
+    <string name="onboarding_title_3">Alcanza tus metas</string>
+    <string name="onboarding_desc_1">Registra tus comidas y obtén recomendaciones personalizadas</string>
+    <string name="onboarding_desc_2">Visualiza tu evolución con estadísticas detalladas</string>
+    <string name="onboarding_desc_3">La IA te ayudará a lograr tus objetivos de salud</string>
+    <string name="get_started">Comenzar</string>
+    <string name="next">Siguiente</string>
+    <string name="skip">Saltar</string>
+</resources>

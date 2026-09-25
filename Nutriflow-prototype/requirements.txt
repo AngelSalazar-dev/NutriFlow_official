@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+motor
+pymongo
+pyjwt
+python-dotenv
+bcrypt
+stripe
+pillow

@@ -1,0 +1,298 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyJWT } from '@/lib/auth-mysql';
+import { query } from '@/lib/mysql';
+import { AIManager } from '@/lib/ai/strategy';
+
+async function getUserFromRequest(request: NextRequest) {
+  // Read cookie directly from request headers (more reliable than next/headers in Route Handlers)
+  const cookieHeader = request.headers.get('cookie') || '';
+  const sessionMatch = cookieHeader.match(/session=([^;]+)/);
+  let token = sessionMatch ? sessionMatch[1] : null;
+
+  if (!token) {
+    const authHeader = request.headers.get('authorization') || '';
+    if (authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+  }
+
+  if (!token) {
+    console.log('[CHAT] No session cookie or bearer token found in request.');
+    return null;
+  }
+
+  const payload = await verifyJWT(token);
+  if (!payload?.userId) {
+    console.log('[CHAT] Invalid JWT payload');
+    return null;
+  }
+
+  const userId = payload.userId as string;
+  const [rows] = await query(`
+    SELECT id, email, name, age, weight_kg, height_cm, sex, goal, activity_level, daily_calorie_target, subscription_plan
+    FROM users WHERE id = ? LIMIT 1
+  `, [userId]);
+
+  const users = Array.isArray(rows) ? rows : [rows];
+  if (!users || users.length === 0) return null;
+
+  const u = users[0] as any;
+  return {
+    _id: u.id,
+    email: u.email,
+    name: u.name,
+    age: u.age,
+    weight: u.weight_kg,
+    height: u.height_cm,
+    sex: u.sex,
+    goal: u.goal,
+    activityLevel: u.activity_level,
+    calorieGoal: u.daily_calorie_target,
+    subscriptionPlan: u.subscription_plan,
+  };
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+    }
+
+
+    const body = await request.json();
+    const { message, conversationHistory = [], conversationId, preferredProvider } = body;
+
+    if (!message || !message.trim()) {
+      return NextResponse.json(
+        { error: 'Mensaje vacío' },
+        { status: 400 }
+      );
+    }
+
+    // Verificar límite de mensajes (15 cada 5 horas para free, ilimitado premium/pro)
+    const now = new Date();
+    const fiveHoursAgo = new Date(now.getTime() - 5 * 60 * 60 * 1000);
+
+    const [messageCount] = await query(
+      'SELECT COUNT(*) as count FROM chat_messages WHERE user_id = ? AND created_at >= ?',
+      [user._id, fiveHoursAgo]
+    ) as any[];
+
+    const messagesInWindow = messageCount?.count || 0;
+    const isPremium = user.subscriptionPlan === 'premium' || user.subscriptionPlan === 'pro';
+    const windowLimit = isPremium ? 9999 : 15;
+    const windowHours = 5;
+
+    if (messagesInWindow >= windowLimit) {
+      const [oldestMessage] = await query(`
+        SELECT created_at FROM chat_messages
+        WHERE user_id = ? AND created_at >= ?
+        ORDER BY created_at ASC
+        LIMIT 1
+      `, [user._id, fiveHoursAgo]) as any[];
+
+      let resetTime = new Date();
+      if (oldestMessage && oldestMessage[0]) {
+        resetTime = new Date(oldestMessage[0].created_at);
+        resetTime.setHours(resetTime.getHours() + windowHours);
+      }
+
+      const hoursRemaining = Math.ceil((resetTime.getTime() - now.getTime()) / (1000 * 60 * 60));
+      const minutesRemaining = Math.ceil((resetTime.getTime() - now.getTime()) / (1000 * 60));
+
+      return NextResponse.json(
+        {
+          error: 'Límite de mensajes alcanzado',
+          message: `Has alcanzado tu límite de ${windowLimit} mensajes cada ${windowHours} horas. Podrás enviar más mensajes en ${hoursRemaining > 0 ? `${hoursRemaining}h ` : ''}${minutesRemaining % 60}min.`,
+          remaining: 0,
+          limit: windowLimit,
+          used: messagesInWindow,
+          resetTime: resetTime.toISOString(),
+          hoursRemaining,
+          minutesRemaining,
+        },
+        { status: 429 }
+      );
+    }
+
+    // Guardar mensaje del usuario
+    const userMsgId = crypto.randomUUID();
+    const activeConvId = conversationId || crypto.randomUUID();
+    console.log('[CHAT] conversationId:', conversationId, 'activeConvId:', activeConvId);
+
+    await query(`
+      INSERT INTO chat_messages (id, user_id, role, content, conversation_id, created_at)
+      VALUES (?, ?, 'user', ?, ?, NOW())
+    `, [userMsgId, user._id, message, activeConvId]);
+
+    // Build prompt safely with fallbacks
+    const userName = user.name || 'Usuario';
+    const userAge = user.age || 25;
+    const userWeight = user.weight || 70;
+    const userHeight = user.height || 170;
+    const userSex = user.sex || 'male';
+    const userGoal = user.goal || 'maintain';
+    const userActivity = user.activityLevel || 'moderate';
+    const userCalorieGoal = user.calorieGoal || 2000;
+    const userPlan = user.subscriptionPlan || 'free';
+
+    const goalText = userGoal === 'lose' ? 'Perder peso' : userGoal === 'gain' ? 'Ganar músculo' : 'Mantener peso';
+
+    const conversationContext = conversationHistory.length > 0
+      ? conversationHistory.map((msg: any) => `${msg.role}: ${msg.content}`).join('\n')
+      : '(Sin historial previo)';
+
+    const userContext = `Eres un asistente de nutrición y salud experto llamado NutriBot, integrado en NutriFlow.
+
+Contexto del usuario:
+- Nombre: ${userName}
+- Edad: ${userAge} años
+- Peso: ${userWeight} kg
+- Altura: ${userHeight} cm
+- Sexo: ${userSex}
+- Objetivo: ${goalText}
+- Nivel de actividad: ${userActivity}
+- Calorías objetivo: ${userCalorieGoal} kcal/día
+- Plan: ${userPlan}
+
+Instrucciones:
+1. Responde en español de manera clara y concisa
+2. Basa tus respuestas en evidencia científica
+3. Sé empático y motivador
+4. Si te preguntan sobre condiciones médicas, recomienda consultar un profesional
+5. Mantén las respuestas entre 3-5 párrafos máximo — NO te cortes a mitad de respuesta
+6. Si la respuesta es larga, ve al punto y luego da detalles
+7. Usa formato markdown cuando sea útil (listas, negritas)
+8. Personaliza las respuestas con los datos del usuario
+9. IMPORTANTE: Termina SIEMPRE tu respuesta de forma completa. No dejes frases inconclusas.
+
+Historial de conversación:
+${conversationContext}
+
+Mensaje del usuario: ${message}
+
+Respuesta de NutriBot:`;
+
+    // Call AI using Strategy Pattern
+    const aiManager = new AIManager();
+    const aiResult = await aiManager.generate(userContext, preferredProvider);
+    const assistantMessage = aiResult.text;
+    console.log(`[CHAT] Response received from ${aiResult.provider}`);
+
+    // Save assistant response
+    const assistantMsgId = crypto.randomUUID();
+    await query(`
+      INSERT INTO chat_messages (id, user_id, role, content, conversation_id, created_at)
+      VALUES (?, ?, 'assistant', ?, ?, NOW())
+    `, [assistantMsgId, user._id, assistantMessage, activeConvId]);
+
+    // Get updated count
+    const [updatedCount] = await query(
+      'SELECT COUNT(*) as count FROM chat_messages WHERE user_id = ? AND created_at >= ?',
+      [user._id, fiveHoursAgo]
+    ) as any[];
+
+    const messagesUsed = updatedCount?.count || 0;
+    const resetTime = new Date(now.getTime() + windowHours * 60 * 60 * 1000);
+
+    return NextResponse.json({
+      success: true,
+      message: assistantMessage,
+      conversationId: activeConvId,
+      conversation: [
+        ...conversationHistory,
+        { role: 'user', content: message },
+        { role: 'assistant', content: assistantMessage },
+      ],
+      usage: {
+        used: messagesUsed,
+        limit: windowLimit,
+        remaining: Math.max(0, windowLimit - messagesUsed),
+        windowHours,
+        resetTime: resetTime.toISOString(),
+      },
+    });
+  } catch (error: any) {
+    console.error('[CHAT] ❌ Error processing message:', error);
+    // Log MySQL-specific errors for debugging
+    if (error.message?.includes('session_id')) {
+      console.error('[CHAT] ⚠️ DB SCHEMA ERROR: session_id NOT NULL constraint is blocking saves. Run: npx tsx scripts/fix-chat-messages-schema.ts');
+    }
+    if (error.code === 'ER_NO_DEFAULT_FOR_FIELD') {
+      console.error(`[CHAT] ⚠️ Missing required field: ${error.sqlMessage || error.message}`);
+    }
+    return NextResponse.json(
+      {
+        error: 'Error procesando mensaje',
+        message: error.message || 'Error interno del servidor'
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * GET /api/chat/limit
+ * Verificar límite de mensajes del usuario
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+    }
+
+    const now = new Date();
+    const fiveHoursAgo = new Date(now.getTime() - 5 * 60 * 60 * 1000);
+    
+    const [count] = await query(
+      'SELECT COUNT(*) as count FROM chat_messages WHERE user_id = ? AND created_at >= ?',
+      [user._id, fiveHoursAgo]
+    ) as any[];
+
+    const messagesUsed = count?.count || 0;
+    const isPremium = user.subscriptionPlan === 'premium' || user.subscriptionPlan === 'pro';
+    const windowLimit = isPremium ? 9999 : 15;
+    const windowHours = 5;
+
+    // Calcular tiempo restante para reset
+    let resetTime = new Date(now.getTime() + windowHours * 60 * 60 * 1000);
+    
+    if (messagesUsed >= windowLimit && !isPremium) {
+      const [oldestMessage] = await query(`
+        SELECT created_at FROM chat_messages 
+        WHERE user_id = ? AND created_at >= ?
+        ORDER BY created_at ASC
+        LIMIT 1
+      `, [user._id, fiveHoursAgo]) as any[];
+
+      if (oldestMessage && oldestMessage[0]) {
+        resetTime = new Date(oldestMessage[0].created_at);
+        resetTime.setHours(resetTime.getHours() + windowHours);
+      }
+    }
+
+    const timeUntilReset = resetTime.getTime() - now.getTime();
+    const hoursRemaining = Math.ceil(timeUntilReset / (1000 * 60 * 60));
+    const minutesRemaining = Math.ceil((timeUntilReset % (1000 * 60 * 60)) / (1000 * 60));
+
+    return NextResponse.json({
+      allowed: messagesUsed < windowLimit,
+      remaining: Math.max(0, windowLimit - messagesUsed),
+      limit: windowLimit,
+      used: messagesUsed,
+      isPremium,
+      windowHours,
+      resetTime: resetTime.toISOString(),
+      hoursRemaining,
+      minutesRemaining,
+    });
+  } catch (error) {
+    console.error('Error checking chat limit:', error);
+    return NextResponse.json(
+      { error: 'Error verificando límite' },
+      { status: 500 }
+    );
+  }
+}

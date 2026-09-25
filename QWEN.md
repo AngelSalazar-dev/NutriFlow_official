@@ -1,4 +1,4 @@
-﻿# Nutriflow - Contexto del Proyecto
+# Nutriflow - Contexto del Proyecto
 
 > ⚠️ **INSTRUCCIONES PARA QWEN CODE - LEE ESTO AL INICIAR SESIÓN**
 >
@@ -201,7 +201,7 @@ Se creó un portfolio profesional para Ángel Salazar desde cero, deployado en V
 Host: gateway01.us-east-1.prod.aws.tidbcloud.com
 Port: 4000
 User: REDACTED_USER
-Password: REDACTED
+Password: TU_PASSWORD_BD
 Database: nutriflow
 SSL: Required (rejectUnauthorized: true)
 ```
@@ -301,7 +301,7 @@ npx tsx scripts/export-foods-excel.ts
 MYSQL_HOST=gateway01.us-east-1.prod.aws.tidbcloud.com
 MYSQL_PORT=4000
 MYSQL_USER=REDACTED_USER
-MYSQL_PASSWORD=REDACTED
+MYSQL_PASSWORD=TU_PASSWORD_BD
 MYSQL_DATABASE=nutriflow
 JWT_SECRET=<configured in Vercel>
 ```
@@ -321,3 +321,97 @@ JWT_SECRET=<configured in Vercel>
 - `exercise_logs` table recreated with correct schema
 - `notifications` table created
 - `chat_messages.conversation_id` column added
+
+---
+
+## 📢 Actividad del Día — 22 de Mayo, 2026
+
+### Nutriflow Flutter — Completo: Phase 1-5 Implementación Mobile
+
+**Contexto:** Se creó y completó la aplicación móvil Flutter para NutriFlow desde lo que ya estaba construido.
+
+**Stack:**
+- Flutter 3.44+ / Dart 3.12+
+- Provider (state management)
+- `http` package + singleton ApiClient (JWT Bearer)
+- `shared_preferences` (auth token persistente)
+- `google_fonts` (Outfit + Inter)
+- `flutter_dotenv` (API_URL configurable)
+- Custom Canvas (CustomPainter) para gráficos
+
+### Fase 1: Bugs Críticos (Completado)
+1. ✅ **ProfileScreen** — Conectada a `AuthProvider.currentUser` (datos reales, no hardcodeados)
+2. ✅ **Sign Out** — Botón ahora llama `AuthProvider.logout()`
+3. ✅ **widget_test.dart** — Actualizado a `NutriFlowApp` en lugar de `MyApp`
+4. ✅ **Colores inconsistentes** — Unificados usando `AppTheme.*` en lugar de valores inline
+
+### Fase 2: Core Features (Completado)
+5. ✅ **Exercise Tab** — Pantalla completa con:
+   - Modelo: `ExerciseEntryModel`
+   - Repositorio: `ExerciseRepository` (`/exercise/log`, `GET/POST/DELETE`)
+   - Provider: `ExerciseProvider`
+   - UI: resumen diario, quick add cards, lista de ejercicios, FAB, bottom sheet con tipo/músculos
+6. ✅ **Food Search API** — Barra de búsqueda conectada a `GET /api/food/search?q=query`
+7. ✅ **Smart Log** — Bottom sheet para describir comidas en lenguaje natural, conectado a `POST /api/food/smart-log`
+8. ✅ **Profile Update** — Formulario de perfil llama `AuthProvider.updateProfile()`
+
+### Fase 3: Contenido (Completado)
+9. ✅ **Stats History** — `fetchHistory()` en `DashboardProvider` conectado a `GET /api/stats/history?days=N`
+10. ✅ **Notificaciones** — `NotificationModel`, `NotificationRepository`, `NotificationProvider`, `NotificationsScreen` con swipe-to-delete, mark as read
+11. ✅ **Artículos** — `ArticleModel`, `ArticleRepository`, `ArticleProvider`, `ArticlesScreen` + `ArticleDetailScreen`
+
+### Fase 4: Monetización (Completado)
+12. ✅ **Suscripciones** — `SubscriptionScreen` con comparativa Free/Elite/Máximo, upgrade flow
+13. ✅ **Settings** — `SettingsScreen` con push/email toggles, slider de meta de agua, info de cuenta
+
+### Fase 5: Polish (Completado)
+14. ✅ **Fuentes** — `google_fonts` agregado, theme usa `GoogleFonts.outfit()` / `GoogleFonts.inter()`
+15. ✅ **Entorno** — `flutter_dotenv` con `.env` para `API_URL`, `.gitignore` actualizado
+16. ✅ **README.md** — Actualizado con setup, arquitectura, features
+17. ✅ **ApiClient** — Agregado método `patch()` faltante
+18. ✅ **Deprecations** — `withOpacity` → `withValues(alpha:)`, `activeColor` → `activeThumbColor`
+
+### Archivos Nuevos (Flutter)
+
+```
+nutriflow_flutter/lib/
+├── data/
+│   ├── models/
+│   │   ├── exercise_entry_model.dart     # NUEVO
+│   │   ├── article_model.dart            # NUEVO
+│   │   └── notification_model.dart       # NUEVO
+│   └── repositories/
+│       ├── exercise_repository.dart      # NUEVO
+│       ├── article_repository.dart       # NUEVO
+│       └── notification_repository.dart  # NUEVO
+├── presentation/
+│   ├── providers/
+│   │   ├── exercise_provider.dart        # NUEVO
+│   │   ├── article_provider.dart         # NUEVO
+│   │   └── notification_provider.dart    # NUEVO
+│   └── screens/
+│       ├── exercise_screen.dart          # NUEVO
+│       ├── articles_screen.dart          # NUEVO
+│       ├── article_detail_screen.dart    # NUEVO
+│       ├── notifications_screen.dart     # NUEVO
+│       ├── subscription_screen.dart      # NUEVO
+│       └── settings_screen.dart          # NUEVO
+```
+
+### Archivos Modificados (Flutter)
+- `lib/main.dart` — Providers registrados, dotenv load, AppTheme import
+- `lib/core/theme/app_theme.dart` — GoogleFonts
+- `lib/core/network/api_client.dart` — `patch()` method, dotenv baseUrl
+- `lib/presentation/navigation/main_tab_screen.dart` — ExerciseScreen
+- `lib/presentation/screens/profile_screen.dart` — AuthProvider conectado
+- `lib/presentation/screens/food_log_screen.dart` — Search bar, Smart Log
+- `lib/presentation/screens/*.dart` — withOpacity → withValues en todos
+- `lib/presentation/providers/food_log_provider.dart` — searchFood(), smartLog()
+- `lib/presentation/providers/dashboard_provider.dart` — fetchHistory()
+- `lib/data/repositories/stats_repository.dart` — getHistory()
+- `lib/data/repositories/food_repository.dart` — searchFood(), smartLog()
+- `pubspec.yaml` — google_fonts, flutter_dotenv
+- `test/widget_test.dart` — Actualizado
+- `.gitignore` — .env agregado
+- `README.md` — Reescribito con info del proyecto
+- `.env` — NUEVO archivo de entorno

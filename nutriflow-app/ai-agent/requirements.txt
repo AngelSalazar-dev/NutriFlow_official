@@ -1,0 +1,16 @@
+# NutriFlow AI Agent - Python Dependencies
+
+# HTTP Requests
+requests>=2.31.0
+
+# Environment Variables
+python-dotenv>=1.0.0
+
+# OpenAI (Generación de contenido)
+openai>=1.12.0
+
+# Opcional: Para scheduling en producción
+# schedule>=1.2.0
+
+# Opcional: Para logging avanzado
+# loguru>=0.7.0
